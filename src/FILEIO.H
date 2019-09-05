@@ -1,3 +1,5 @@
+// This file was not part of the original Wolf3D source
+
 #ifndef FILEIO_H_INCLUDED
 #define FILEIO_H_INCLUDED
 
@@ -15,5 +17,6 @@ int file_open(const char* filename, int flags, int sb = 0);
 void file_read(int handle, void* out, size_t size);
 void file_write(int handle, const void* in, size_t size);
 void file_close(int handle);
+int file_seek(int handle, long pos, int flag);
 
 #endif

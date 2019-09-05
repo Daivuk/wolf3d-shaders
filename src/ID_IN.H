@@ -107,7 +107,9 @@ typedef	byte		ScanCode;
 #define	MDelta		11
 
 #define	MouseInt	0x33
-#define	Mouse(x)	_AX = x,geninterrupt(MouseInt)
+#define	Mouse(x)	//_AX = x,geninterrupt(MouseInt)
+extern int _CX;
+extern int _DX;
 
 typedef	enum		{
 						demo_Off,demo_Record,demo_Playback,demo_PlayDone

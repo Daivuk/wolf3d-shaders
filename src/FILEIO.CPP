@@ -41,3 +41,10 @@ void file_close(int handle)
     fclose(it->second);
     file_handles.erase(it);
 }
+
+int file_seek(int handle, long pos, int flag)
+{
+    auto it = file_handles.find(handle);
+    if (it == file_handles.end()) return 0;
+    return fseek(it->second, pos, flag);
+}

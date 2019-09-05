@@ -1,6 +1,7 @@
 // WL_INTER.C
 
 #include "WL_DEF.H"
+#include <string>
 #pragma hdrstop
 
 
@@ -166,20 +167,20 @@ void Victory (void)
 	UNCACHEGRCHUNK(C_ENDRATIOSPIC);
 #endif
 #else
-	Write(18,2,STR_YOUWIN);
+	Write(18,2,(char*)STR_YOUWIN);
 
-	Write(TIMEX,TIMEY-2,STR_TOTALTIME);
+	Write(TIMEX,TIMEY-2,(char*)STR_TOTALTIME);
 
-	Write(12,RATIOY-2,"averages");
+	Write(12,RATIOY-2,(char*)"averages");
 
 	#ifdef SPANISH
 	Write(RATIOX+2,  RATIOY,      STR_RATKILL);
 	Write(RATIOX+2,  RATIOY+2,  STR_RATSECRET);
 	Write(RATIOX+2,  RATIOY+4,STR_RATTREASURE);
 	#else
-	Write(RATIOX+8,RATIOY,      STR_RATKILL);
-	Write(RATIOX+4,RATIOY+2,  STR_RATSECRET);
-	Write(RATIOX,  RATIOY+4,STR_RATTREASURE);
+	Write(RATIOX+8,RATIOY,      (char*)STR_RATKILL);
+	Write(RATIOX+4,RATIOY+2,  (char*)STR_RATSECRET);
+	Write(RATIOX,  RATIOY+4,(char*)STR_RATTREASURE);
 	#endif
 
 #endif
@@ -222,22 +223,25 @@ void Victory (void)
 	i += 2*8;
 	VWB_DrawPic(i,TIMEY*8,L_NUM0PIC+(min%10));
 	i += 2*8;
-	Write(i/8,TIMEY,":");
+	Write(i/8,TIMEY,(char*)":");
 	i += 1*8;
 	VWB_DrawPic(i,TIMEY*8,L_NUM0PIC+(sec/10));
 	i += 2*8;
 	VWB_DrawPic(i,TIMEY*8,L_NUM0PIC+(sec%10));
 	VW_UpdateScreen ();
 
-	itoa(kr,tempstr,10);
+    auto _str = std::to_string(kr);
+    strcpy(tempstr, _str.c_str());
 	x=RATIOX+24-strlen(tempstr)*2;
 	Write(x,RATIOY,tempstr);
 
-	itoa(sr,tempstr,10);
+    _str = std::to_string(sr);
+    strcpy(tempstr, _str.c_str());
 	x=RATIOX+24-strlen(tempstr)*2;
 	Write(x,RATIOY+2,tempstr);
 
-	itoa(tr,tempstr,10);
+    _str = std::to_string(tr);
+    strcpy(tempstr, _str.c_str());
 	x=RATIOX+24-strlen(tempstr)*2;
 	Write(x,RATIOY+4,tempstr);
 
@@ -275,7 +279,7 @@ void Victory (void)
 	IN_Ack();
 
 	#ifndef SPEAR
-	if (Keyboard[sc_P] && MS_CheckParm("goobers"))
+	if (Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
 		PicturePause();
 	#endif
 
@@ -440,6 +444,7 @@ void LevelCompleted (void)
 	unsigned	temp;
 	char tempstr[10];
 	long bonus,timeleft=0;
+    std::string _str;
 	times parTimes[]=
 	{
 #ifndef SPEAR
@@ -584,26 +589,28 @@ void LevelCompleted (void)
 	{
 #ifndef JAPAN
 	 #ifdef SPANISH
-	 Write(14,2,"piso\ncompletado");
+	 Write(14,2,(char*)"piso\ncompletado");
 	 #else
-	 Write(14,2,"floor\ncompleted");
+	 Write(14,2,(char*)"floor\ncompleted");
 	 #endif
 
-	 Write(14,7,STR_BONUS"     0");
-	 Write(16,10,STR_TIME);
-	 Write(16,12,STR_PAR);
+	 Write(14,7,(char*)STR_BONUS"     0");
+	 Write(16,10,(char*)STR_TIME);
+	 Write(16,12,(char*)STR_PAR);
 
 	 #ifdef SPANISH
-	 Write(11,14,    STR_RAT2KILL);
-	 Write(11,16,  STR_RAT2SECRET);
-	 Write(11,18,STR_RAT2TREASURE);
+	 Write(11,14,    (char*)STR_RAT2KILL);
+	 Write(11,16,  (char*)STR_RAT2SECRET);
+	 Write(11,18,(char*)STR_RAT2TREASURE);
 	 #else
-	 Write(9,14,    STR_RAT2KILL);
-	 Write(5,16,  STR_RAT2SECRET);
-	 Write(1,18,STR_RAT2TREASURE);
+	 Write(9,14,    (char*)STR_RAT2KILL);
+	 Write(5,16,  (char*)STR_RAT2SECRET);
+	 Write(1,18,(char*)STR_RAT2TREASURE);
 	 #endif
 
-	 Write(26,2,itoa(gamestate.mapon+1,tempstr,10));
+    _str = std::to_string(gamestate.mapon+1);
+     strcpy(tempstr, _str.c_str());
+	 Write(26,2,tempstr);
 #endif
 
 	 #ifdef SPANISH
@@ -635,7 +642,7 @@ void LevelCompleted (void)
 	 i+=2*8;
 	 VWB_DrawPic(i,10*8,L_NUM0PIC+(min%10));
 	 i+=2*8;
-	 Write(i/8,10,":");
+	 Write(i/8,10,(char*)":");
 	 i+=1*8;
 	 VWB_DrawPic(i,10*8,L_NUM0PIC+(sec/10));
 	 i+=2*8;
@@ -665,7 +672,9 @@ void LevelCompleted (void)
 	 {
 	  for (i=0;i<=timeleft;i++)
 	  {
-	   ltoa((long)i*PAR_AMOUNT,tempstr,10);
+         _str = std::to_string((long)i*PAR_AMOUNT);
+        strcpy(tempstr, _str.c_str());
+	//    ltoa((long)i*PAR_AMOUNT,tempstr,10);
 	   x=36-strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   if (!(i%(PAR_AMOUNT/10)))
@@ -695,7 +704,9 @@ void LevelCompleted (void)
 	 ratio=kr;
 	 for (i=0;i<=ratio;i++)
 	 {
-	  itoa(i,tempstr,10);
+         _str = std::to_string(i);
+        strcpy(tempstr, _str.c_str());
+	//   itoa(i,tempstr,10);
 	  x=RATIOXX-strlen(tempstr)*2;
 	  Write(x,14,tempstr);
 	  if (!(i%10))
@@ -712,7 +723,9 @@ void LevelCompleted (void)
 	   VW_WaitVBL(VBLWAIT);
 	   SD_StopSound();
 	   bonus+=PERCENT100AMT;
-	   ltoa(bonus,tempstr,10);
+         _str = std::to_string(bonus);
+        strcpy(tempstr, _str.c_str());
+	//    ltoa(bonus,tempstr,10);
 	   x=(RATIOXX-1)-strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
@@ -739,7 +752,9 @@ void LevelCompleted (void)
 	 ratio=sr;
 	 for (i=0;i<=ratio;i++)
 	 {
-	  itoa(i,tempstr,10);
+         _str = std::to_string(i);
+        strcpy(tempstr, _str.c_str());
+	//   itoa(i,tempstr,10);
 	  x=RATIOXX-strlen(tempstr)*2;
 	  Write(x,16,tempstr);
 	  if (!(i%10))
@@ -757,7 +772,9 @@ void LevelCompleted (void)
 	   VW_WaitVBL(VBLWAIT);
 	   SD_StopSound();
 	   bonus+=PERCENT100AMT;
-	   ltoa(bonus,tempstr,10);
+         _str = std::to_string(bonus);
+        strcpy(tempstr, _str.c_str());
+	//    ltoa(bonus,tempstr,10);
 	   x=(RATIOXX-1)-strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
@@ -783,7 +800,9 @@ void LevelCompleted (void)
 	 ratio=tr;
 	 for (i=0;i<=ratio;i++)
 	 {
-	  itoa(i,tempstr,10);
+         _str = std::to_string(i);
+        strcpy(tempstr, _str.c_str());
+	//   itoa(i,tempstr,10);
 	  x=RATIOXX-strlen(tempstr)*2;
 	  Write(x,18,tempstr);
 	  if (!(i%10))
@@ -799,7 +818,9 @@ void LevelCompleted (void)
 	   VW_WaitVBL(VBLWAIT);
 	   SD_StopSound();
 	   bonus+=PERCENT100AMT;
-	   ltoa(bonus,tempstr,10);
+         _str = std::to_string(bonus);
+        strcpy(tempstr, _str.c_str());
+	//    ltoa(bonus,tempstr,10);
 	   x=(RATIOXX-1)-strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
@@ -824,15 +845,21 @@ void LevelCompleted (void)
 	 //
 	 done:
 
-	 itoa(kr,tempstr,10);
+         _str = std::to_string(kr);
+        strcpy(tempstr, _str.c_str());
+	//  itoa(kr,tempstr,10);
 	 x=RATIOXX-strlen(tempstr)*2;
 	 Write(x,14,tempstr);
 
-	 itoa(sr,tempstr,10);
+         _str = std::to_string(sr);
+        strcpy(tempstr, _str.c_str());
+	//  itoa(sr,tempcstr,10);
 	 x=RATIOXX-strlen(tempstr)*2;
 	 Write(x,16,tempstr);
 
-	 itoa(tr,tempstr,10);
+         _str = std::to_string(tr);
+        strcpy(tempstr, _str.c_str());
+	//  itoa(tr,tempstr,10);
 	 x=RATIOXX-strlen(tempstr)*2;
 	 Write(x,18,tempstr);
 
@@ -842,7 +869,9 @@ void LevelCompleted (void)
 		   (PERCENT100AMT*(tr==100));
 
 	 GivePoints(bonus);
-	 ltoa(bonus,tempstr,10);
+    _str = std::to_string(bonus);
+    strcpy(tempstr, _str.c_str());
+	//  ltoa(bonus,tempstr,10);
 	 x=36-strlen(tempstr)*2;
 	 Write(x,7,tempstr);
 
@@ -880,10 +909,10 @@ void LevelCompleted (void)
 	  }
 #endif
 #else
-	  Write(14,4,"secret floor\n completed!");
+	  Write(14,4,(char*)"secret floor\n completed!");
 #endif
 
-	  Write(10,16,"15000 bonus!");
+	  Write(10,16,(char*)"15000 bonus!");
 
 	  VW_UpdateScreen();
 	  VW_FadeIn();
@@ -938,7 +967,7 @@ void LevelCompleted (void)
 #endif
 
 	#ifndef SPEAR
-	if (Keyboard[sc_P] && MS_CheckParm("goobers"))
+	if (Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
 		PicturePause();
 	#endif
 
@@ -1098,7 +1127,9 @@ void	DrawHighScores(void)
 		//
 		// level
 		//
-		ultoa(s->completed,buffer,10);
+        auto _str = std::to_string(s->completed);
+        strcpy(buffer, _str.c_str());
+		// ultoa(s->completed,buffer,10);
 #ifndef SPEAR
 		for (str = buffer;*str;str++)
 			*str = *str + (129 - '0');	// Used fixed-width numbers (129...)
@@ -1112,10 +1143,12 @@ void	DrawHighScores(void)
 #ifndef UPLOAD
 #ifndef SPEAR
 		PrintX -= 6;
-		itoa(s->episode+1,buffer1,10);
-		US_Print("E");
+        _str = std::to_string(s->episode+1);
+        strcpy(buffer1, _str.c_str());
+		// itoa(s->episode+1,buffer1,10);
+		US_Print((char*)"E");
 		US_Print(buffer1);
-		US_Print("/L");
+		US_Print((char*)"/L");
 #endif
 #endif
 
@@ -1129,7 +1162,9 @@ void	DrawHighScores(void)
 		//
 		// score
 		//
-		ultoa(s->score,buffer,10);
+        _str = std::to_string(s->score);
+        strcpy(buffer, _str.c_str());
+		// ultoa(s->score,buffer,10);
 #ifndef SPEAR
 		for (str = buffer;*str;str++)
 			*str = *str + (129 - '0');	// Used fixed-width numbers (129...)
@@ -1284,24 +1319,24 @@ void NonShareware(void)
 	PrintY=15;
 
 	#ifdef SPANISH
-	US_Print("Atencion");
+	US_Print((char*)"Atencion");
 	#else
-	US_Print("Attention");
+	US_Print((char*)"Attention");
 	#endif
 
 	SETFONTCOLOR(HIGHLIGHT,BKGDCOLOR);
 	WindowX=PrintX=40;
 	PrintY=60;
 	#ifdef SPANISH
-	US_Print("Este juego NO es gratis y\n");
-	US_Print("NO es Shareware; favor de\n");
-	US_Print("no distribuirlo.\n\n");
+	US_Print((char*)"Este juego NO es gratis y\n");
+	US_Print((char*)"NO es Shareware; favor de\n");
+	US_Print((char*)"no distribuirlo.\n\n");
 	#else
-	US_Print("This game is NOT shareware.\n");
-	US_Print("Please do not distribute it.\n");
-	US_Print("Thanks.\n\n");
+	US_Print((char*)"This game is NOT shareware.\n");
+	US_Print((char*)"Please do not distribute it.\n");
+	US_Print((char*)"Thanks.\n\n");
 	#endif
-	US_Print("        Id Software\n");
+	US_Print((char*)"        Id Software\n");
 
 	VW_UpdateScreen ();
 	VW_FadeIn();

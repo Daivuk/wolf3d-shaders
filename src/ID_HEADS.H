@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <cinttypes>
 #include "FILEIO.H"
 #define __ID_GLOB__

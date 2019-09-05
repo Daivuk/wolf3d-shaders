@@ -4,7 +4,7 @@
 // by John Romero (C) 1992 Id Software, Inc.
 //
 ////////////////////////////////////////////////////////////////////
-#include "wl_def.h"
+#include "WL_DEF.H"
 #pragma hdrstop
 
 //
@@ -24,7 +24,7 @@ void CP_ReadThis(void);
 #endif
 #endif
 
-char far endStrings[9][80]=
+char endStrings[9][80]=
 {
 #ifndef SPEAR
 	{"Dost thou wish to\nleave with such hasty\nabandon?"},
@@ -59,7 +59,7 @@ CP_iteminfo
 	NewItems={NM_X,NM_Y,4,2,24};
 
 #pragma warn -sus
-CP_itemtype far
+CP_itemtype
 MainMenu[]=
 {
 #ifdef JAPAN
@@ -75,12 +75,12 @@ MainMenu[]=
 	{1,"",0}
 #else
 
-	{1,STR_NG,CP_NewGame},
-	{1,STR_SD,CP_Sound},
-	{1,STR_CL,CP_Control},
-	{1,STR_LG,CP_LoadGame},
-	{0,STR_SG,CP_SaveGame},
-	{1,STR_CV,CP_ChangeView},
+	{1,STR_NG,(void(*)(int))CP_NewGame},
+	{1,STR_SD,(void(*)(int))CP_Sound},
+	{1,STR_CL,(void(*)(int))CP_Control},
+	{1,STR_LG,(void(*)(int))CP_LoadGame},
+	{0,STR_SG,(void(*)(int))CP_SaveGame},
+	{1,STR_CV,(void(*)(int))CP_ChangeView},
 
 #ifndef GOODTIMES
 #ifndef SPEAR
@@ -94,13 +94,13 @@ MainMenu[]=
 #endif
 #endif
 
-	{1,STR_VS,CP_ViewScores},
+	{1,STR_VS,(void(*)(int))CP_ViewScores},
 	{1,STR_BD,0},
 	{1,STR_QT,0}
 #endif
 },
 
-far SndMenu[]=
+SndMenu[]=
 {
 #ifdef JAPAN
 	{1,"",0},
@@ -131,7 +131,7 @@ far SndMenu[]=
 #endif
 },
 
-far CtlMenu[]=
+CtlMenu[]=
 {
 #ifdef JAPAN
 	{0,"",0},
@@ -145,15 +145,15 @@ far CtlMenu[]=
 	{0,STR_JOYEN,0},
 	{0,STR_PORT2,0},
 	{0,STR_GAMEPAD,0},
-	{0,STR_SENS,MouseSensitivity},
-	{1,STR_CUSTOM,CustomControls}
+	{0,STR_SENS,(void(*)(int))MouseSensitivity},
+	{1,STR_CUSTOM,(void(*)(int))CustomControls}
 #endif
 },
 
 #pragma warn +sus
 
 #ifndef SPEAR
-far NewEmenu[]=
+NewEmenu[]=
 {
 #ifdef JAPAN
 #ifdef JAPDEMO
@@ -226,7 +226,7 @@ far NewEmenu[]=
 #endif
 
 
-far NewMenu[]=
+NewMenu[]=
 {
 #ifdef JAPAN
 	{1,"",0},
@@ -241,7 +241,7 @@ far NewMenu[]=
 #endif
 },
 
-far LSMenu[]=
+LSMenu[]=
 {
 	{1,"",0},
 	{1,"",0},
@@ -255,7 +255,7 @@ far LSMenu[]=
 	{1,"",0}
 },
 
-far CusMenu[]=
+CusMenu[]=
 {
 	{1,"",0},
 	{0,"",0},
@@ -299,16 +299,16 @@ char SaveGameNames[10][32],SaveName[13]="SAVEGAM?.";
 static byte
 					*ScanNames[] =		// Scan code names with single chars
 					{
-	"?","?","1","2","3","4","5","6","7","8","9","0","-","+","?","?",
-	"Q","W","E","R","T","Y","U","I","O","P","[","]","|","?","A","S",
-	"D","F","G","H","J","K","L",";","\"","?","?","?","Z","X","C","V",
-	"B","N","M",",",".","/","?","?","?","?","?","?","?","?","?","?",
-	"?","?","?","?","?","?","?","?","\xf","?","-","\x15","5","\x11","+","?",
-	"\x13","?","?","?","?","?","?","?","?","?","?","?","?","?","?","?",
-	"?","?","?","?","?","?","?","?","?","?","?","?","?","?","?","?",
-	"?","?","?","?","?","?","?","?","?","?","?","?","?","?","?","?"
+	(byte*)"?",(byte*)"?",(byte*)"1",(byte*)"2",(byte*)"3",(byte*)"4",(byte*)"5",(byte*)"6",(byte*)"7",(byte*)"8",(byte*)"9",(byte*)"0",(byte*)"-",(byte*)"+",(byte*)"?",(byte*)"?",
+	(byte*)"Q",(byte*)"W",(byte*)"E",(byte*)"R",(byte*)"T",(byte*)"Y",(byte*)"U",(byte*)"I",(byte*)"O",(byte*)"P",(byte*)"[",(byte*)"]",(byte*)"|",(byte*)"?",(byte*)"A",(byte*)"S",
+	(byte*)"D",(byte*)"F",(byte*)"G",(byte*)"H",(byte*)"J",(byte*)"K",(byte*)"L",(byte*)";",(byte*)"\"",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"Z",(byte*)"X",(byte*)"C",(byte*)"V",
+	(byte*)"B",(byte*)"N",(byte*)"M",(byte*)",(byte*)",(byte*)".",(byte*)"/",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",
+	(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"\xf",(byte*)"?",(byte*)"-",(byte*)"\x15",(byte*)"5",(byte*)"\x11",(byte*)"+",(byte*)"?",
+	(byte*)"\x13",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",
+	(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",
+	(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?"
 					},	// DEBUG - consolidate these
-					far ExtScanCodes[] =	// Scan codes with >1 char names
+					ExtScanCodes[] =	// Scan codes with >1 char names
 					{
 	1,0xe,0xf,0x1d,0x2a,0x39,0x3a,0x3b,0x3c,0x3d,0x3e,
 	0x3f,0x40,0x41,0x42,0x43,0x44,0x57,0x59,0x46,0x1c,0x36,
@@ -317,10 +317,10 @@ static byte
 					},
 					*ExtScanNames[] =	// Names corresponding to ExtScanCodes
 					{
-	"Esc","BkSp","Tab","Ctrl","LShft","Space","CapsLk","F1","F2","F3","F4",
-	"F5","F6","F7","F8","F9","F10","F11","F12","ScrlLk","Enter","RShft",
-	"PrtSc","Alt","Home","PgUp","End","PgDn","Ins","Del","NumLk","Up",
-	"Down","Left","Right",""
+	(byte*)"Esc",(byte*)"BkSp",(byte*)"Tab",(byte*)"Ctrl",(byte*)"LShft",(byte*)"Space",(byte*)"CapsLk",(byte*)"F1",(byte*)"F2",(byte*)"F3",(byte*)"F4",
+	(byte*)"F5",(byte*)"F6",(byte*)"F7",(byte*)"F8",(byte*)"F9",(byte*)"F10",(byte*)"F11",(byte*)"F12",(byte*)"ScrlLk",(byte*)"Enter",(byte*)"RShft",
+	(byte*)"PrtSc",(byte*)"Alt",(byte*)"Home",(byte*)"PgUp",(byte*)"End",(byte*)"PgDn",(byte*)"Ins",(byte*)"Del",(byte*)"NumLk",(byte*)"Up",
+	(byte*)"Down",(byte*)"Left",(byte*)"Right",(byte*)""
 					};
 
 
@@ -518,7 +518,7 @@ void US_ControlPanel(byte scancode)
 		#pragma warn -sus
 		MainMenu[viewscores].routine = NULL;
 		#ifndef JAPAN
-		_fstrcpy(MainMenu[viewscores].string,STR_EG);
+		strcpy(MainMenu[viewscores].string,STR_EG);
 		#endif
 		#pragma warn +sus
 	}
@@ -562,9 +562,9 @@ void DrawMainMenu(void)
 		#ifndef JAPAN
 
 		#ifdef SPANISH
-		_fstrcpy(&MainMenu[backtodemo].string,STR_GAME);
+		strcpy(&MainMenu[backtodemo].string,STR_GAME);
 		#else
-		_fstrcpy(&MainMenu[backtodemo].string[8],STR_GAME);
+		strcpy(&MainMenu[backtodemo].string[8],STR_GAME);
 		#endif
 
 		#else
@@ -581,9 +581,9 @@ void DrawMainMenu(void)
 	{
 		#ifndef JAPAN
 		#ifdef SPANISH
-		_fstrcpy(&MainMenu[backtodemo].string,STR_BD);
+		strcpy(&MainMenu[backtodemo].string,STR_BD);
 		#else
-		_fstrcpy(&MainMenu[backtodemo].string[8],STR_DEMO);
+		strcpy(&MainMenu[backtodemo].string[8],STR_DEMO);
 		#endif
 		#else
 		CA_CacheGrChunk(C_MRETDEMOPIC);
@@ -627,8 +627,8 @@ void CP_ReadThis(void)
 void BossKey(void)
 {
 	SD_MusicOff();
-	_AX = 3;
-	geninterrupt(0x10);
+	// _AX = 3;
+	// geninterrupt(0x10);
 	printf("C>");
 	while (!Keyboard[sc_Escape])
 	IN_ClearKeysDown();
@@ -661,7 +661,7 @@ int CP_CheckQuick(unsigned scancode)
 			#ifdef JAPAN
 			if (GetYorN(7,8,C_JAPQUITPIC))
 			#else
-			if (Confirm(ENDGAMESTR))
+			if (Confirm((char*)ENDGAMESTR))
 			#endif
 			{
 				playstate = ex_died;
@@ -682,7 +682,7 @@ int CP_CheckQuick(unsigned scancode)
 			{
 				CA_CacheGrChunk(STARTFONT+1);
 				fontnumber = 1;
-				Message(STR_SAVING"...");
+				Message((char*)STR_SAVING"...");
 				CP_SaveGame(1);
 				fontnumber=0;
 			}
@@ -866,7 +866,7 @@ int CP_EndGame(void)
 #ifdef JAPAN
 	if (!GetYorN(7,8,C_JAPQUITPIC))
 #else
-	if (!Confirm(ENDGAMESTR))
+	if (!Confirm((char*)ENDGAMESTR))
 #endif
 		return 0;
 
@@ -875,9 +875,9 @@ int CP_EndGame(void)
 
 	#pragma warn -sus
 	MainMenu[savegame].active = 0;
-	MainMenu[viewscores].routine=CP_ViewScores;
+	MainMenu[viewscores].routine=(void (*)(int))CP_ViewScores;
 	#ifndef JAPAN
-	_fstrcpy(MainMenu[viewscores].string,STR_VS);
+	strcpy(MainMenu[viewscores].string,STR_VS);
 	#endif
 	#pragma warn +sus
 
@@ -949,7 +949,7 @@ firstpart:
 				if (!EpisodeSelect[which/2])
 				{
 					SD_PlaySound (NOWAYSND);
-					Message("Please select \"Read This!\"\n"
+					Message((char*)"Please select \"Read This!\"\n"
 							"from the Options menu to\n"
 							"find out how to order this\n"
 							"episode from Apogee.");
@@ -977,7 +977,7 @@ firstpart:
 		#ifdef JAPAN
 		if (!GetYorN(7,8,C_JAPNEWGAMEPIC))
 		#else
-		if (!Confirm(CURGAME))
+		if (!Confirm((char*)CURGAME))
 		#endif
 		{
 			MenuFadeOut();
@@ -1062,9 +1062,9 @@ void DrawNewEpisode(void)
 	PrintY=2;
 	WindowX=0;
 	#ifdef SPANISH
-	US_CPrint("Cual episodio jugar?");
+	US_CPrint((char*)"Cual episodio jugar?");
 	#else
-	US_CPrint("Which episode to play?");
+	US_CPrint((char*)"Which episode to play?");
 	#endif
 #endif
 
@@ -1098,9 +1098,9 @@ void DrawNewGame(void)
 
 #ifndef SPEAR
 	#ifdef SPANISH
-	US_Print("Eres macho?");
+	US_Print((char*)"Eres macho?");
 	#else
-	US_Print("How tough are you?");
+	US_Print((char*)"How tough are you?");
 	#endif
 #else
 	VWB_DrawPic (PrintX,PrintY,C_HOWTOUGHPIC);
@@ -1357,9 +1357,9 @@ void DrawLSAction(int which)
 	PrintY=LSA_Y+13;
 
 	if (!which)
-		US_Print(STR_LOADING"...");
+		US_Print((char*)STR_LOADING"...");
 	else
-		US_Print(STR_SAVING"...");
+		US_Print((char*)STR_SAVING"...");
 
 	VW_UpdateScreen();
 }
@@ -1389,7 +1389,7 @@ int CP_LoadGame(int quick)
 		{
 			name[7]=which+'0';
 			handle=file_open(name,O_BINARY);
-			lseek(handle,32,SEEK_SET);
+			file_seek(handle,32,SEEK_SET);
 			loadedgame=_true;
 			LoadTheGame(handle,0,0);
 			loadedgame=_false;
@@ -1424,7 +1424,7 @@ int CP_LoadGame(int quick)
 			name[7]=which+'0';
 
 			handle=file_open(name,O_BINARY);
-			lseek(handle,32,SEEK_SET);
+			file_seek(handle,32,SEEK_SET);
 
 			DrawLSAction(0);
 			loadedgame=_true;
@@ -1524,7 +1524,7 @@ void PrintLSEntry(int w,int color)
 	if (SaveGamesAvail[w])
 		US_Print(SaveGameNames[w]);
 	else
-		US_Print("      - "STR_EMPTY" -");
+		US_Print((char*)(std::string("      - ") + STR_EMPTY" -").c_str());
 
 	fontnumber=1;
 }
@@ -1554,13 +1554,13 @@ int CP_SaveGame(int quick)
 		if (SaveGamesAvail[which])
 		{
 			name[7]=which+'0';
-			unlink(name);
-			handle=creat(name,S_IREAD|S_IWRITE);
+			// unlink(name);
+			handle=file_open(name,O_BINARY|O_CREAT|O_WRONLY);
 
 			strcpy(input,&SaveGameNames[which][0]);
 
-			_dos_write(handle,(void far *)input,32,&nwritten);
-			lseek(handle,32,SEEK_SET);
+			file_write(handle,(void *)input,32);
+			file_seek(handle,32,SEEK_SET);
 			SaveTheGame(handle,0,0);
 			file_close(handle);
 
@@ -1585,10 +1585,11 @@ int CP_SaveGame(int quick)
 			// OVERWRITE EXISTING SAVEGAME?
 			//
 			if (SaveGamesAvail[which])
+            {
 				#ifdef JAPAN
 				if (!GetYorN(7,8,C_JAPSAVEOVERPIC))
 				#else
-				if (!Confirm(GAMESVD))
+				if (!Confirm((char*)GAMESVD))
 				#endif
 				{
 					DrawLoadSaveScreen(1);
@@ -1600,6 +1601,7 @@ int CP_SaveGame(int quick)
 					PrintLSEntry(which,HIGHLIGHT);
 					VW_UpdateScreen();
 				}
+            }
 
 			ShootSnd();
 
@@ -1616,10 +1618,10 @@ int CP_SaveGame(int quick)
 				SaveGamesAvail[which]=1;
 				strcpy(&SaveGameNames[which][0],input);
 
-				unlink(name);
-				handle=creat(name,S_IREAD|S_IWRITE);
-				_dos_write(handle,(void far *)input,32,&nwritten);
-				lseek(handle,32,SEEK_SET);
+				// unlink(name);
+				handle=file_open(name,O_BINARY | O_WRONLY);
+				file_write(handle,(void *)input,32);
+				file_seek(handle,32,SEEK_SET);
 
 				DrawLSAction(1);
 				SaveTheGame(handle,LSA_X+8,LSA_Y+5);
@@ -1682,12 +1684,12 @@ int CalibrateJoystick(void)
 	WindowW = CALW;
 	WindowH = CALH;
 	WindowY = PrintY = CALY;
-	US_Print("    "STR_CALIB"\n    "STR_JOYST"\n");
+	US_Print((char*)(std::string("    ") + STR_CALIB + "\n    " + STR_JOYST"\n").c_str());
 	VWB_DrawPic(CALX+40,CALY+30,C_JOY1PIC);
 	PrintY = CALY+80;
-	US_Print(STR_MOVEJOY);
+	US_Print((char*)STR_MOVEJOY);
 	SETFONTCOLOR(BKGDCOLOR,TEXTCOLOR);
-	US_Print("   "STR_ESCEXIT);
+	US_Print((char*)(std::string("   ") + STR_ESCEXIT).c_str());
 	#endif
 	VW_UpdateScreen();
 
@@ -1697,7 +1699,7 @@ int CalibrateJoystick(void)
 		if (Keyboard[sc_Escape])
 			return 0;
 		#ifndef SPEAR
-		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
 			PicturePause();
 		#endif
 
@@ -1716,12 +1718,12 @@ int CalibrateJoystick(void)
 
 	PrintX = CALX;
 	PrintY = CALY;
-	US_Print("    "STR_CALIB"\n    "STR_JOYST"\n");
+	US_Print((char*)(std::string("    ") + STR_CALIB + "\n    " + STR_JOYST + "\n").c_str());
 	VWB_DrawPic(CALX+40,CALY+30,C_JOY2PIC);
 	PrintY = CALY+80;
-	US_Print(STR_MOVEJOY2);
+	US_Print((char*)STR_MOVEJOY2);
 	SETFONTCOLOR(BKGDCOLOR,TEXTCOLOR);
-	US_Print("   "STR_ESCEXIT);
+	US_Print((char*)(std::string("    ") + STR_ESCEXIT).c_str());
 	#endif
 	VW_UpdateScreen();
 
@@ -1731,7 +1733,7 @@ int CalibrateJoystick(void)
 		if (Keyboard[sc_Escape])
 			return 0;
 		#ifndef SPEAR
-		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
 			PicturePause();
 		#endif
 	} while(!(jb&2));
@@ -1780,8 +1782,8 @@ void CP_Control(void)
 		switch(which)
 		{
 			case MOUSEENABLE:
-				mouseenabled^=1;
-				_CX=_DX=CENTER;
+				mouseenabled = (boolean)((int)mouseenabled^1);
+				// _CX=_DX=CENTER;
 				Mouse(4);
 				DrawCtlScreen();
 				CusItems.curpos=-1;
@@ -1789,10 +1791,10 @@ void CP_Control(void)
 				break;
 
 			case JOYENABLE:
-				joystickenabled^=1;
+				joystickenabled = (boolean)((int)joystickenabled^1);
 				if (joystickenabled)
 					if (!CalibrateJoystick())
-						joystickenabled = 0;
+						joystickenabled = _false;
 				DrawCtlScreen();
 				CusItems.curpos=-1;
 				ShootSnd();
@@ -1805,7 +1807,7 @@ void CP_Control(void)
 				break;
 
 			case PADENABLE:
-				joypadenabled^=1;
+				joypadenabled = (boolean)((int)joypadenabled^1);
 				DrawCtlScreen();
 				ShootSnd();
 				break;
@@ -1849,7 +1851,7 @@ void DrawMouseSens(void)
 	WindowW=320;
 	PrintY=82;
 	SETFONTCOLOR(READCOLOR,BKGDCOLOR);
-	US_CPrint(STR_MOUSEADJ);
+	US_CPrint((char*)STR_MOUSEADJ);
 
 	SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
 	#ifdef SPANISH
@@ -1861,9 +1863,9 @@ void DrawMouseSens(void)
 	#else
 	PrintX=14;
 	PrintY=95;
-	US_Print(STR_SLOW);
+	US_Print((char*)STR_SLOW);
 	PrintX=269;
-	US_Print(STR_FAST);
+	US_Print((char*)STR_FAST);
 	#endif
 #endif
 
@@ -1894,6 +1896,7 @@ void MouseSensitivity(void)
 		ReadAnyControl(&ci);
 		switch(ci.dir)
 		{
+            default: break;
 			case dir_North:
 			case dir_West:
 				if (mouseadjustment)
@@ -1928,7 +1931,7 @@ void MouseSensitivity(void)
 		}
 
 		#ifndef SPEAR
-		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
 		#else
 		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
 		#endif
@@ -2211,7 +2214,7 @@ void EnterCtrlData(int index,CustomCtrls *cust,void (*DrawRtn)(int),void (*Print
 	break;
 	  case 1:
 	PrintX=x;
-	US_Print("?");
+	US_Print((char*)"?");
 	SD_PlaySound(HITWALLSND);
 	 }
 	 tick^=1;
@@ -2226,7 +2229,7 @@ void EnterCtrlData(int index,CustomCtrls *cust,void (*DrawRtn)(int),void (*Print
 	{
 	 case MOUSE:
 	   Mouse(3);
-	   button=_BX;
+	//    button=_BX;
 	   switch(button)
 	   {
 	case 1: result=1; break;
@@ -2325,6 +2328,7 @@ void EnterCtrlData(int index,CustomCtrls *cust,void (*DrawRtn)(int),void (*Print
   //
   switch(ci.dir)
   {
+      default: break;
    case dir_West:
 	 do
 	 {
@@ -2463,7 +2467,7 @@ void DrawCustomScreen(void)
 
 #ifndef SPEAR
 	PrintY=CST_Y;
-	US_CPrint("Mouse\n");
+	US_CPrint((char*)"Mouse\n");
 #else
 	PrintY = CST_Y+13;
 	VWB_DrawPic (128,48,C_MOUSEPIC);
@@ -2481,18 +2485,18 @@ void DrawCustomScreen(void)
 	US_Print(STR_CSTRAFE"\n");
 	#else
 	PrintX=CST_START;
-	US_Print(STR_CRUN);
+	US_Print((char*)STR_CRUN);
 	PrintX=CST_START+CST_SPC*1;
-	US_Print(STR_COPEN);
+	US_Print((char*)STR_COPEN);
 	PrintX=CST_START+CST_SPC*2;
-	US_Print(STR_CFIRE);
+	US_Print((char*)STR_CFIRE);
 	PrintX=CST_START+CST_SPC*3;
-	US_Print(STR_CSTRAFE"\n");
+	US_Print((char*)STR_CSTRAFE"\n");
 	#endif
 
 	DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
 	DrawCustMouse(0);
-	US_Print("\n");
+	US_Print((char*)"\n");
 
 
 	//
@@ -2500,7 +2504,7 @@ void DrawCustomScreen(void)
 	//
 #ifndef SPEAR
 	SETFONTCOLOR(READCOLOR,BKGDCOLOR);
-	US_CPrint("Joystick/Gravis GamePad\n");
+	US_CPrint((char*)"Joystick/Gravis GamePad\n");
 #else
 	PrintY += 13;
 	VWB_DrawPic (40,88,C_JOYSTICKPIC);
@@ -2522,17 +2526,17 @@ void DrawCustomScreen(void)
 	US_Print(STR_CSTRAFE"\n");
 	#else
 	PrintX=CST_START;
-	US_Print(STR_CRUN);
+	US_Print((char*)STR_CRUN);
 	PrintX=CST_START+CST_SPC*1;
-	US_Print(STR_COPEN);
+	US_Print((char*)STR_COPEN);
 	PrintX=CST_START+CST_SPC*2;
-	US_Print(STR_CFIRE);
+	US_Print((char*)STR_CFIRE);
 	PrintX=CST_START+CST_SPC*3;
-	US_Print(STR_CSTRAFE"\n");
+	US_Print((char*)STR_CSTRAFE"\n");
 	#endif
 	DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
 	DrawCustJoy(0);
-	US_Print("\n");
+	US_Print((char*)"\n");
 
 
 	//
@@ -2540,7 +2544,7 @@ void DrawCustomScreen(void)
 	//
 #ifndef SPEAR
 	SETFONTCOLOR(READCOLOR,BKGDCOLOR);
-	US_CPrint("Keyboard\n");
+	US_CPrint((char*)"Keyboard\n");
 #else
 	PrintY += 13;
 #endif
@@ -2556,17 +2560,17 @@ void DrawCustomScreen(void)
 	US_Print(STR_CSTRAFE"\n");
 	#else
 	PrintX=CST_START;
-	US_Print(STR_CRUN);
+	US_Print((char*)STR_CRUN);
 	PrintX=CST_START+CST_SPC*1;
-	US_Print(STR_COPEN);
+	US_Print((char*)STR_COPEN);
 	PrintX=CST_START+CST_SPC*2;
-	US_Print(STR_CFIRE);
+	US_Print((char*)STR_CFIRE);
 	PrintX=CST_START+CST_SPC*3;
-	US_Print(STR_CSTRAFE"\n");
+	US_Print((char*)STR_CSTRAFE"\n");
 	#endif
 	DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
 	DrawCustKeybd(0);
-	US_Print("\n");
+	US_Print((char*)"\n");
 
 
 	//
@@ -2584,13 +2588,13 @@ void DrawCustomScreen(void)
 	US_Print(STR_BKWD"\n");
 	#else
 	PrintX=CST_START;
-	US_Print(STR_LEFT);
+	US_Print((char*)STR_LEFT);
 	PrintX=CST_START+CST_SPC*1;
-	US_Print(STR_RIGHT);
+	US_Print((char*)STR_RIGHT);
 	PrintX=CST_START+CST_SPC*2;
-	US_Print(STR_FRWD);
+	US_Print((char*)STR_FRWD);
 	PrintX=CST_START+CST_SPC*3;
-	US_Print(STR_BKWD"\n");
+	US_Print((char*)STR_BKWD"\n");
 	#endif
 	DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
 	DrawCustKeys(0);
@@ -2688,7 +2692,7 @@ void DrawCustJoy(int hilight)
 void PrintCustKeybd(int i)
 {
 	PrintX=CST_START+CST_SPC*i;
-	US_Print(IN_GetScanName(buttonscan[order[i]]));
+	US_Print((char*)IN_GetScanName(buttonscan[order[i]]));
 }
 
 void DrawCustKeybd(int hilight)
@@ -2709,7 +2713,7 @@ void DrawCustKeybd(int hilight)
 void PrintCustKeys(int i)
 {
 	PrintX=CST_START+CST_SPC*i;
-	US_Print(IN_GetScanName(dirscan[moveorder[i]]));
+	US_Print((char*)IN_GetScanName(dirscan[moveorder[i]]));
 }
 
 void DrawCustKeys(int hilight)
@@ -2751,6 +2755,7 @@ void CP_ChangeView(void)
 		ReadAnyControl(&ci);
 		switch(ci.dir)
 		{
+            default: break;
 		case dir_South:
 		case dir_West:
 			newview--;
@@ -2775,7 +2780,7 @@ void CP_ChangeView(void)
 		}
 
 		#ifndef SPEAR
-		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
 		#else
 		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
 		#endif
@@ -2798,7 +2803,7 @@ void CP_ChangeView(void)
 	if (oldview!=newview)
 	{
 		SD_PlaySound (SHOOTSND);
-		Message(STR_THINK"...");
+		Message((char*)STR_THINK"...");
 		NewViewSize(newview);
 	}
 
@@ -2826,9 +2831,9 @@ void DrawChangeView(int view)
 	WindowY=320;
 	SETFONTCOLOR(HIGHLIGHT,BKGDCOLOR);
 
-	US_CPrint(STR_SIZE1"\n");
-	US_CPrint(STR_SIZE2"\n");
-	US_CPrint(STR_SIZE3);
+	US_CPrint((char*)STR_SIZE1"\n");
+	US_CPrint((char*)STR_SIZE2"\n");
+	US_CPrint((char*)STR_SIZE3);
 #endif
 	VW_UpdateScreen();
 
@@ -3028,7 +3033,7 @@ void DrawOutline(int x,int y,int w,int h,int color1,int color2)
 ////////////////////////////////////////////////////////////////////
 void SetupControlPanel(void)
 {
-	struct ffblk f;
+	// struct ffblk f; //TODO: Use Dirent
 	char name[13];
 	int which,i;
 
@@ -3055,28 +3060,28 @@ void SetupControlPanel(void)
 	//
 	// SEE WHICH SAVE GAME FILES ARE AVAILABLE & READ STRING IN
 	//
-	strcpy(name,SaveName);
-	if (!findfirst(name,&f,0))
-		do
-		{
-			which=f.ff_name[7]-'0';
-			if (which<10)
-			{
-				int handle;
-				char temp[32];
+	// strcpy(name,SaveName);
+	// if (!findfirst(name,&f,0))
+	// 	do
+	// 	{
+	// 		which=f.ff_name[7]-'0';
+	// 		if (which<10)
+	// 		{
+	// 			int handle;
+	// 			char temp[32];
 
-				SaveGamesAvail[which]=1;
-				handle=file_open(f.ff_name,O_BINARY);
-				file_read(handle,temp,32);
-				file_close(handle);
-				strcpy(&SaveGameNames[which][0],temp);
-			}
-		} while(!findnext(&f));
+	// 			SaveGamesAvail[which]=1;
+	// 			handle=file_open(f.ff_name,O_BINARY);
+	// 			file_read(handle,temp,32);
+	// 			file_close(handle);
+	// 			strcpy(&SaveGameNames[which][0],temp);
+	// 		}
+	// 	} while(!findnext(&f));
 
 	//
 	// CENTER MOUSE
 	//
-	_CX=_DX=CENTER;
+	// _CX=_DX=CENTER;
 	Mouse(4);
 }
 
@@ -3103,7 +3108,7 @@ void CleanupControlPanel(void)
 // Handle moving gun around a menu
 //
 ////////////////////////////////////////////////////////////////////
-int HandleMenu(CP_iteminfo *item_i,CP_itemtype far *items,void (*routine)(int w))
+int HandleMenu(CP_iteminfo *item_i,CP_itemtype *items,void (*routine)(int w))
 {
 	char key;
 	static int redrawitem=1,lastitem=-1;
@@ -3176,9 +3181,9 @@ int HandleMenu(CP_iteminfo *item_i,CP_itemtype far *items,void (*routine)(int w)
 			// CHECK FOR SCREEN CAPTURE
 			//
 			#ifndef SPEAR
-			if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+			if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
 			#else
-			if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
+			if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"debugmode"))
 			#endif
 				PicturePause();
 
@@ -3220,6 +3225,7 @@ int HandleMenu(CP_iteminfo *item_i,CP_itemtype far *items,void (*routine)(int w)
 		ReadAnyControl(&ci);
 		switch(ci.dir)
 		{
+            default: break;
 			////////////////////////////////////////////////
 			//
 			// MOVE UP
@@ -3349,7 +3355,7 @@ int HandleMenu(CP_iteminfo *item_i,CP_itemtype far *items,void (*routine)(int w)
 //
 // ERASE GUN & DE-HIGHLIGHT STRING
 //
-void EraseGun(CP_iteminfo *item_i,CP_itemtype far *items,int x,int y,int which)
+void EraseGun(CP_iteminfo *item_i,CP_itemtype *items,int x,int y,int which)
 {
 	VWB_Bar(x-1,y,25,16,BKGDCOLOR);
 	SetTextColor(items+which,0);
@@ -3377,7 +3383,7 @@ void DrawHalfStep(int x,int y)
 //
 // DRAW GUN AT NEW POSITION
 //
-void DrawGun(CP_iteminfo *item_i,CP_itemtype far *items,int x,int *y,int which,int basey,void (*routine)(int w))
+void DrawGun(CP_iteminfo *item_i,CP_itemtype *items,int x,int *y,int which,int basey,void (*routine)(int w))
 {
 	VWB_Bar(x-1,*y,25,16,BKGDCOLOR);
 	*y=basey+which*13;
@@ -3420,7 +3426,7 @@ void TicDelay(int count)
 // Draw a menu
 //
 ////////////////////////////////////////////////////////////////////
-void DrawMenu(CP_iteminfo *item_i,CP_itemtype far *items)
+void DrawMenu(CP_iteminfo *item_i,CP_itemtype *items)
 {
 	int i,which=item_i->curpos;
 
@@ -3444,7 +3450,7 @@ void DrawMenu(CP_iteminfo *item_i,CP_itemtype far *items)
 			SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
 		}
 
-		US_Print("\n");
+		US_Print((char*)"\n");
 	}
 }
 
@@ -3454,7 +3460,7 @@ void DrawMenu(CP_iteminfo *item_i,CP_itemtype far *items)
 // SET TEXT COLOR (HIGHLIGHT OR NO)
 //
 ////////////////////////////////////////////////////////////////////
-void SetTextColor(CP_itemtype far *items,int hlight)
+void SetTextColor(CP_itemtype *items,int hlight)
 {
 	if (hlight)
 		{SETFONTCOLOR(color_hlite[items->active],BKGDCOLOR);}
@@ -3541,9 +3547,9 @@ void ReadAnyControl(ControlInfo *ci)
 
 		if (IN_MouseButtons())
 		{
-			ci->button0=IN_MouseButtons()&1;
-			ci->button1=IN_MouseButtons()&2;
-			ci->button2=IN_MouseButtons()&4;
+			ci->button0=(IN_MouseButtons()&1)?_true:_false;
+			ci->button1=(IN_MouseButtons()&2)?_true:_false;
+			ci->button2=(IN_MouseButtons()&4)?_true:_false;
 			ci->button3=_false;
 			mouseactive=1;
 		}
@@ -3570,12 +3576,12 @@ void ReadAnyControl(ControlInfo *ci)
 		jb=IN_JoyButtons();
 		if (jb)
 		{
-			ci->button0=jb&1;
-			ci->button1=jb&2;
+			ci->button0=(jb&1)?_true:_false;
+			ci->button1=(jb&2)?_true:_false;
 			if (joypadenabled)
 			{
-				ci->button2=jb&4;
-				ci->button3=jb&8;
+				ci->button2=(jb&4)?_true:_false;
+				ci->button3=(jb&8)?_true:_false;
 			}
 			else
 				ci->button2=ci->button3=_false;
@@ -3589,7 +3595,7 @@ void ReadAnyControl(ControlInfo *ci)
 // DRAW DIALOG AND CONFIRM YES OR NO TO QUESTION
 //
 ////////////////////////////////////////////////////////////////////
-int Confirm(char far *string)
+int Confirm(char *string)
 {
 	int xit=0,i,x,y,tick=0,time,whichsnd[2]={ESCPRESSEDSND,SHOOTSND};
 
@@ -3616,7 +3622,7 @@ int Confirm(char far *string)
 				case 1:
 					PrintX=x;
 					PrintY=y;
-					US_Print("_");
+					US_Print((char*)"_");
 			}
 			VW_UpdateScreen();
 			tick^=1;
@@ -3624,7 +3630,7 @@ int Confirm(char far *string)
 		}
 
 		#ifndef SPEAR
-		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
 			PicturePause();
 		#endif
 
@@ -3655,7 +3661,7 @@ int Confirm(char far *string)
 	#endif
 
 	IN_ClearKeysDown();
-	SD_PlaySound(whichsnd[xit]);
+	SD_PlaySound((soundnames)whichsnd[xit]);
 	return xit;
 }
 
@@ -3721,17 +3727,17 @@ int GetYorN(int x,int y,int pic)
 // PRINT A MESSAGE IN A WINDOW
 //
 ////////////////////////////////////////////////////////////////////
-void Message(char far *string)
+void Message(char *string)
 {
 	int h=0,w=0,mw=0,i,x,y,time;
-	fontstruct _seg *font;
+	fontstruct *font;
 
 
 	CA_CacheGrChunk (STARTFONT+1);
 	fontnumber=1;
-	font=grsegs[STARTFONT+fontnumber];
+	font=(fontstruct*)grsegs[STARTFONT+fontnumber];
 	h=font->height;
-	for (i=0;i<_fstrlen(string);i++)
+	for (i=0;i<strlen(string);i++)
 		if (string[i]=='\n')
 		{
 			if (w>mw)
@@ -3772,7 +3778,7 @@ void StartCPMusic(int song)
 	lastmusic = song;
 
 	SD_MusicOff();
-	chunk =	song;
+	chunk =	(musicnames)song;
 
 	MM_BombOnError (_false);
 	CA_CacheAudioChunk(STARTMUSIC + chunk);
@@ -3781,8 +3787,8 @@ void StartCPMusic(int song)
 		mmerror = _false;
 	else
 	{
-		MM_SetLock(&((memptr)audiosegs[STARTMUSIC + chunk]),_true);
-		SD_StartMusic((MusicGroup far *)audiosegs[STARTMUSIC + chunk]);
+		MM_SetLock((memptr*)&(audiosegs[STARTMUSIC + chunk]),_true);
+		SD_StartMusic((MusicGroup *)audiosegs[STARTMUSIC + chunk]);
 	}
 }
 
@@ -3803,7 +3809,7 @@ byte *
 IN_GetScanName(ScanCode scan)
 {
 	byte		**p;
-	ScanCode	far *s;
+	ScanCode   *s;
 
 	for (s = ExtScanCodes,p = ExtScanNames;*s;p++,s++)
 		if (*s == scan)
@@ -3881,7 +3887,7 @@ void ShootSnd(void)
 ///////////////////////////////////////////////////////////////////////////
 void CheckForEpisodes(void)
 {
-	struct ffblk f;
+	// struct ffblk f; //TODO: Dirent.h
 
 //
 // JAPANESE VERSION
@@ -3916,30 +3922,30 @@ void CheckForEpisodes(void)
 //
 #ifndef UPLOAD
 #ifndef SPEAR
-	if (!findfirst("*.WL6",&f,FA_ARCH))
-	{
-		strcpy(extension,"WL6");
-		NewEmenu[2].active =
-		NewEmenu[4].active =
-		NewEmenu[6].active =
-		NewEmenu[8].active =
-		NewEmenu[10].active =
-		EpisodeSelect[1] =
-		EpisodeSelect[2] =
-		EpisodeSelect[3] =
-		EpisodeSelect[4] =
-		EpisodeSelect[5] = 1;
-	}
-	else
-	if (!findfirst("*.WL3",&f,FA_ARCH))
-	{
-		strcpy(extension,"WL3");
-		NewEmenu[2].active =
-		NewEmenu[4].active =
-		EpisodeSelect[1] =
-		EpisodeSelect[2] = 1;
-	}
-	else
+	// if (!findfirst("*.WL6",&f,FA_ARCH))
+	// {
+	// 	strcpy(extension,"WL6");
+	// 	NewEmenu[2].active =
+	// 	NewEmenu[4].active =
+	// 	NewEmenu[6].active =
+	// 	NewEmenu[8].active =
+	// 	NewEmenu[10].active =
+	// 	EpisodeSelect[1] =
+	// 	EpisodeSelect[2] =
+	// 	EpisodeSelect[3] =
+	// 	EpisodeSelect[4] =
+	// 	EpisodeSelect[5] = 1;
+	// }
+	// else
+	// if (!findfirst("*.WL3",&f,FA_ARCH))
+	// {
+	// 	strcpy(extension,"WL3");
+	// 	NewEmenu[2].active =
+	// 	NewEmenu[4].active =
+	// 	EpisodeSelect[1] =
+	// 	EpisodeSelect[2] = 1;
+	// }
+	// else
 #endif
 #endif
 
@@ -3963,12 +3969,12 @@ void CheckForEpisodes(void)
 #endif
 
 #else
-	if (!findfirst("*.WL1",&f,FA_ARCH))
-	{
+	// if (!findfirst("*.WL1",&f,FA_ARCH))
+	// {
 		strcpy(extension,"WL1");
-	}
-	else
-		Quit("NO WOLFENSTEIN 3-D DATA FILES to be found!");
+	// }
+	// else
+	// 	Quit("NO WOLFENSTEIN 3-D DATA FILES to be found!");
 #endif
 
 	strcat(configname,extension);
