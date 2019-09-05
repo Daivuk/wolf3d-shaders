@@ -61,6 +61,10 @@ list(APPEND includes PUBLIC ./thirdparty/SDL-mirror/include/)
 list(APPEND includes PUBLIC ./thirdparty/gl3w/include/)
 list(APPEND srcthirdparty ./thirdparty/gl3w/src/gl3w.c)
 
+# tinyfiledialogs
+list(APPEND includes PUBLIC ./thirdparty/tinyfiledialogs/)
+list(APPEND srcthirdparty ./thirdparty/tinyfiledialogs/tinyfiledialogs.c)
+
 #------------------------------------------------------------------------------
 # Exe
 #------------------------------------------------------------------------------

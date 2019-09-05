@@ -1,3 +1,6 @@
 [submodule "thirdparty/SDL-mirror"]
 	path = thirdparty/SDL-mirror
 	url = https://github.com/spurious/SDL-mirror.git
+[submodule "thirdparty/tinyfiledialogs"]
+	path = thirdparty/tinyfiledialogs
+	url = https://github.com/native-toolkit/tinyfiledialogs.git

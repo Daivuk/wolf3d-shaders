@@ -15,10 +15,10 @@ loaded into the data segment
 */
 
 #include "ID_HEADS.H"
-#pragma hdrstop
+// #pragma hdrstop
 
-#pragma warn -pro
-#pragma warn -use
+// #pragma warn -pro
+// #pragma warn -use
 
 #define THREEBYTEGRSTARTS
 
@@ -52,18 +52,18 @@ typedef struct
 =============================================================================
 */
 
-byte 		_seg	*tinf;
-int			mapon;
+byte 	    *tinf=nullptr;
+int			mapon=0;
 
-unsigned	_seg	*mapsegs[MAPPLANES];
-maptype		_seg	*mapheaderseg[NUMMAPS];
-byte		_seg	*audiosegs[NUMSNDCHUNKS];
-void		_seg	*grsegs[NUMCHUNKS];
+unsigned		*mapsegs[MAPPLANES]={0};
+maptype			*mapheaderseg[NUMMAPS]={0};
+byte			*audiosegs[NUMSNDCHUNKS]={0};
+void			*grsegs[NUMCHUNKS]={0};
 
-byte		far	grneeded[NUMCHUNKS];
-byte		ca_levelbit,ca_levelnum;
+byte			grneeded[NUMCHUNKS]={0};
+byte		ca_levelbit=0,ca_levelnum=0;
 
-int			profilehandle,debughandle;
+int			profilehandle=0,debughandle=0;
 
 char		audioname[13]="AUDIO.";
 
@@ -75,14 +75,14 @@ char		audioname[13]="AUDIO.";
 =============================================================================
 */
 
-extern	long	far	CGAhead;
-extern	long	far	EGAhead;
-extern	byte	CGAdict;
-extern	byte	EGAdict;
-extern	byte	far	maphead;
-extern	byte	mapdict;
-extern	byte	far	audiohead;
-extern	byte	audiodict;
+extern	long		CGAhead=0;
+extern	long		EGAhead=0;
+extern	byte	CGAdict=0;
+extern	byte	EGAdict=0;
+extern	byte		maphead=0;
+extern	byte	mapdict=0;
+extern	byte		audiohead=0;
+extern	byte	audiodict=0;
 
 
 char extension[5],	// Need a string, not constant to change cache files
@@ -96,33 +96,33 @@ char extension[5],	// Need a string, not constant to change cache files
 
 void CA_CannotOpen(char *string);
 
-long		_seg *grstarts;	// array of offsets in egagraph, -1 for sparse
-long		_seg *audiostarts;	// array of offsets in audio / audiot
+long		 *grstarts=0;	// array of offsets in egagraph, -1 for sparse
+long		 *audiostarts=0;	// array of offsets in audio / audiot
 
 #ifdef GRHEADERLINKED
-huffnode	*grhuffman;
+huffnode	*grhuffman=0;
 #else
-huffnode	grhuffman[255];
+huffnode	grhuffman[255]={0};
 #endif
 
 #ifdef AUDIOHEADERLINKED
-huffnode	*audiohuffman;
+huffnode	*audiohuffman=nullptr;
 #else
-huffnode	audiohuffman[255];
+huffnode	audiohuffman[255]={0};
 #endif
 
 
-int			grhandle;		// handle to EGAGRAPH
-int			maphandle;		// handle to MAPTEMP / GAMEMAPS
-int			audiohandle;	// handle to AUDIOT / AUDIO
+int			grhandle=0;		// handle to EGAGRAPH
+int			maphandle=0;		// handle to MAPTEMP / GAMEMAPS
+int			audiohandle=0;	// handle to AUDIOT / AUDIO
 
-long		chunkcomplen,chunkexplen;
+long		chunkcomplen=0,chunkexplen=0;
 
-SDMode		oldsoundmode;
+SDMode		oldsoundmode=(SDMode)0;
 
 
 
-void	CAL_CarmackExpand (unsigned far *source, unsigned far *dest,
+void	CAL_CarmackExpand (unsigned  *source, unsigned  *dest,
 		unsigned length);
 
 
@@ -136,7 +136,7 @@ long GRFILEPOS(int c)
 
 	offset = c*3;
 
-	value = *(long far *)(((byte far *)grstarts)+offset);
+	value = *(long  *)(((byte  *)grstarts)+offset);
 
 	value &= 0x00ffffffl;
 
@@ -170,7 +170,7 @@ long GRFILEPOS(int c)
 
 void CA_OpenDebug (void)
 {
-	unlink ("DEBUG.TXT");
+	// unlink ("DEBUG.TXT");
 	debughandle = file_open("DEBUG.TXT", O_CREAT | O_WRONLY | O_TEXT);
 }
 
@@ -194,7 +194,7 @@ void CA_CloseDebug (void)
 
 void CAL_GetGrChunkLength (int chunk)
 {
-	lseek(grhandle,GRFILEPOS(chunk),SEEK_SET);
+	file_seek(grhandle,GRFILEPOS(chunk),SEEK_SET);
 	file_read(grhandle,&chunkexplen,sizeof(chunkexplen));
 	chunkcomplen = GRFILEPOS(chunk+1)-GRFILEPOS(chunk)-4;
 }
@@ -210,29 +210,14 @@ void CAL_GetGrChunkLength (int chunk)
 ==========================
 */
 
-boolean CA_FarRead (int handle, byte far *dest, long length)
+boolean CA_FarRead (int handle, byte *dest, long length)
 {
-	if (length>0xffffl)
-		Quit ("CA_FarRead doesn't support 64K reads yet!");
+	// if (length>0xffffl)
+	// 	Quit ("CA_FarRead doesn't support 64K reads yet!"); // lul. Remove restriction? remove restriction...
 
-asm		push	ds
-asm		mov	bx,[handle]
-asm		mov	cx,[WORD PTR length]
-asm		mov	dx,[WORD PTR dest]
-asm		mov	ds,[WORD PTR dest+2]
-asm		mov	ah,0x3f				// READ w/handle
-asm		int	21h
-asm		pop	ds
-asm		jnc	good
-	errno = _AX;
-	return	_false;
-good:
-asm		cmp	ax,[WORD PTR length]
-asm		je	done
-	errno = EINVFMT;			// user manager knows this is bad read
-	return	_false;
-done:
-	return	_true;
+    file_read(handle, dest, length);
+
+    return _true;
 }
 
 
@@ -246,30 +231,14 @@ done:
 ==========================
 */
 
-boolean CA_FarWrite (int handle, byte far *source, long length)
+boolean CA_FarWrite (int handle, byte *source, long length)
 {
-	if (length>0xffffl)
-		Quit ("CA_FarWrite doesn't support 64K reads yet!");
+	// if (length>0xffffl)
+	// 	Quit ("CA_FarWrite doesn't support 64K reads yet!");
 
-asm		push	ds
-asm		mov	bx,[handle]
-asm		mov	cx,[WORD PTR length]
-asm		mov	dx,[WORD PTR source]
-asm		mov	ds,[WORD PTR source+2]
-asm		mov	ah,0x40			// WRITE w/handle
-asm		int	21h
-asm		pop	ds
-asm		jnc	good
-	errno = _AX;
-	return	_false;
-good:
-asm		cmp	ax,[WORD PTR length]
-asm		je	done
-	errno = ENOMEM;				// user manager knows this is bad write
-	return	_false;
+    file_write(handle, source, length);
 
-done:
-	return	_true;
+    return _true;
 }
 
 
@@ -415,7 +384,7 @@ void CAL_OptimizeNodes (huffnode *table)
 ======================
 */
 
-void CAL_HuffExpand (byte huge *source, byte huge *dest,
+void CAL_HuffExpand (byte  *source, byte  *dest,
   long length,huffnode *hufftable, boolean screenhack)
 {
 //  unsigned bit,byte,node,code;
@@ -997,7 +966,7 @@ void CAL_SetupMapFile (void)
 
 		MM_GetPtr(&(memptr)mapheaderseg[i],sizeof(maptype));
 		MM_SetLock(&(memptr)mapheaderseg[i],_true);
-		lseek(maphandle,pos,SEEK_SET);
+		file_seek(maphandle,pos,SEEK_SET);
 		CA_FarRead (maphandle,(memptr)mapheaderseg[i],sizeof(maptype));
 	}
 
@@ -1153,7 +1122,7 @@ void CA_CacheAudioChunk (int chunk)
 	pos = audiostarts[chunk];
 	compressed = audiostarts[chunk+1]-pos;
 
-	lseek(audiohandle,pos,SEEK_SET);
+	file_seek(audiohandle,pos,SEEK_SET);
 
 #ifndef AUDIOHEADERLINKED
 
@@ -1319,7 +1288,7 @@ void CA_CacheGrChunk (int chunk)
 {
 	long	pos,compressed;
 	memptr	bigbufferseg;
-	byte	far *source;
+	byte	*source;
 	int		next;
 
 	grneeded[chunk] |= ca_levelbit;		// make sure it doesn't get removed
@@ -1343,7 +1312,7 @@ void CA_CacheGrChunk (int chunk)
 
 	compressed = GRFILEPOS(next)-pos;
 
-	lseek(grhandle,pos,SEEK_SET);
+	file_seek(grhandle,pos,SEEK_SET);
 
 	if (compressed<=BUFFERSIZE)
 	{
@@ -1380,10 +1349,10 @@ void CA_CacheGrChunk (int chunk)
 
 void CA_CacheScreen (int chunk)
 {
-	long	pos,compressed,expanded;
-	memptr	bigbufferseg;
-	byte	far *source;
-	int		next;
+	long	pos=0,compressed=0,expanded=0;
+	memptr	bigbufferseg=0;
+	byte	*source=0;
+	int		next=0;
 
 //
 // load the chunk into a buffer
@@ -1394,7 +1363,7 @@ void CA_CacheScreen (int chunk)
 		next++;
 	compressed = GRFILEPOS(next)-pos;
 
-	lseek(grhandle,pos,SEEK_SET);
+	file_seek(grhandle,pos,SEEK_SET);
 
 	MM_GetPtr(&bigbufferseg,compressed);
 	MM_SetLock (&bigbufferseg,_true);
@@ -1451,7 +1420,7 @@ void CA_CacheMap (int mapnum)
 
 		dest = &(memptr)mapsegs[plane];
 
-		lseek(maphandle,pos,SEEK_SET);
+		file_seek(maphandle,pos,SEEK_SET);
 		if (compressed<=BUFFERSIZE)
 			source = bufferseg;
 		else
@@ -1728,7 +1697,7 @@ void CA_CacheMarks (void)
 							next = NUMCHUNKS;			// read pos to posend
 					}
 
-					lseek(grhandle,pos,SEEK_SET);
+					file_seek(grhandle,pos,SEEK_SET);
 					CA_FarRead(grhandle,bufferseg,endpos-pos);
 					bufferstart = pos;
 					bufferend = endpos;
@@ -1742,7 +1711,7 @@ void CA_CacheMarks (void)
 				if (mmerror)
 					return;
 				MM_SetLock (&bigbufferseg,_true);
-				lseek(grhandle,pos,SEEK_SET);
+				file_seek(grhandle,pos,SEEK_SET);
 				CA_FarRead(grhandle,bigbufferseg,compressed);
 				source = bigbufferseg;
 			}

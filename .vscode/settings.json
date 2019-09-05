@@ -93,6 +93,7 @@
         "vector": "cpp",
         "bit": "cpp",
         "memory_resource": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "WOLFHACK.C": "cpp"
     }
 }
