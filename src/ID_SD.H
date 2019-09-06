@@ -227,9 +227,9 @@ extern	void	SD_SetDigiDevice(SDSMode),
 				SD_Poll(void);
 
 #ifdef	_MUSE_	// MUSE Goes directly to the lower level routines
-extern	void	SDL_PCPlaySound(PCSound far *sound),
+extern	void	SDL_PCPlaySound(PCSound  *sound),
 				SDL_PCStopSound(void),
-				SDL_ALPlaySound(AdLibSound far *sound),
+				SDL_ALPlaySound(AdLibSound  *sound),
 				SDL_ALStopSound(void);
 #endif
 

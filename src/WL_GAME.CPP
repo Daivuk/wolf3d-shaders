@@ -171,7 +171,7 @@ void PlaySoundLocGlobal(word s,fixed gx,fixed gy)
 {
 	SetSoundLoc(gx,gy);
 	SD_PositionSound(leftchannel,rightchannel);
-	if (SD_PlaySound(s))
+	if (SD_PlaySound((soundnames)s))
 	{
 		globalsoundx = gx;
 		globalsoundy = gy;
@@ -222,7 +222,7 @@ void ScanInfoPlane (void)
 {
 	unsigned	x,y,i,j;
 	int			tile;
-	unsigned	far	*start;
+	unsigned		*start;
 
 	start = mapsegs[1];
 	for (y=0;y<mapheight;y++)
@@ -625,7 +625,7 @@ void ScanInfoPlane (void)
 void SetupGameLevel (void)
 {
 	int	x,y,i;
-	unsigned	far *map,tile,spot;
+	uintptr_t	 *map,tile,spot;
 
 
 	if (!loadedgame)
@@ -654,7 +654,7 @@ void SetupGameLevel (void)
 	mapheight = mapheaderseg[mapon]->height;
 
 	if (mapwidth != 64 || mapheight != 64)
-		Quit ("Map not 64*64!");
+		Quit ((char*)"Map not 64*64!");
 
 
 //
@@ -662,7 +662,7 @@ void SetupGameLevel (void)
 //
 	memset (tilemap,0,sizeof(tilemap));
 	memset (actorat,0,sizeof(actorat));
-	map = mapsegs[0];
+	map = (uintptr_t*)mapsegs[0];
 	for (y=0;y<mapheight;y++)
 		for (x=0;x<mapwidth;x++)
 		{
@@ -670,14 +670,14 @@ void SetupGameLevel (void)
 			if (tile<AREATILE)
 			{
 			// solid wall
-				tilemap[x][y] = tile;
-				(unsigned)actorat[x][y] = tile;
+				tilemap[x][y] = (byte)tile;
+				actorat[x][y] = (objtype*)tile;
 			}
 			else
 			{
 			// area floor
 				tilemap[x][y] = 0;
-				(unsigned)actorat[x][y] = 0;
+				actorat[x][y] = 0;
 			}
 		}
 
@@ -688,7 +688,7 @@ void SetupGameLevel (void)
 	InitDoorList ();
 	InitStaticList ();
 
-	map = mapsegs[0];
+	map = (uintptr_t*)mapsegs[0];
 	for (y=0;y<mapheight;y++)
 		for (x=0;x<mapwidth;x++)
 		{
@@ -704,7 +704,7 @@ void SetupGameLevel (void)
 				case 96:
 				case 98:
 				case 100:
-					SpawnDoor (x,y,1,(tile-90)/2);
+					SpawnDoor (x,y,_true,(tile-90)/2);
 					break;
 				case 91:
 				case 93:
@@ -712,7 +712,7 @@ void SetupGameLevel (void)
 				case 97:
 				case 99:
 				case 101:
-					SpawnDoor (x,y,0,(tile-91)/2);
+					SpawnDoor (x,y,_false,(tile-91)/2);
 					break;
 				}
 			}
@@ -726,7 +726,7 @@ void SetupGameLevel (void)
 //
 // take out the ambush markers
 //
-	map = mapsegs[0];
+	map = (uintptr_t*)mapsegs[0];
 	for (y=0;y<mapheight;y++)
 		for (x=0;x<mapwidth;x++)
 		{
@@ -734,7 +734,7 @@ void SetupGameLevel (void)
 			if (tile == AMBUSHTILE)
 			{
 				tilemap[x][y] = 0;
-				if ( (unsigned)actorat[x][y] == AMBUSHTILE)
+				if ( actorat[x][y] == (objtype*)AMBUSHTILE)
 					actorat[x][y] = NULL;
 
 				if (*map >= AREATILE)
@@ -915,7 +915,7 @@ void StartDemoRecord (int levelnumber)
 {
 	MM_GetPtr (&demobuffer,MAXDEMOSIZE);
 	MM_SetLock (&demobuffer,_true);
-	demoptr = (char far *)demobuffer;
+	demoptr = (char  *)demobuffer;
 	lastdemoptr = demoptr+MAXDEMOSIZE;
 
 	*demoptr = levelnumber;
@@ -940,14 +940,14 @@ void FinishDemoRecord (void)
 
 	demorecord = _false;
 
-	length = demoptr - (char far *)demobuffer;
+	length = demoptr - (char  *)demobuffer;
 
-	demoptr = ((char far *)demobuffer)+1;
-	*(unsigned far *)demoptr = length;
+	demoptr = ((char  *)demobuffer)+1;
+	*(unsigned  *)demoptr = length;
 
 	CenterWindow(24,3);
 	PrintY+=6;
-	US_Print(" Demo number (0-9):");
+	US_Print((char*)" Demo number (0-9):");
 	VW_UpdateScreen();
 
 	if (US_LineInput (px,py,str,NULL,_true,2,0))
@@ -956,7 +956,7 @@ void FinishDemoRecord (void)
 		if (level>=0 && level<=9)
 		{
 			demoname[4] = '0'+level;
-			CA_WriteFile (demoname,(void far *)demobuffer,length);
+			CA_WriteFile (demoname,(void  *)demobuffer,length);
 		}
 	}
 
@@ -984,7 +984,7 @@ void RecordDemo (void)
 	PrintY+=6;
 	CA_CacheGrChunk(STARTFONT);
 	fontnumber=0;
-	US_Print("  Demo which level(1-10):");
+	US_Print((char*)"  Demo which level(1-10):");
 	VW_UpdateScreen();
 	VW_FadeIn ();
 	esc = !US_LineInput (px,py,str,NULL,_true,2,0);
@@ -1054,20 +1054,20 @@ void PlayDemo (int demonumber)
 #endif
 
 	CA_CacheGrChunk(dems[demonumber]);
-	demoptr = grsegs[dems[demonumber]];
+	demoptr = (char*)grsegs[dems[demonumber]];
 	MM_SetLock (&grsegs[dems[demonumber]],_true);
 #else
 	demoname[4] = '0'+demonumber;
 	CA_LoadFile (demoname,&demobuffer);
 	MM_SetLock (&demobuffer,_true);
-	demoptr = (char far *)demobuffer;
+	demoptr = (char  *)demobuffer;
 #endif
 
 	NewGame (1,0);
 	gamestate.mapon = *demoptr++;
 	gamestate.difficulty = gd_hard;
-	length = *((unsigned far *)demoptr)++;
-	demoptr++;
+	length = *((unsigned  *)demoptr);
+    demoptr = (char*)(((unsigned*)demoptr) + 1);
 	lastdemoptr = demoptr-4+length;
 
 	VW_FadeOut ();
@@ -1117,7 +1117,7 @@ void Died (void)
 	long	dx,dy;
 	int		iangle,curangle,clockwise,counter,change;
 
-	gamestate.weapon = -1;			// take away weapon
+	gamestate.weapon = (weapontype)-1;			// take away weapon
 	SD_PlaySound (PLAYERDEATHSND);
 //
 // swing around to face attacker
@@ -1442,9 +1442,9 @@ startplayloop:
 
 			#pragma warn -sus
 			#ifndef JAPAN
-			_fstrcpy(MainMenu[viewscores].string,STR_VS);
+			strcpy(MainMenu[viewscores].string,STR_VS);
 			#endif
-			MainMenu[viewscores].routine = CP_ViewScores;
+			MainMenu[viewscores].routine = (void(*)(int))CP_ViewScores;
 			#pragma warn +sus
 
 			return;
@@ -1466,9 +1466,9 @@ startplayloop:
 
 			#pragma warn -sus
 			#ifndef JAPAN
-			_fstrcpy(MainMenu[viewscores].string,STR_VS);
+			strcpy(MainMenu[viewscores].string,STR_VS);
 			#endif
-			MainMenu[viewscores].routine = CP_ViewScores;
+			MainMenu[viewscores].routine = (void (*)(int))CP_ViewScores;
 			#pragma warn +sus
 
 			return;

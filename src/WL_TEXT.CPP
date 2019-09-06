@@ -51,7 +51,7 @@ TEXT FORMATTING COMMANDS
 int			pagenum,numpages;
 
 unsigned	leftmargin[TEXTROWS],rightmargin[TEXTROWS];
-char		far *text;
+char		 *text;
 unsigned	rowon;
 
 int			picx,picy,picnum,picdelay;
@@ -365,7 +365,7 @@ void HandleWord (void)
 	{
 		word[wordindex] = *text++;
 		if (++wordindex == WORDLIMIT)
-			Quit ("PageLayout: Word limit exceeded");
+			Quit ((char*)"PageLayout: Word limit exceeded");
 	}
 	word[wordindex] = 0;		// stick a null at end for C
 
@@ -446,7 +446,7 @@ void PageLayout (boolean shownumber)
 		text++;
 
 	if (*text != '^' || toupper(*++text) != 'P')
-		Quit ("PageLayout: Text not headed with ^P");
+		Quit ((char*)"PageLayout: Text not headed with ^P");
 
 	while (*text++ != '\n')
 	;
@@ -487,13 +487,17 @@ void PageLayout (boolean shownumber)
 		px = 208;
 		#else
 		strcpy (str,"pg ");
-		itoa (pagenum,str2,10);
+        auto _str = std::to_string(pagenum);
+        strcpy(str2, _str.c_str());
+		// itoa (pagenum,str2,10);
 		strcat (str,str2);
 		strcat (str," of ");
 		py = 183;
 		px = 213;
 		#endif
-		itoa (numpages,str2,10);
+        _str = std::to_string(numpages);
+        strcpy(str2, _str.c_str());
+		// itoa (numpages,str2,10);
 		strcat (str,str2);
 		fontcolor = 0x4f; 			   //12^BACKCOLOR;
 
@@ -542,7 +546,7 @@ void BackPage (void)
 */
 void CacheLayoutGraphics (void)
 {
-	char	far *bombpoint, far *textstart;
+	char	 *bombpoint,  *textstart;
 	char	ch;
 
 	textstart = text;
@@ -582,7 +586,7 @@ void CacheLayoutGraphics (void)
 
 	} while (text<bombpoint);
 
-	Quit ("CacheLayoutGraphics: No ^E to terminate file!");
+	Quit ((char*)"CacheLayoutGraphics: No ^E to terminate file!");
 }
 #endif
 
@@ -598,7 +602,7 @@ void CacheLayoutGraphics (void)
 #ifdef JAPAN
 void ShowArticle (int which)
 #else
-void ShowArticle (char far *article)
+void ShowArticle (char  *article)
 #endif
 {
 	#ifdef JAPAN
@@ -712,7 +716,7 @@ void ShowArticle (char far *article)
 		}
 
 		#ifndef SPEAR
-		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
 			PicturePause();
 		#endif
 
@@ -743,11 +747,12 @@ char helpfilename[13] = "HELPART.",
 =
 =================
 */
+void FreeMusic (void);
 #ifndef SPEAR
 void HelpScreens (void)
 {
 	int			artnum;
-	char far 	*text;
+	char  	*text;
 	memptr		layout;
 
 
@@ -767,11 +772,11 @@ void HelpScreens (void)
 #ifdef ARTSEXTERN
 	artnum = helpextern;
 	CA_CacheGrChunk (artnum);
-	text = (char _seg *)grsegs[artnum];
+	text = (char  *)grsegs[artnum];
 	MM_SetLock (&grsegs[artnum], _true);
 #else
 	CA_LoadFile (helpfilename,&layout);
-	text = (char _seg *)layout;
+	text = (char  *)layout;
 	MM_SetLock (&layout, _true);
 #endif
 
@@ -800,7 +805,7 @@ void HelpScreens (void)
 void EndText (void)
 {
 	int			artnum;
-	char far 	*text;
+	char  	*text;
 	memptr		layout;
 
 
@@ -828,12 +833,12 @@ void EndText (void)
 #ifdef ARTSEXTERN
 	artnum = endextern+gamestate.episode;
 	CA_CacheGrChunk (artnum);
-	text = (char _seg *)grsegs[artnum];
+	text = (char  *)grsegs[artnum];
 	MM_SetLock (&grsegs[artnum], _true);
 #else
 	endfilename[6] = '1'+gamestate.episode;
 	CA_LoadFile (endfilename,&layout);
-	text = (char _seg *)layout;
+	text = (char  *)layout;
 	MM_SetLock (&layout, _true);
 #endif
 

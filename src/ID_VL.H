@@ -81,7 +81,7 @@ void Quit (char *error);
 
 //===========================================================================
 
-extern	unsigned	bufferofs;			// all drawing is reletive to this
+extern	uintptr_t	bufferofs;			// all drawing is reletive to this
 extern	unsigned	displayofs,pelpan;	// last setscreen coordinates
 
 extern	unsigned	screenseg;			// set to 0xa000 for asm convenience

@@ -68,7 +68,7 @@ int			viewsize;
 boolean		buttonheld[NUMBUTTONS];
 
 boolean		demorecord,demoplayback;
-char		far *demoptr, far *lastdemoptr;
+char		 *demoptr,  *lastdemoptr;
 memptr		demobuffer;
 
 //
@@ -495,7 +495,7 @@ void PollControls (void)
 		buttonbits = *demoptr++;
 		for (i=0;i<NUMBUTTONS;i++)
 		{
-			buttonstate[i] = buttonbits&1;
+			buttonstate[i] = (boolean)(buttonbits&1);
 			buttonbits >>= 1;
 		}
 
@@ -571,7 +571,7 @@ void PollControls (void)
 		*demoptr++ = controly;
 
 		if (demoptr >= lastdemoptr)
-			Quit ("Demo buffer overflowed!");
+			Quit ((char*)"Demo buffer overflowed!");
 
 		controlx *= (int)tics;
 		controly *= (int)tics;
@@ -678,7 +678,7 @@ void CheckKeys (void)
 		ClearSplitVWB ();
 		VW_ScreenToScreen (displayofs,bufferofs,80,160);
 
-		Message(STR_CHEATER1"\n"
+		Message((char*)STR_CHEATER1"\n"
 				STR_CHEATER2"\n\n"
 				STR_CHEATER3"\n"
 				STR_CHEATER4"\n"
@@ -699,7 +699,7 @@ void CheckKeys (void)
 	if (Keyboard[sc_BackSpace] &&
 		Keyboard[sc_LShift] &&
 		Keyboard[sc_Alt] &&
-		MS_CheckParm("goobers"))
+		MS_CheckParm((char*)"goobers"))
 #else
 	if (Keyboard[sc_BackSpace] &&
 		Keyboard[sc_LShift] &&
@@ -712,7 +712,7 @@ void CheckKeys (void)
 	 ClearSplitVWB ();
 	 VW_ScreenToScreen (displayofs,bufferofs,80,160);
 
-	 Message("Debugging keys are\nnow available!");
+	 Message((char*)"Debugging keys are\nnow available!");
 	 UNCACHEGRCHUNK(STARTFONT+1);
 	 PM_CheckMainMem ();
 	 IN_ClearKeysDown();
@@ -734,7 +734,7 @@ void CheckKeys (void)
 	 ClearSplitVWB ();
 	 VW_ScreenToScreen (displayofs,bufferofs,80,160);
 
-	 Message("Commander Keen is also\n"
+	 Message((char*)"Commander Keen is also\n"
 			 "available from Apogee, but\n"
 			 "then, you already know\n"
 			 "that - right, Cheatmeister?!");
@@ -919,7 +919,7 @@ void InitActorList (void)
 void GetNewActor (void)
 {
 	if (!objfreelist)
-		Quit ("GetNewActor: No free spots in objlist!");
+		Quit ((char*)"GetNewActor: No free spots in objlist!");
 
 	_new = objfreelist;
 	objfreelist = _new->prev;
@@ -929,7 +929,7 @@ void GetNewActor (void)
 		lastobj->next = _new;
 	_new->prev = lastobj;	// _new->next is allready NULL from memset
 
-	_new->active = _false;
+	_new->active = (activetype)_false;
 	lastobj = _new;
 
 	objcount++;
@@ -953,7 +953,7 @@ void RemoveObj (objtype *gone)
 	objtype **spotat;
 
 	if (gone == player)
-		Quit ("RemoveObj: Tried to remove the player!");
+		Quit ((char*)"RemoveObj: Tried to remove the player!");
 
 	gone->state = NULL;
 
@@ -1004,8 +1004,8 @@ void StopMusic(void)
 	for (i = 0;i < LASTMUSIC;i++)
 		if (audiosegs[STARTMUSIC + i])
 		{
-			MM_SetPurge(&((memptr)audiosegs[STARTMUSIC + i]),3);
-			MM_SetLock(&((memptr)audiosegs[STARTMUSIC + i]),_false);
+			MM_SetPurge(((memptr*)&audiosegs[STARTMUSIC + i]),3);
+			MM_SetLock(((memptr*)&audiosegs[STARTMUSIC + i]),_false);
 		}
 }
 
@@ -1025,7 +1025,7 @@ void StartMusic(void)
 	musicnames	chunk;
 
 	SD_MusicOff();
-	chunk = songs[gamestate.mapon+gamestate.episode*10];
+	chunk = (musicnames)songs[gamestate.mapon+gamestate.episode*10];
 
 //	if ((chunk == -1) || (MusicMode != smm_AdLib))
 //DEBUG control panel		return;
@@ -1037,8 +1037,8 @@ void StartMusic(void)
 		mmerror = _false;
 	else
 	{
-		MM_SetLock(&((memptr)audiosegs[STARTMUSIC + chunk]),_true);
-		SD_StartMusic((MusicGroup far *)audiosegs[STARTMUSIC + chunk]);
+		MM_SetLock(((memptr*)&audiosegs[STARTMUSIC + chunk]),_true);
+		SD_StartMusic((MusicGroup  *)audiosegs[STARTMUSIC + chunk]);
 	}
 }
 
@@ -1059,13 +1059,13 @@ void StartMusic(void)
 #define WHITETICS		6
 
 
-byte	far redshifts[NUMREDSHIFTS][768];
-byte	far whiteshifts[NUMREDSHIFTS][768];
+byte	 redshifts[NUMREDSHIFTS][768];
+byte	 whiteshifts[NUMREDSHIFTS][768];
 
 int		damagecount,bonuscount;
 boolean	palshifted;
 
-extern 	byte	far	gamepal;
+extern 	byte		gamepal;
 
 /*
 =====================
@@ -1077,7 +1077,7 @@ extern 	byte	far	gamepal;
 
 void InitRedShifts (void)
 {
-	byte	far *workptr, far *baseptr;
+	byte	 *workptr,  *baseptr;
 	int		i,j,delta;
 
 
@@ -1086,7 +1086,7 @@ void InitRedShifts (void)
 //
 	for (i=1;i<=NUMREDSHIFTS;i++)
 	{
-		workptr = (byte far *)&redshifts[i-1][0];
+		workptr = (byte  *)&redshifts[i-1][0];
 		baseptr = &gamepal;
 
 		for (j=0;j<=255;j++)
@@ -1102,7 +1102,7 @@ void InitRedShifts (void)
 
 	for (i=1;i<=NUMWHITESHIFTS;i++)
 	{
-		workptr = (byte far *)&whiteshifts[i-1][0];
+		workptr = (byte  *)&whiteshifts[i-1][0];
 		baseptr = &gamepal;
 
 		for (j=0;j<=255;j++)
@@ -1233,7 +1233,7 @@ void FinishPaletteShifts (void)
 {
 	if (palshifted)
 	{
-		palshifted = 0;
+		palshifted = _false;
 		VW_WaitVBL(1);
 		VL_SetPalette (&gamepal);
 	}
@@ -1273,7 +1273,7 @@ void DoActor (objtype *ob)
 
 	if (!ob->ticcount)
 	{
-		think =	ob->state->think;
+		think =	(void (*)(objtype *))ob->state->think;
 		if (think)
 		{
 			think (ob);
@@ -1300,7 +1300,7 @@ void DoActor (objtype *ob)
 	ob->ticcount-=tics;
 	while ( ob->ticcount <= 0)
 	{
-		think = ob->state->action;			// end of state action
+		think = (void (*)(objtype *))ob->state->action;			// end of state action
 		if (think)
 		{
 			think (ob);
@@ -1332,7 +1332,7 @@ think:
 	//
 	// think
 	//
-	think =	ob->state->think;
+	think =	(void (*)(objtype *))ob->state->think;
 	if (think)
 	{
 		think (ob);
@@ -1370,7 +1370,9 @@ void PlayLoop (void)
 	int		give;
 	int	helmetangle;
 
-	playstate = TimeCount = lasttimecount = 0;
+	playstate = (exit_t)0;
+    TimeCount = 0;
+    lasttimecount = 0;
 	frameon = 0;
 	running = _false;
 	anglefrac = 0;
@@ -1389,7 +1391,7 @@ void PlayLoop (void)
 	{
 		if (virtualreality)
 		{
-			helmetangle = peek (0x40,0xf0);
+			helmetangle = 0;//peek (0x40,0xf0);
 			player->angle += helmetangle;
 			if (player->angle >= ANGLES)
 				player->angle -= ANGLES;

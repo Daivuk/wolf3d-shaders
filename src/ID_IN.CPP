@@ -478,7 +478,7 @@ INL_StartMouse(void)
 	return(_false);
 #endif
 //  union REGS regs;
-//  unsigned char far *vector;
+//  unsigned char  *vector;
 
 
 //  if ((vector=MK_FP(peek(0,0x33*4+2),peek(0,0x33*4)))==NULL)

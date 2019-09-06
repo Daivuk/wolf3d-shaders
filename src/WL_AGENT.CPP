@@ -54,8 +54,8 @@ objtype		*LastAttacker;
 void	T_Player (objtype *ob);
 void	T_Attack (objtype *ob);
 
-statetype s_player = {_false,0,0,T_Player,NULL,NULL};
-statetype s_attack = {_false,0,0,T_Attack,NULL,NULL};
+statetype s_player = {_false,0,0,(void (*)())T_Player,NULL,NULL};
+statetype s_attack = {_false,0,0,(void (*)())T_Attack,NULL,NULL};
 
 
 long	playerxmove,playerymove;
@@ -124,7 +124,7 @@ void CheckWeaponChange (void)
 	for (i=wp_knife ; i<=gamestate.bestweapon ; i++)
 		if (buttonstate[bt_readyknife+i-wp_knife])
 		{
-			gamestate.weapon = gamestate.chosenweapon = i;
+			gamestate.weapon = gamestate.chosenweapon = (weapontype)i;
 			DrawWeapon ();
 			return;
 		}
@@ -339,7 +339,9 @@ void	LatchNumber (int x, int y, int width, long number)
 	unsigned	length,c;
 	char	str[20];
 
-	ltoa (number,str,10);
+    auto _str = std::to_string(number);
+    strcpy(str, _str.c_str());
+	// ltoa (number,str,10);
 
 	length = strlen (str);
 
@@ -584,7 +586,7 @@ void GiveWeapon (int weapon)
 
 	if (gamestate.bestweapon<weapon)
 		gamestate.bestweapon = gamestate.weapon
-		= gamestate.chosenweapon = weapon;
+		= gamestate.chosenweapon = (weapontype)weapon;
 
 	DrawWeapon ();
 }
@@ -906,7 +908,7 @@ void ClipMove (objtype *ob, long xmove, long ymove)
 =
 ===================
 */
-
+void SpawnBJVictory (void);
 void VictoryTile (void)
 {
 #ifndef SPEAR
@@ -1100,7 +1102,7 @@ void Cmd_Use (void)
 void SpawnPlayer (int tilex, int tiley, int dir)
 {
 	player->obclass = playerobj;
-	player->active = _true;
+	player->active = (activetype)_true;
 	player->tilex = tilex;
 	player->tiley = tiley;
 	player->areanumber =
@@ -1174,6 +1176,7 @@ void	GunAttack (objtype *ob)
 
 	switch (gamestate.weapon)
 	{
+        default: break;
 	case wp_pistol:
 		SD_PlaySound (ATKPISTOLSND);
 		break;
@@ -1224,8 +1227,8 @@ void	GunAttack (objtype *ob)
 //
 // hit something
 //
-	dx = abs(closest->tilex - player->tilex);
-	dy = abs(closest->tiley - player->tiley);
+	dx = abs((int)closest->tilex - (int)player->tilex);
+	dy = abs((int)closest->tiley - (int)player->tiley);
 	dist = dx>dy ? dx:dy;
 
 	if (dist<2)

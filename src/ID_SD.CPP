@@ -76,7 +76,7 @@ extern	void        	SDL_t0ExtremeAsmService(void),
 	SDSMode		DigiMode;
 	longword	TimeCount;
 	word		HackCount;
-	word		*SoundTable;	// Really * _seg *SoundTable, but that don't work
+	word		*SoundTable;	// Really *  *SoundTable, but that don't work
 	boolean		ssIsTandy;
 	word		ssPort = 2;
 	int			DigiMap[LASTSOUND];
@@ -707,7 +707,7 @@ SDL_SSPlaySample(byte *data,longword len)
 // asm	cli
 
 // 	ssLengthLeft = len;
-// 	ssSample = (volatile byte far *)data;
+// 	ssSample = (volatile byte  *)data;
 
 // asm	popf
 }
@@ -838,7 +838,7 @@ SDL_PCPlaySample(byte *data,longword len)
 // 	SDL_IndicatePC(_true);
 
 // 	pcLengthLeft = len;
-// 	pcSound = (volatile byte far *)data;
+// 	pcSound = (volatile byte  *)data;
 
 // asm	popf
 }
@@ -1239,15 +1239,15 @@ void
 SDL_SetupDigi(void)
 {
 	// memptr	list;
-	// word	far *p,
+	// word	 *p,
 	// 		pg;
 	// int		i;
 
 	// PM_UnlockMainMem();
 	// MM_GetPtr(&list,PMPageSize);
 	// PM_CheckMainMem();
-	// p = (word far *)MK_FP(PM_GetPage(ChunksInFile - 1),0);
-	// _fmemcpy((void far *)list,(void far *)p,PMPageSize);
+	// p = (word  *)MK_FP(PM_GetPage(ChunksInFile - 1),0);
+	// _fmemcpy((void  *)list,(void  *)p,PMPageSize);
 	// pg = PMSoundStart;
 	// for (i = 0;i < PMPageSize / (sizeof(word) * 2);i++,p += 2)
 	// {
@@ -1257,7 +1257,7 @@ SDL_SetupDigi(void)
 	// }
 	// PM_UnlockMainMem();
 	// MM_GetPtr((memptr *)&DigiList,i * sizeof(word) * 2);
-	// _fmemcpy((void far *)DigiList,(void far *)list,i * sizeof(word) * 2);
+	// _fmemcpy((void  *)DigiList,(void  *)list,i * sizeof(word) * 2);
 	// MM_FreePtr(&list);
 	// NumDigi = i;
 
@@ -1341,7 +1341,7 @@ alOut(byte n,byte b)
 //
 ///////////////////////////////////////////////////////////////////////////
 static void
-SDL_SetInstrument(int track,int which,Instrument far *inst,boolean percussive)
+SDL_SetInstrument(int track,int which,Instrument  *inst,boolean percussive)
 {
 	byte		c,m;
 
@@ -1436,8 +1436,8 @@ static void
 #endif
 SDL_ALPlaySound(AdLibSound *sound)
 {
-// 	Instrument	far *inst;
-// 	byte		huge *data;
+// 	Instrument	 *inst;
+// 	byte		 *data;
 
 // 	SDL_ALStopSound();
 
@@ -1448,7 +1448,7 @@ SDL_ALPlaySound(AdLibSound *sound)
 // 	data = sound->data;
 // 	data++;
 // 	data--;
-// 	alSound = (byte far *)data;
+// 	alSound = (byte  *)data;
 // 	alBlock = ((sound->block & 7) << 2) | 0x20;
 // 	inst = &sound->inst;
 
@@ -1520,7 +1520,7 @@ SDL_ALService(void)
 	alTimeCount++;
 	if (!sqHackLen)
 	{
-		sqHackPtr = (word far *)sqHack;
+		sqHackPtr = (word  *)sqHack;
 		sqHackLen = sqHackSeqLen;
 		alTimeCount = sqHackTime = 0;
 	}
@@ -2193,10 +2193,10 @@ SD_PlaySound(soundnames sound)
 	// switch (SoundMode)
 	// {
 	// case sdm_PC:
-	// 	SDL_PCPlaySound((void far *)s);
+	// 	SDL_PCPlaySound((void  *)s);
 	// 	break;
 	// case sdm_AdLib:
-	// 	SDL_ALPlaySound((void far *)s);
+	// 	SDL_ALPlaySound((void  *)s);
 	// 	break;
 	// }
 

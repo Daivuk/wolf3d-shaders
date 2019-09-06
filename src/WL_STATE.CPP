@@ -52,6 +52,8 @@ boolean CheckLine (objtype *ob);
 void FirstSighting (objtype *ob);
 boolean	CheckSight (objtype *ob);
 
+void A_DeathScream (objtype *ob);
+
 /*
 =============================================================================
 
@@ -153,7 +155,7 @@ void NewState (objtype *ob, statetype *state)
 
 #define CHECKDIAG(x,y)								\
 {                                                   \
-	temp=(unsigned)actorat[x][y];                   \
+	temp=(uintptr_t)actorat[x][y];                   \
 	if (temp)                                       \
 	{                                               \
 		if (temp<256)                               \
@@ -165,7 +167,7 @@ void NewState (objtype *ob, statetype *state)
 
 #define CHECKSIDE(x,y)								\
 {                                                   \
-	temp=(unsigned)actorat[x][y];                   \
+	temp=(uintptr_t)actorat[x][y];                   \
 	if (temp)                                       \
 	{                                               \
 		if (temp<128)                               \
@@ -181,7 +183,7 @@ void NewState (objtype *ob, statetype *state)
 boolean TryWalk (objtype *ob)
 {
 	int			doornum;
-	unsigned	temp;
+	uintptr_t	temp;
 
 	doornum = -1;
 
@@ -189,6 +191,7 @@ boolean TryWalk (objtype *ob)
 	{
 		switch (ob->dir)
 		{
+            default: break;
 		case north:
 			ob->tiley--;
 			break;
@@ -313,7 +316,7 @@ boolean TryWalk (objtype *ob)
 			return _false;
 
 		default:
-			Quit ("Walk: Bad dir");
+			Quit ((char*)"Walk: Bad dir");
 		}
 
 	if (doornum != -1)
@@ -535,7 +538,7 @@ void SelectChaseDir (objtype *ob)
 
 	if (US_RndT()>128) 	/*randomly determine direction of search*/
 	{
-		for (tdir=north;tdir<=west;tdir++)
+		for (tdir=north;tdir<=west;tdir = (dirtype)((int)tdir + 1))
 		{
 			if (tdir!=turnaround)
 			{
@@ -547,7 +550,7 @@ void SelectChaseDir (objtype *ob)
 	}
 	else
 	{
-		for (tdir=west;tdir>=north;tdir--)
+		for (tdir=west;tdir>=north;tdir = (dirtype)((int)tdir - 1))
 		{
 			if (tdir!=turnaround)
 			{
@@ -620,7 +623,7 @@ void SelectRunDir (objtype *ob)
 
 	if (US_RndT()>128) 	/*randomly determine direction of search*/
 	{
-		for (tdir=north;tdir<=west;tdir++)
+		for (tdir=north;tdir<=west;tdir = (dirtype)((int)tdir + 1))
 		{
 			ob->dir=tdir;
 			if ( TryWalk(ob) )
@@ -629,7 +632,7 @@ void SelectRunDir (objtype *ob)
 	}
 	else
 	{
-		for (tdir=west;tdir>=north;tdir--)
+		for (tdir=west;tdir>=north;tdir = (dirtype)((int)tdir - 1))
 		{
 			ob->dir=tdir;
 			if ( TryWalk(ob) )
@@ -695,7 +698,7 @@ void MoveObj (objtype *ob, long move)
 		return;
 
 	default:
-		Quit ("MoveObj: bad dir!");
+		Quit ((char*)"MoveObj: bad dir!");
 	}
 
 //
@@ -821,6 +824,7 @@ void KillActor (objtype *ob)
 
 	switch (ob->obclass)
 	{
+        default:break;
 	case guardobj:
 		GivePoints (100);
 		NewState (ob,&s_grddie1);
@@ -982,6 +986,7 @@ void DamageActor (objtype *ob, unsigned damage)
 
 		switch (ob->obclass)		// dogs only have one hit point
 		{
+            default: break;
 		case guardobj:
 			if (ob->hitpoints&1)
 				NewState (ob,&s_grdpain);
@@ -1209,6 +1214,7 @@ boolean CheckSight (objtype *ob)
 //
 	switch (ob->dir)
 	{
+        default: break;
 	case north:
 		if (deltay > 0)
 			return _false;
@@ -1257,6 +1263,7 @@ void FirstSighting (objtype *ob)
 //
 	switch (ob->obclass)
 	{
+        default: break;
 	case guardobj:
 		PlaySoundLocActor(HALTSND,ob);
 		NewState (ob,&s_grdchase1);
@@ -1404,7 +1411,7 @@ void FirstSighting (objtype *ob)
 boolean SightPlayer (objtype *ob)
 {
 	if (ob->flags & FL_ATTACKMODE)
-		Quit ("An actor in ATTACKMODE called SightPlayer!");
+		Quit ((char*)"An actor in ATTACKMODE called SightPlayer!");
 
 	if (ob->temp2)
 	{
@@ -1436,6 +1443,7 @@ boolean SightPlayer (objtype *ob)
 
 		switch (ob->obclass)
 		{
+            default: break;
 		case guardobj:
 			ob->temp2 = 1+US_RndT()/4;
 			break;

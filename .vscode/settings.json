@@ -94,6 +94,7 @@
         "bit": "cpp",
         "memory_resource": "cpp",
         "cinttypes": "cpp",
-        "WOLFHACK.C": "cpp"
+        "WOLFHACK.C": "cpp",
+        "MUNGE.C": "cpp"
     }
 }

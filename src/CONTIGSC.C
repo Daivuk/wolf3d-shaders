@@ -13,13 +13,13 @@
 =============================================================================
 */
 
-t_compscale far *scaledirectory[MAXSCALEHEIGHT+1];
+t_compscale  *scaledirectory[MAXSCALEHEIGHT+1];
 long			fullscalefarcall[MAXSCALEHEIGHT+1];
 
 int			maxscale,maxscaleshl2;
 
-byte far	*scalermemory;
-byte _seg	*endscalermemory;
+byte 	*scalermemory;
+byte 	*endscalermemory;
 long		freescalermemory;
 
 
@@ -31,7 +31,7 @@ long		freescalermemory;
 =============================================================================
 */
 
-unsigned BuildCompScale (int height, byte far *code);
+unsigned BuildCompScale (int height, byte  *code);
 
 int			stepbytwo;
 
@@ -45,9 +45,9 @@ int			stepbytwo;
 ==============
 */
 
-void far BadScale (void)
+void  BadScale (void)
 {
-	Quit ("BadScale called!");
+	Quit ((char*)"BadScale called!");
 }
 
 
@@ -61,72 +61,72 @@ void far BadScale (void)
 
 long SetupScaling (int maxscaleheight)
 {
-	int		i,x,y;
-	byte	far *dest;
-	unsigned	seg,ofs;
-	long	size;
+// 	int		i,x,y;
+// 	byte	 *dest;
+// 	unsigned	seg,ofs;
+// 	long	size;
 
 
-	maxscaleheight/=2;			// one scaler every two pixels
+// 	maxscaleheight/=2;			// one scaler every two pixels
 
-	maxscale = maxscaleheight-1;
-	maxscaleshl2 = maxscale<<2;
+// 	maxscale = maxscaleheight-1;
+// 	maxscaleshl2 = maxscale<<2;
 
-	dest = scalermemory;
+// 	dest = scalermemory;
 
-//
-// build the compiled scalers
-//
-	stepbytwo = viewheight/2;	// save space by double stepping
+// //
+// // build the compiled scalers
+// //
+// 	stepbytwo = viewheight/2;	// save space by double stepping
 
-	for (i=1;i<=maxscaleheight;i++)
-	{
-		seg = FP_SEG(dest);
-		ofs = (FP_OFF(dest)+15)&~15;
-		dest = MK_FP(seg+ofs/16,0);
+// 	for (i=1;i<=maxscaleheight;i++)
+// 	{
+// 		seg = FP_SEG(dest);
+// 		ofs = (FP_OFF(dest)+15)&~15;
+// 		dest = MK_FP(seg+ofs/16,0);
 
-		scaledirectory[i] = (t_compscale far *)dest;
-		size = BuildCompScale (i*2,dest);
-		dest += size;
+// 		scaledirectory[i] = (t_compscale  *)dest;
+// 		size = BuildCompScale (i*2,dest);
+// 		dest += size;
 
-		if ((byte huge *)dest-(byte huge *)scalermemory > MAXSCALERMEMORY)
-			Quit ("Compiled scalars exceeded allocated space!");
+// 		if ((byte  *)dest-(byte  *)scalermemory > MAXSCALERMEMORY)
+// 			Quit ("Compiled scalars exceeded allocated space!");
 
-		if (i>=stepbytwo)
-			i+= 2;
-	}
+// 		if (i>=stepbytwo)
+// 			i+= 2;
+// 	}
 
-//
-// get far call addresses
-//
-	for (i=1;i<=maxscaleheight;i++)
-	{
-		fullscalefarcall[i] = (long)scaledirectory[i] + scaledirectory[i]->codeofs[0];
-		if (i>=stepbytwo)
-		{
-			scaledirectory[i+1] = scaledirectory[i];
-			fullscalefarcall[i+1] = (long)scaledirectory[i] + scaledirectory[i]->codeofs[0];
-			scaledirectory[i+2] = scaledirectory[i];
-			fullscalefarcall[i+2] = (long)scaledirectory[i] + scaledirectory[i]->codeofs[0];
-			i+=2;
-		}
-	}
-	scaledirectory[0] = scaledirectory[1];
-	fullscalefarcall[0] = fullscalefarcall[1];
+// //
+// // get  call addresses
+// //
+// 	for (i=1;i<=maxscaleheight;i++)
+// 	{
+// 		fullscalefarcall[i] = (long)scaledirectory[i] + scaledirectory[i]->codeofs[0];
+// 		if (i>=stepbytwo)
+// 		{
+// 			scaledirectory[i+1] = scaledirectory[i];
+// 			fullscalefarcall[i+1] = (long)scaledirectory[i] + scaledirectory[i]->codeofs[0];
+// 			scaledirectory[i+2] = scaledirectory[i];
+// 			fullscalefarcall[i+2] = (long)scaledirectory[i] + scaledirectory[i]->codeofs[0];
+// 			i+=2;
+// 		}
+// 	}
+// 	scaledirectory[0] = scaledirectory[1];
+// 	fullscalefarcall[0] = fullscalefarcall[1];
 
-//
-// check for oversize wall drawing
-//
-	for (i=maxscaleheight;i<MAXSCALEHEIGHT;i++)
-		fullscalefarcall[i] = (long)BadScale;
+// //
+// // check for oversize wall drawing
+// //
+// 	for (i=maxscaleheight;i<MAXSCALEHEIGHT;i++)
+// 		fullscalefarcall[i] = (long)BadScale;
 
-	seg = FP_SEG(dest);
-	ofs = (FP_OFF(dest)+15)&~15;
-	endscalermemory = (void _seg *)(seg+ofs/16);
-	size = (byte huge *)dest-(byte huge *)scalermemory;
-	freescalermemory = MAXSCALERMEMORY-16-size;
+// 	seg = FP_SEG(dest);
+// 	ofs = (FP_OFF(dest)+15)&~15;
+// 	endscalermemory = (void  *)(seg+ofs/16);
+// 	size = (byte  *)dest-(byte  *)scalermemory;
+// 	freescalermemory = MAXSCALERMEMORY-16-size;
 
-	return size;
+// 	return size;
 }
 
 //===========================================================================
@@ -151,16 +151,16 @@ long SetupScaling (int maxscaleheight)
 ========================
 */
 
-unsigned BuildCompScale (int height, byte far *code)
+unsigned BuildCompScale (int height, byte  *code)
 {
-	t_compscale 	far *work;
+	t_compscale 	 *work;
 
 	int			i;
 	long		fix,step;
 	unsigned	src,totalscaled,totalsize;
 	int			startpix,endpix,toppix;
 
-	work = (t_compscale far *)code;
+	work = (t_compscale  *)code;
 
 	step = ((long)height<<16) / 64;
 	code = &work->code[0];
@@ -212,7 +212,7 @@ unsigned BuildCompScale (int height, byte far *code)
 			*code++ = 0x26;
 			*code++ = 0x88;
 			*code++ = 0x85;
-			*((unsigned far *)code)++ = startpix*SCREENBWIDE;
+			*((unsigned  *)code)++ = startpix*SCREENBWIDE;
 		}
 
 	}
@@ -239,14 +239,14 @@ unsigned BuildCompScale (int height, byte far *code)
 */
 
 extern	int			slinex,slinewidth;
-extern	unsigned	far *linecmds;
+extern	unsigned	 *linecmds;
 extern	long		linescale;
 extern	unsigned	maskword;
 
 byte	mask1,mask2,mask3;
 
 
-void near ScaleLine (void)
+void  ScaleLine (void)
 {
 asm	mov	cx,WORD PTR [linescale+2]
 asm	mov	es,cx						// segment of scaler
@@ -420,11 +420,11 @@ static	long		longtemp;
 
 void ScaleShape (int xcenter, int shapenum, unsigned height)
 {
-	t_compshape	_seg *shape;
-	t_compscale far *comptable;
+	t_compshape	 *shape;
+	t_compscale  *comptable;
 	unsigned	scale,srcx,stopx,tempx;
 	int			t;
-	unsigned	far *cmdptr;
+	unsigned	 *cmdptr;
 	boolean		leftvis,rightvis;
 
 
@@ -432,10 +432,10 @@ void ScaleShape (int xcenter, int shapenum, unsigned height)
 
 	scale = height>>3;						// low three bits are fractional
 	if (!scale || scale>maxscale)
-		return;								// too close or far away
+		return;								// too close or  away
 	comptable = scaledirectory[scale];
 
-	*(((unsigned *)&linescale)+1)=FP_SEG(comptable);	// seg of far call
+	*(((unsigned *)&linescale)+1)=FP_SEG(comptable);	// seg of  call
 	*(((unsigned *)&linecmds)+1)=(unsigned)shape;		// seg of shape
 
 //
@@ -624,11 +624,11 @@ void ScaleShape (int xcenter, int shapenum, unsigned height)
 
 void SimpleScaleShape (int xcenter, int shapenum, unsigned height)
 {
-	t_compshape	_seg *shape;
-	t_compscale far *comptable;
+	t_compshape	 *shape;
+	t_compscale  *comptable;
 	unsigned	scale,srcx,stopx,tempx;
 	int			t;
-	unsigned	far *cmdptr;
+	unsigned	 *cmdptr;
 	boolean		leftvis,rightvis;
 
 
@@ -637,7 +637,7 @@ void SimpleScaleShape (int xcenter, int shapenum, unsigned height)
 	scale = height>>1;
 	comptable = scaledirectory[scale];
 
-	*(((unsigned *)&linescale)+1)=FP_SEG(comptable);	// seg of far call
+	*(((unsigned *)&linescale)+1)=FP_SEG(comptable);	// seg of  call
 	*(((unsigned *)&linecmds)+1)=(unsigned)shape;		// seg of shape
 
 //
@@ -727,7 +727,7 @@ unsigned	wordmasks[8][8] = {
 {0x0001,0x8001,0xc001,0xe001,0xf001,0xf801,0xfc01,0xfe01} };
 
 int			slinex,slinewidth;
-unsigned	far *linecmds;
+unsigned	 *linecmds;
 long		linescale;
 unsigned	maskword;
 

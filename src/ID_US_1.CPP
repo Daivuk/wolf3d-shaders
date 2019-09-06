@@ -42,16 +42,16 @@
 //	Internal variables
 #define	ConfigVersion	1
 
-static	char		*ParmStrings[] = {"TEDLEVEL","NOWAIT"},
-					*ParmStrings2[] = {"COMP","NOCOMP"};
+static	char		*ParmStrings[] = {(char*)"TEDLEVEL",(char*)"NOWAIT"},
+					*ParmStrings2[] = {(char*)"COMP",(char*)"NOCOMP"};
 static	boolean		US_Started;
 
 		boolean		Button0,Button1,
 					CursorBad;
 		int			CursorX,CursorY;
 
-		void		(*USL_MeasureString)(char far *,word *,word *) = VW_MeasurePropString,
-					(*USL_DrawString)(char far *) = VWB_DrawPropString;
+		void		(*USL_MeasureString)(char  *,word *,word *) = VW_MeasurePropString,
+					(*USL_DrawString)(char  *) = VWB_DrawPropString;
 
 		SaveGame	Games[MaxSaveGames];
 		HighScore	Scores[MaxScores] =
@@ -64,6 +64,29 @@ static	boolean		US_Started;
 						{"John Romero",10000,1},
 						{"Jay Wilbur",10000,1},
 					};
+
+int rndindex = 0;
+
+static byte rndtable[] = {
+      0,   8, 109, 220, 222, 241, 149, 107,  75, 248, 254, 140,  16,  66,
+	 74,  21, 211,  47,  80, 242, 154,  27, 205, 128, 161,  89,  77,  36,
+	 95, 110,  85,  48, 212, 140, 211, 249,  22,  79, 200,  50,  28, 188,
+	 52, 140, 202, 120,  68, 145,  62,  70, 184, 190,  91, 197, 152, 224,
+	149, 104,  25, 178, 252, 182, 202, 182, 141, 197,   4,  81, 181, 242,
+	145,  42,  39, 227, 156, 198, 225, 193, 219,  93, 122, 175, 249,   0,
+	175, 143,  70, 239,  46, 246, 163,  53, 163, 109, 168, 135,   2, 235,
+	 25,  92,  20, 145, 138,  77,  69, 166,  78, 176, 173, 212, 166, 113,
+	 94, 161,  41,  50, 239,  49, 111, 164,  70,  60,   2,  37, 171,  75,
+	136, 156,  11,  56,  42, 146, 138, 229,  73, 146,  77,  61,  98, 196,
+	135, 106,  63, 197, 195,  86,  96, 203, 113, 101, 170, 247, 181, 113,
+	 80, 250, 108,   7, 255, 237, 129, 226,  79, 107, 112, 166, 103, 241,
+	 24, 223, 239, 120, 198,  58,  60,  82, 128,   3, 184,  66, 143, 224,
+	145, 224,  81, 206, 163,  45,  63,  90, 168, 114,  59,  33, 159,  95,
+	 28, 139, 123,  98, 125, 196,  15,  70, 194, 253,  54,  14, 109, 226,
+	 71,  17, 161,  93, 186,  87, 244, 138,  20,  52, 123, 251,  26,  36,
+	 17,  46,  52, 231, 232,  76,  31, 221,  84,  37, 216, 165, 212, 106,
+	197, 242,  98,  43,  39, 175, 254, 145, 190,  84, 118, 222, 187, 136,
+	120, 163, 236, 249 };
 
 //	Internal routines
 
@@ -80,81 +103,82 @@ static	boolean		US_Started;
 int
 USL_HardError(word errval,int ax,int bp,int si)
 {
-#define IGNORE  0
-#define RETRY   1
-#define	ABORT   2
-extern	void	ShutdownId(void);
+// #define IGNORE  0
+// #define RETRY   1
+// #define	ABORT   2
+// extern	void	ShutdownId(void);
 
-static	char		buf[32];
-static	WindowRec	wr;
-		int			di;
-		char		c,*s,*t;
+// static	char		buf[32];
+// static	WindowRec	wr;
+// 		int			di;
+// 		char		c,*s,*t;
 
 
-	di = _DI;
+// 	di = _DI;
 
-	if (ax < 0)
-		s = "Device Error";
-	else
-	{
-		if ((di & 0x00ff) == 0)
-			s = "Drive ~ is Write Protected";
-		else
-			s = "Error on Drive ~";
-		for (t = buf;*s;s++,t++)	// Can't use sprintf()
-			if ((*t = *s) == '~')
-				*t = (ax & 0x00ff) + 'A';
-		*t = '\0';
-		s = buf;
-	}
+// 	if (ax < 0)
+// 		s = (char*)"Device Error";
+// 	else
+// 	{
+// 		if ((di & 0x00ff) == 0)
+// 			s = (char*)"Drive ~ is Write Protected";
+// 		else
+// 			s = (char*)"Error on Drive ~";
+// 		for (t = buf;*s;s++,t++)	// Can't use sprintf()
+// 			if ((*t = *s) == '~')
+// 				*t = (ax & 0x00ff) + 'A';
+// 		*t = '\0';
+// 		s = buf;
+// 	}
 
-	c = peekb(0x40,0x49);	// Get the current screen mode
-	if ((c < 4) || (c == 7))
-		goto oh_kill_me;
+// 	c = peekb(0x40,0x49);	// Get the current screen mode
+// 	if ((c < 4) || (c == 7))
+// 		goto oh_kill_me;
 
-	// DEBUG - handle screen cleanup
+// 	// DEBUG - handle screen cleanup
 
-	US_SaveWindow(&wr);
-	US_CenterWindow(30,3);
-	US_CPrint(s);
-	US_CPrint("(R)etry or (A)bort?");
-	VW_UpdateScreen();
-	IN_ClearKeysDown();
+// 	US_SaveWindow(&wr);
+// 	US_CenterWindow(30,3);
+// 	US_CPrint(s);
+// 	US_CPrint((char*)"(R)etry or (A)bort?");
+// 	VW_UpdateScreen();
+// 	IN_ClearKeysDown();
 
-asm	sti	// Let the keyboard interrupts come through
+// asm	sti	// Let the keyboard interrupts come through
 
-	while (_true)
-	{
-		switch (IN_WaitForASCII())
-		{
-		case key_Escape:
-		case 'a':
-		case 'A':
-			goto oh_kill_me;
-			break;
-		case key_Return:
-		case key_Space:
-		case 'r':
-		case 'R':
-			US_ClearWindow();
-			VW_UpdateScreen();
-			US_RestoreWindow(&wr);
-			return(RETRY);
-			break;
-		}
-	}
+// 	while (_true)
+// 	{
+// 		switch (IN_WaitForASCII())
+// 		{
+// 		case key_Escape:
+// 		case 'a':
+// 		case 'A':
+// 			goto oh_kill_me;
+// 			break;
+// 		case key_Return:
+// 		case key_Space:
+// 		case 'r':
+// 		case 'R':
+// 			US_ClearWindow();
+// 			VW_UpdateScreen();
+// 			US_RestoreWindow(&wr);
+// 			return(RETRY);
+// 			break;
+// 		}
+// 	}
 
-oh_kill_me:
-	abortprogram = s;
-	ShutdownId();
-	fprintf(stderr,"Terminal Error: %s\n",s);
-	if (tedlevel)
-		fprintf(stderr,"You launched from TED. I suggest that you reboot...\n");
+// oh_kill_me:
+// 	abortprogram = s;
+// 	ShutdownId();
+// 	fprintf(stderr,"Terminal Error: %s\n",s);
+// 	if (tedlevel)
+// 		fprintf(stderr,"You launched from TED. I suggest that you reboot...\n");
 
-	return(ABORT);
-#undef	IGNORE
-#undef	RETRY
-#undef	ABORT
+// 	return(ABORT);
+// #undef	IGNORE
+// #undef	RETRY
+// #undef	ABORT
+    return 0;
 }
 #pragma	warn	+par
 #pragma	warn	+rch
@@ -165,6 +189,8 @@ oh_kill_me:
 //	US_Startup() - Starts the User Mgr
 //
 ///////////////////////////////////////////////////////////////////////////
+extern int _argc;
+extern char** _argv;
 void
 US_Startup(void)
 {
@@ -173,7 +199,7 @@ US_Startup(void)
 	if (US_Started)
 		return;
 
-	harderr(USL_HardError);	// Install the fatal error handler
+	// harderr(USL_HardError);	// Install the fatal error handler
 
 	US_InitRndT(_true);		// Initialize the random number generator
 
@@ -272,7 +298,7 @@ US_CheckParm(char *parm,char **strings)
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-US_SetPrintRoutines(void (*measure)(char far *,word *,word *),void (*print)(char far *))
+US_SetPrintRoutines(void (*measure)(char  *,word *,word *),void (*print)(char  *))
 {
 	USL_MeasureString = measure;
 	USL_DrawString = print;
@@ -285,9 +311,9 @@ US_SetPrintRoutines(void (*measure)(char far *,word *,word *),void (*print)(char
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-US_Print(char far *s)
+US_Print(char  *s)
 {
-	char	c,far *se;
+	char	c, *se;
 	word	w,h;
 
 	while (*s)
@@ -326,7 +352,10 @@ US_PrintUnsigned(longword n)
 {
 	char	buffer[32];
 
-	US_Print(ultoa(n,buffer,10));
+    auto _str = std::to_string(n);
+    strcpy(buffer, _str.c_str());
+
+	US_Print(buffer);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -339,7 +368,10 @@ US_PrintSigned(long n)
 {
 	char	buffer[32];
 
-	US_Print(ltoa(n,buffer,10));
+    auto _str = std::to_string(n);
+    strcpy(buffer, _str.c_str());
+
+	US_Print(buffer);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -348,7 +380,7 @@ US_PrintSigned(long n)
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-USL_PrintInCenter(char far *s,Rect r)
+USL_PrintInCenter(char  *s,Rect r)
 {
 	word	w,h,
 			rw,rh;
@@ -368,7 +400,7 @@ USL_PrintInCenter(char far *s,Rect r)
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-US_PrintCentered(char far *s)
+US_PrintCentered(char  *s)
 {
 	Rect	r;
 
@@ -387,14 +419,14 @@ US_PrintCentered(char far *s)
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-US_CPrintLine(char far *s)
+US_CPrintLine(char  *s)
 {
 	word	w,h;
 
 	USL_MeasureString(s,&w,&h);
 
 	if (w > WindowW)
-		Quit("US_CPrintLine() - String exceeds width");
+		Quit((char*)"US_CPrintLine() - String exceeds width");
 	px = WindowX + ((WindowW - w) / 2);
 	py = PrintY;
 	USL_DrawString(s);
@@ -408,9 +440,9 @@ US_CPrintLine(char far *s)
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-US_CPrint(char far *s)
+US_CPrint(char  *s)
 {
-	char	c,far *se;
+	char	c, *se;
 
 	while (*s)
 	{
@@ -548,13 +580,14 @@ USL_XORICursor(int x,int y,char *s,word cursor)
 
 	px = x + w - 1;
 	py = y;
-	if (status^=1)
-		USL_DrawString("\x80");
+    status = (boolean)((int)status^1);
+	if (status)
+		USL_DrawString((char*)"\x80");
 	else
 	{
 		temp = fontcolor;
 		fontcolor = backcolor;
-		USL_DrawString("\x80");
+		USL_DrawString((char*)"\x80");
 		fontcolor = temp;
 	}
 
@@ -604,15 +637,15 @@ US_LineInput(int x,int y,char *buf,char *def,boolean escok,
 		if (cursorvis)
 			USL_XORICursor(x,y,s,cursor);
 
-	asm	pushf
-	asm	cli
+	// asm	pushf
+	// asm	cli
 
 		sc = LastScan;
 		LastScan = sc_None;
 		c = LastASCII;
 		LastASCII = key_None;
 
-	asm	popf
+	// asm	popf
 
 		switch (sc)
 		{
@@ -732,7 +765,7 @@ US_LineInput(int x,int y,char *buf,char *def,boolean escok,
 		{
 			lasttime = TimeCount;
 
-			cursorvis ^= _true;
+            cursorvis = (boolean)((int)cursorvis^(int)_true);
 		}
 		if (cursorvis)
 			USL_XORICursor(x,y,s,cursor);
@@ -752,4 +785,31 @@ US_LineInput(int x,int y,char *buf,char *def,boolean escok,
 
 	IN_ClearKeysDown();
 	return(result);
+}
+
+///////////////////////////////////////////////////////////////////////////
+//
+// US_InitRndT - Initializes the pseudo random number generator.
+//      If randomize is true, the seed will be initialized depending on the
+//      current time
+//
+///////////////////////////////////////////////////////////////////////////
+#include "SDL.h"
+void US_InitRndT(boolean randomize)
+{
+    if(randomize)
+        rndindex = (SDL_GetTicks() >> 4) & 0xff;
+    else
+        rndindex = 0;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//
+// US_RndT - Returns the next 8-bit pseudo random number
+//
+///////////////////////////////////////////////////////////////////////////
+int US_RndT()
+{
+    rndindex = (rndindex+1)&0xff;
+    return rndtable[rndindex];
 }
