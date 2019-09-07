@@ -28,24 +28,26 @@ int file_open(const char* filename, int flags, int sb)
     return ret;
 }
 
+void Quit(char* err);
+
 void file_read(int handle, void* out, size_t size)
 {
     auto it = file_handles.find(handle);
-    if (it == file_handles.end()) return;
+    if (it == file_handles.end()) Quit((char*)"file_read invalid handle");
     fread(out, size, 1, it->second);
 }
 
 void file_write(int handle, const void* in, size_t size)
 {
     auto it = file_handles.find(handle);
-    if (it == file_handles.end()) return;
+    if (it == file_handles.end()) Quit((char*)"file_write invalid handle");
     fwrite(in, size, 1, it->second);
 }
 
 void file_close(int handle)
 {
     auto it = file_handles.find(handle);
-    if (it == file_handles.end()) return;
+    if (it == file_handles.end()) Quit((char*)"file_close invalid handle");
     fclose(it->second);
     file_handles.erase(it);
 }
@@ -53,14 +55,14 @@ void file_close(int handle)
 int file_seek(int handle, long pos, int flag)
 {
     auto it = file_handles.find(handle);
-    if (it == file_handles.end()) return 0;
+    if (it == file_handles.end()) Quit((char*)"file_seek invalid handle");
     return fseek(it->second, pos, flag);
 }
 
 long filelength(int handle)
 {
     auto it = file_handles.find(handle);
-    if (it == file_handles.end()) return 0;
+    if (it == file_handles.end()) Quit((char*)"filelength invalid handle");
     int prev = ftell(it->second);
     fseek(it->second, 0, SEEK_END);
     int len = ftell(it->second);

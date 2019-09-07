@@ -1162,22 +1162,22 @@ void InitGame (void)
 	CA_Startup ();
 	US_Startup ();
 
+// #ifndef SPEAR
+// 	if (mminfo.mainmem < 235000L)
+// #else
+// 	if (mminfo.mainmem < 257000L && !MS_CheckParm("debugmode"))
+// #endif
+// 	{
+// 		// memptr screen;
 
-#ifndef SPEAR
-	if (mminfo.mainmem < 235000L)
-#else
-	if (mminfo.mainmem < 257000L && !MS_CheckParm("debugmode"))
-#endif
-	{
-		// memptr screen;
-
-		// CA_CacheGrChunk (ERRORSCREEN);
-		// screen = grsegs[ERRORSCREEN];
-		// ShutdownId();
-		// movedata ((unsigned)screen,7+7*160,0xb800,0,17*160);
-		// gotoxy (1,23);
-		exit(1);
-	}
+// 		// CA_CacheGrChunk (ERRORSCREEN);
+// 		// screen = grsegs[ERRORSCREEN];
+// 		// ShutdownId();
+// 		// movedata ((unsigned)screen,7+7*160,0xb800,0,17*160);
+// 		// gotoxy (1,23);
+//         Quit((char*)"Error screen?");
+// 		exit(1);
+// 	}
 
 
 //
@@ -1585,8 +1585,8 @@ void    DemoLoop (void)
 
 void wolf3d_init()
 {
-	// CheckForEpisodes();
-	// InitGame();
+	CheckForEpisodes();
+	InitGame();
 
     // CA_CacheScreen(TITLE1PIC);
 }

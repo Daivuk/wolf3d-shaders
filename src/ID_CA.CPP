@@ -32,8 +32,7 @@ loaded into the data segment
 
 typedef struct
 {
-	uintptr_t bit0;
-	uintptr_t bit1;
+	word bit0,bit1;
 } huffnode;
 
 
@@ -563,42 +562,91 @@ void CAL_OptimizeNodes (huffnode *table)
 // }
 
 // Modified version found here: https://github.com/pbrook/ewolf3d/blob/master/id_ca.c
-void CAL_HuffExpand(const byte *source, byte *dest, long length, 
-	const huffnode *htable, boolean screenhack)
+// void CAL_HuffExpand(const byte *source, byte *dest, long length, 
+// 	const huffnode *htable, boolean screenhack)
+// {
+// 	const huffnode *headptr;          
+// 	const huffnode *nodeon;           
+// 	byte      mask = 0x01;    
+// 	word      path;             
+// 	byte     *endoff = dest + length;    
+
+// 	nodeon = headptr = htable + 254;
+
+// 	do {
+// 		if (*source & mask)
+// 		  path = 1;
+// 	        else
+// 		  path = 0;
+//        		mask <<= 1;
+// 	        if (mask == 0x00) {   
+// 			mask = 0x01;
+// 			source++;
+// 	        } 
+// 		if (path ? nodeon->bit1 : nodeon->bit0) {  
+//             if (path)
+// 			    nodeon = (huffnode*)nodeon->bit1;
+//             else
+// 			    nodeon = (huffnode*)nodeon->bit0;
+// 		} else {
+//             if (path)
+// 			    *dest = (byte)nodeon->bit1;
+//             else
+// 			    *dest = (byte)nodeon->bit0;
+// 			dest++;
+// 			nodeon = headptr;
+// 		}
+// 	} while (dest != endoff);   
+// } 
+
+static void CAL_HuffExpand(byte *source, byte *dest, long length, huffnode *hufftable, boolean _dummy)
 {
-	const huffnode *headptr;          
-	const huffnode *nodeon;           
-	byte      mask = 0x01;    
-	word      path;             
-	byte     *endoff = dest + length;    
+    byte *end;
+    huffnode *headptr, *huffptr;
 
-	nodeon = headptr = htable + 254;
+    if(!length || !dest)
+    {
+        Quit((char*)"length or dest is null!");
+        return;
+    }
 
-	do {
-		if (*source & mask)
-		  path = 1;
-	        else
-		  path = 0;
-       		mask <<= 1;
-	        if (mask == 0x00) {   
-			mask = 0x01;
-			source++;
-	        } 
-		if (path ? nodeon->bit1 : nodeon->bit0) {  
-            if (path)
-			    nodeon = (huffnode*)nodeon->bit1;
-            else
-			    nodeon = (huffnode*)nodeon->bit0;
-		} else {
-            if (path)
-			    *dest = (byte)nodeon->bit1;
-            else
-			    *dest = (byte)nodeon->bit0;
-			dest++;
-			nodeon = headptr;
-		}
-	} while (dest != endoff);   
-} 
+    headptr = hufftable+254;        // head node is always node 254
+
+    int written = 0;
+
+    end=dest+length;
+
+    byte val = *source++;
+    byte mask = 1;
+    word nodeval;
+    huffptr = headptr;
+    while(1)
+    {
+        if(!(val & mask))
+            nodeval = huffptr->bit0;
+        else
+            nodeval = huffptr->bit1;
+        if(mask==0x80)
+        {
+            val = *source++;
+            mask = 1;
+        }
+        else mask <<= 1;
+
+        if(nodeval<256)
+        {
+            *dest++ = (byte) nodeval;
+            written++;
+            huffptr = headptr;
+            if(dest>=end) break;
+        }
+        else
+        {
+            huffptr = hufftable + (nodeval - 256);
+        }
+    }
+}
+
 
 /*
 ======================
@@ -919,19 +967,19 @@ void CAL_SetupGrFile (void)
 		 O_RDONLY | O_BINARY, S_IREAD)) == -1)
 		CA_CannotOpen(fname);
 
-	// file_read(handle, &grhuffman, sizeof(grhuffman));
-    auto pNode = grhuffman;
-    for (int i = 0; i < 256; ++i)
-    {
-        int16_t us;
-        file_read(handle, &us, 2);
-        pNode->bit0 = (uintptr_t)(us & 0xFFFF);
-        file_read(handle, &us, 2);
-        pNode->bit1 = (uintptr_t)(us & 0xFFFF);
-        ++pNode;
-    }
+	file_read(handle, &grhuffman, sizeof(grhuffman));
+    // auto pNode = grhuffman;
+    // for (int i = 0; i < 256; ++i)
+    // {
+    //     int16_t us;
+    //     file_read(handle, &us, 2);
+    //     pNode->bit0 = (uintptr_t)(us & 0xFFFF);
+    //     file_read(handle, &us, 2);
+    //     pNode->bit1 = (uintptr_t)(us & 0xFFFF);
+    //     ++pNode;
+    // }
 	file_close(handle);
-	CAL_OptimizeNodes (grhuffman);
+	// CAL_OptimizeNodes (grhuffman);
 //
 // load the data offsets from ???head.ext
 //
@@ -1030,7 +1078,6 @@ void CAL_SetupMapFile (void)
 		 O_RDONLY | O_BINARY, S_IREAD)) == -1)
 		CA_CannotOpen(fname);
 #endif
-
 //
 // load all map header
 //
@@ -1044,6 +1091,12 @@ void CAL_SetupMapFile (void)
 		MM_SetLock((memptr*)&mapheaderseg[i],_true);
 		file_seek(maphandle,pos,SEEK_SET);
 		CA_FarRead (maphandle,(byte*)mapheaderseg[i],sizeof(maptype));
+
+        // printf("%i, %i, %i, %s\n", (int)(mapheaderseg[i]->planelength[0]), (int)(mapheaderseg[i]->width), (int)(mapheaderseg[i]->height), mapheaderseg[i]->name);	
+    //     long		planestart[3];
+	// unsigned	planelength[3];
+	// unsigned	width,height;
+	// char		name[16];
 	}
 
 //
@@ -1135,6 +1188,7 @@ void CA_Startup (void)
 	CAL_SetupMapFile ();
 	CAL_SetupGrFile ();
 	CAL_SetupAudioFile ();
+    return;
 
 	mapon = -1;
 	ca_levelbit = 1;

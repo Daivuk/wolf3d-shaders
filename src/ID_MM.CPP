@@ -436,9 +436,9 @@ void MM_Shutdown (void)
 
 void MM_GetPtr (memptr *baseptr,unsigned long size)
 {
-    auto ptr = new uint8_t[size];
+    auto ptr = malloc(size);
     if (!ptr) Quit ((char*)"MM_GetPtr: Out of memory!");
-    *baseptr = (memptr)ptr;
+    *baseptr = ptr;
 // 	mmblocktype  *scan, *lastscan, *endscan
 // 				, *purge, *next;
 // 	int			search;
@@ -563,7 +563,8 @@ void MM_GetPtr (memptr *baseptr,unsigned long size)
 
 void MM_FreePtr (memptr *baseptr)
 {
-    delete[] (uint8_t*)*baseptr;
+    free(*baseptr);
+    // delete[] (uint8_t*)*baseptr;
     *baseptr = nullptr;
 	// mmblocktype  *scan, *last;
 
