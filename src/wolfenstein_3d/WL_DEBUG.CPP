@@ -190,7 +190,7 @@ void PicturePause (void)
 // 	dest = MK_FP(0xa000,0);
 // 	_fmemcpy (dest,buffer,64000);
 
-// 	VL_SetPalette (&gamepal);
+// 	VL_SetPalette ((byte*)gamepal);
 
 
 // 	IN_Shutdown ();

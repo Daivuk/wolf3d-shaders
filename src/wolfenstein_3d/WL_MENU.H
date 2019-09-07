@@ -31,7 +31,7 @@
 #define VIEWCOLOR	0x7f
 #define TEXTCOLOR	0x17
 #define HIGHLIGHT	0x13
-#define MenuFadeIn()	VL_FadeIn(0,255,&gamepal,10)
+#define MenuFadeIn()	VL_FadeIn(0,255,(byte*)gamepal,10)
 
 
 #define MENUSONG	WONDERIN_MUS

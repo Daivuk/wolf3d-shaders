@@ -4,8 +4,9 @@
 // #include <alloc.h>
 // #include <mem.h>
 #include <string.h>
-#include "ID_HEAD.H"
+#include "ID_HEADS.H"
 #include "ID_VL.H"
+#include "ws_main.h"
 #pragma hdrstop
 
 //
@@ -26,7 +27,7 @@ uint16_t	bordercolor;
 _boolean		fastpalette;				// if _true, use outsb to set
 
 byte			palette1[256][3], palette2[256][3];
-byte            gamepal;
+byte            gamepal[256][3];
 
 //===========================================================================
 
@@ -369,8 +370,8 @@ void VL_GetColor	(int16_t color, int16_t *red, int16_t *green, int16_t *blue)
 =================
 */
 
-void VL_SetPalette (byte  *palette)
-{
+//void VL_SetPalette (byte  *palette)
+//{
 // 	int16_t	i;
 
 // //	outportb (PEL_WRITE_ADR,0);
@@ -410,7 +411,7 @@ void VL_SetPalette (byte  *palette)
 // 	asm	mov	ax,ss
 // 	asm	mov	ds,ax
 
-}
+//}
 
 
 //===========================================================================
@@ -426,16 +427,16 @@ void VL_SetPalette (byte  *palette)
 =================
 */
 
-byte current_palette[768] = {0};
+//byte current_palette[768] = {0};
 
 void VL_GetPalette (byte  *palette)
 {
-    memcpy(palette, current_palette, 768);
-	// int16_t	i;
+    //memcpy(palette, current_palette, 768);
+	 int16_t	i;
 
-	// outportb (PEL_READ_ADR,0);
-	// for (i=0;i<768;i++)
-	// 	*palette++ = inportb(PEL_DATA);
+	 outportb (PEL_READ_ADR,0);
+	 for (i=0;i<768;i++)
+	 	*palette++ = (byte)inportb(PEL_DATA);
 }
 
 
@@ -453,43 +454,43 @@ void VL_GetPalette (byte  *palette)
 
 void VL_FadeOut (int16_t start, int16_t end, int16_t red, int16_t green, int16_t blue, int16_t steps)
 {
-// 	int16_t		i,j,orig,delta;
-// 	byte	 *origptr,  *newptr;
+ 	int16_t		i,j,orig,delta;
+ 	byte	 *origptr,  *newptr;
 
-// 	VL_WaitVBL(1);
-// 	VL_GetPalette (&palette1[0][0]);
-// 	_fmemcpy (palette2,palette1,768);
+ 	VL_WaitVBL(1);
+ 	VL_GetPalette (&palette1[0][0]);
+ 	memcpy (palette2,palette1,768);
 
-// //
-// // fade through intermediate frames
-// //
-// 	for (i=0;i<steps;i++)
-// 	{
-// 		origptr = &palette1[start][0];
-// 		newptr = &palette2[start][0];
-// 		for (j=start;j<=end;j++)
-// 		{
-// 			orig = *origptr++;
-// 			delta = red-orig;
-// 			*newptr++ = orig + delta * i / steps;
-// 			orig = *origptr++;
-// 			delta = green-orig;
-// 			*newptr++ = orig + delta * i / steps;
-// 			orig = *origptr++;
-// 			delta = blue-orig;
-// 			*newptr++ = orig + delta * i / steps;
-// 		}
+ //
+ // fade through intermediate frames
+ //
+ 	for (i=0;i<steps;i++)
+ 	{
+ 		origptr = &palette1[start][0];
+ 		newptr = &palette2[start][0];
+ 		for (j=start;j<=end;j++)
+ 		{
+ 			orig = *origptr++;
+ 			delta = red-orig;
+ 			*newptr++ = orig + delta * i / steps;
+ 			orig = *origptr++;
+ 			delta = green-orig;
+ 			*newptr++ = orig + delta * i / steps;
+ 			orig = *origptr++;
+ 			delta = blue-orig;
+ 			*newptr++ = orig + delta * i / steps;
+ 		}
 
-// 		VL_WaitVBL(1);
-// 		VL_SetPalette (&palette2[0][0]);
-// 	}
+ 		VL_WaitVBL(1);
+ 		VL_SetPalette (&palette2[0][0]);
+ 	}
 
-// //
-// // final color
-// //
-// 	VL_FillPalette (red,green,blue);
+ //
+ // final color
+ //
+ 	VL_FillPalette (red,green,blue);
 
-// 	screenfaded = _true;
+ 	screenfaded = _true;
 }
 
 
@@ -503,35 +504,35 @@ void VL_FadeOut (int16_t start, int16_t end, int16_t red, int16_t green, int16_t
 
 void VL_FadeIn (int16_t start, int16_t end, byte  *palette, int16_t steps)
 {
-// 	int16_t		i,j,delta;
+ 	int16_t		i,j,delta;
 
-// 	VL_WaitVBL(1);
-// 	VL_GetPalette (&palette1[0][0]);
-// 	_fmemcpy (&palette2[0][0],&palette1[0][0],sizeof(palette1));
+ 	VL_WaitVBL(1);
+ 	VL_GetPalette (&palette1[0][0]);
+ 	memcpy (&palette2[0][0],&palette1[0][0],sizeof(palette1));
 
-// 	start *= 3;
-// 	end = end*3+2;
+ 	start *= 3;
+ 	end = end*3+2;
 
-// //
-// // fade through intermediate frames
-// //
-// 	for (i=0;i<steps;i++)
-// 	{
-// 		for (j=start;j<=end;j++)
-// 		{
-// 			delta = palette[j]-palette1[0][j];
-// 			palette2[0][j] = palette1[0][j] + delta * i / steps;
-// 		}
+ //
+ // fade through intermediate frames
+ //
+ 	for (i=0;i<steps;i++)
+ 	{
+ 		for (j=start;j<=end;j++)
+ 		{
+ 			delta = palette[j]-palette1[0][j];
+ 			palette2[0][j] = palette1[0][j] + delta * i / steps;
+ 		}
 
-// 		VL_WaitVBL(1);
-// 		VL_SetPalette (&palette2[0][0]);
-// 	}
+ 		VL_WaitVBL(1);
+ 		VL_SetPalette (&palette2[0][0]);
+ 	}
 
-// //
-// // final color
-// //
-// 	VL_SetPalette (palette);
-// 	screenfaded = _false;
+ //
+ // final color
+ //
+ 	VL_SetPalette (palette);
+ 	screenfaded = _false;
 }
 
 
@@ -549,16 +550,16 @@ void VL_FadeIn (int16_t start, int16_t end, byte  *palette, int16_t steps)
 
 void VL_TestPaletteSet (void)
 {
-	// int16_t	i;
+	 int16_t	i;
 
-	// for (i=0;i<768;i++)
-	// 	palette1[0][i] = i;
+	 for (i=0;i<768;i++)
+	 	palette1[0][i] = i;
 
-	// fastpalette = _true;
-	// VL_SetPalette (&palette1[0][0]);
-	// VL_GetPalette (&palette2[0][0]);
-	// if (_fmemcmp (&palette1[0][0],&palette2[0][0],768))
-	// 	fastpalette = _false;
+	 fastpalette = _true;
+	 VL_SetPalette (&palette1[0][0]);
+	 VL_GetPalette (&palette2[0][0]);
+	 if (memcmp (&palette1[0][0],&palette2[0][0],768))
+	 	fastpalette = _false;
 }
 
 

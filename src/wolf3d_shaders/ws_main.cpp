@@ -166,7 +166,15 @@ struct Resources
 #define DRAW_MODE_PTC 1
 int drawMode = -1;
 GLenum drawModePrim = 0;
-Color palette[256];
+
+#define wolf_RGB(r, g, b) {(float)((r)*255/63)/255.0f, (float)((g)*255/63)/255.0f, (float)((b)*255/63)/255.0f, 1.0f}
+Color palette[] = {
+#ifdef SPEAR
+    #include "sodpal.inc"
+#else
+    #include "wolfpal.inc"
+#endif
+};
 
 static void checkShader(GLuint handle)
 {
@@ -524,16 +532,7 @@ int main(int argc, char** argv)
     resources.pPTCVertices = new VertexPTC[MAX_VERTICES];
     resources.mainRT = createRT(MaxX, MaxY);
 
-    // Start with a random colot palette
     srand(0);
-    for (int i = 0; i < 256; ++i)
-    {
-        palette[i].r = (float)(rand() % 256) / 255.0f;
-        palette[i].g = (float)(rand() % 256) / 255.0f;
-        palette[i].b = (float)(rand() % 256) / 255.0f;
-        palette[i].a = 1.0f;
-    }
-
     uint32_t checkerBytes[] = { 0xFF880088, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF880088 };
     resources.checkerTexture = ws_create_texture((uint8_t*)&checkerBytes, 2, 2);
 
@@ -669,20 +668,42 @@ void ws_update_sdl()
     drawModePrim = 0;
 }
 
+int palidx = 0;
+
 int16_t inportb(int16_t addr)
 {
-    if (addr == 0x60)
+    switch (addr)
     {
-        return scancode;
+        case 0x60:
+        {
+            return scancode;
+        }
+        case PEL_DATA:
+        {
+            auto &col = palette[palidx / 3];
+            int16_t ret = 0;
+            switch (palidx % 3)
+            {
+                case 0: ret = (int16_t)(byte)(col.r * 255.0f); break;
+                case 1: ret = (int16_t)(byte)(col.g * 255.0f); break;
+                case 2: ret = (int16_t)(byte)(col.b * 255.0f); break;
+            }
+            palidx++;
+            return ret;
+        }
     }
     return 0;
 }
 
 void outportb(int16_t addr, char val)
 {
-    if (addr == 0x61)
+    switch (addr)
     {
-
+        case PEL_READ_ADR:
+        {
+            palidx = 0;
+            break;
+        }
     }
 }
 
@@ -854,4 +875,16 @@ void ws_draw_screen_from_raw(byte* _data, int16_t chunk)
     glBindTexture(GL_TEXTURE_2D, texture);
     ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)0, (float)0, (float)MaxX, (float)MaxY, 0, 0, 1, 1, { 1, 1, 1, 1 });
     flush();
+}
+
+void VL_SetPalette(byte  *pal)
+{
+    for (int i = 0; i < 256; ++i)
+    {
+        auto& col = palette[i];
+        col.r = (float)pal[i * 3 + 0] * 255.0f;
+        col.g = (float)pal[i * 3 + 1] * 255.0f;
+        col.b = (float)pal[i * 3 + 2] * 255.0f;
+        col.a = 255.0f;
+    }
 }

@@ -297,8 +297,8 @@ void MML_UseSpace (uint16_t segstart, uint16_t seglength)
 ====================
 */
 
-// void MML_ClearBlock (void)
-// {
+ void MML_ClearBlock (void)
+ {
 // 	mmblocktype  *scan, *last;
 
 // 	scan = mmhead->next;
@@ -314,7 +314,7 @@ void MML_UseSpace (uint16_t segstart, uint16_t seglength)
 // 	}
 
 // 	Quit ("MM_ClearBlock: No purgable blocks!");
-// }
+ }
 
 
 //==========================================================================
@@ -334,68 +334,69 @@ static	char *ParmStrings[] = {(char*)"noems",(char*)"noxms",(char*)""};
 
 void MM_Startup (void)
 {
-// 	int16_t i;
-// 	uint32_t length;
-// 	void  	*start;
-// 	uint16_t 	segstart,seglength,endfree;
+ 	int16_t i;
+ 	uint32_t length;
+ 	void  	*start;
+ 	uint16_t 	segstart,seglength,endfree;
 
-// 	if (mmstarted)
-// 		MM_Shutdown ();
-
-
-// 	mmstarted = _true;
-// 	bombonerror = _true;
-// //
-// // set up the linked list (everything in the free list;
-// //
-// 	mmhead = NULL;
-// 	mmfree = &mmblocks[0];
-// 	for (i=0;i<MAXBLOCKS-1;i++)
-// 		mmblocks[i].next = &mmblocks[i+1];
-// 	mmblocks[i].next = NULL;
-
-// //
-// // locked block of all memory until we punch out free space
-// //
-// 	GETNEWBLOCK;
-// 	mmhead = mmnew;				// this will allways be the first node
-// 	mmnew->start = 0;
-// 	mmnew->length = 0xffff;
-// 	mmnew->attributes = LOCKBIT;
-// 	mmnew->next = NULL;
-// 	mmrover = mmhead;
+ 	if (mmstarted)
+ 		MM_Shutdown ();
 
 
-// //
-// // get all available  conventional memory segments
-// //
-// 	length=coreleft();
-// 	start = (void  *)(nearheap = malloc(length));
+ 	mmstarted = _true;
+ 	bombonerror = _true;
+ //
+ // set up the linked list (everything in the free list;
+ //
+ 	mmhead = NULL;
+ 	mmfree = &mmblocks[0];
+ 	for (i=0;i<MAXBLOCKS-1;i++)
+ 		mmblocks[i].next = &mmblocks[i+1];
+ 	mmblocks[i].next = NULL;
 
-// 	length -= 16-(FP_OFF(start)&15);
-// 	length -= SAVENEARHEAP;
-// 	seglength = length / 16;			// now in paragraphs
-// 	segstart = FP_SEG(start)+(FP_OFF(start)+15)/16;
-// 	MML_UseSpace (segstart,seglength);
- 	mminfo.nearheap = 128 * 1024 * 1024; // Pretend we have 128 MB
+ //
+ // locked block of all memory until we punch out free space
+ //
+ 	GETNEWBLOCK;
+ 	mmhead = mmnew;				// this will allways be the first node
+ 	mmnew->start = 0;
+ 	mmnew->length = 0xffff;
+ 	mmnew->attributes = LOCKBIT;
+ 	mmnew->next = NULL;
+ 	mmrover = mmhead;
 
-// //
-// // get all available  conventional memory segments
-// //
-// 	length=farcoreleft();
-// 	start = farheap = farmalloc(length);
-// 	length -= 16-(FP_OFF(start)&15);
-// 	length -= SAVEFARHEAP;
-// 	seglength = length / 16;			// now in paragraphs
-// 	segstart = FP_SEG(start)+(FP_OFF(start)+15)/16;
-// 	MML_UseSpace (segstart,seglength);
-// 	mminfo.farheap = length;
-// 	mminfo.mainmem = mminfo.nearheap + mminfo.farheap;
 
-// //
-// // allocate the misc buffer
-// //
-// 	mmrover = mmhead;		// start looking for space after low block
+ //
+ // get all available  conventional memory segments
+ //
+ 	length=64 * 1024 * 1024;
+ 	nearheap = malloc(length);
+
+ 	//length -= 16-(FP_OFF(start)&15);
+ 	//length -= SAVENEARHEAP;
+ 	//seglength = length / 16;			// now in paragraphs
+ 	//segstart = FP_SEG(start)+(FP_OFF(start)+15)/16;
+ 	//MML_UseSpace (segstart,seglength);
+ 	mminfo.nearheap = length; // Pretend we have 64 MB
+
+ //
+ // get all available  conventional memory segments
+ //
+ 	length= 64 * 1024 * 1024;
+    farheap = malloc(length);
+ 	//start = farheap = farmalloc(length);
+ 	//length -= 16-(FP_OFF(start)&15);
+ 	//length -= SAVEFARHEAP;
+ 	//seglength = length / 16;			// now in paragraphs
+ 	//segstart = FP_SEG(start)+(FP_OFF(start)+15)/16;
+ 	//MML_UseSpace (segstart,seglength);
+ 	mminfo.farheap = length;
+ 	mminfo.mainmem = mminfo.nearheap + mminfo.farheap;
+
+ //
+ // allocate the misc buffer
+ //
+ 	mmrover = mmhead;		// start looking for space after low block
 
 	MM_GetPtr (&bufferseg,BUFFERSIZE);
 }

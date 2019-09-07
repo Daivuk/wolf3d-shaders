@@ -989,18 +989,7 @@ void CAL_SetupGrFile (void)
 		CA_CannotOpen(fname);
 
 	file_read(handle, &grhuffman, sizeof(grhuffman));
-     //auto pNode = grhuffman;
-     //for (int16_t i = 0; i < 256; ++i)
-     //{
-     //    uint16_t us;
-     //    file_read(handle, &us, 2);
-     //    pNode->bit0 = (uintptr_t)us;
-     //    file_read(handle, &us, 2);
-     //    pNode->bit1 = (uintptr_t)us;
-     //    ++pNode;
-     //}
 	file_close(handle);
-	 //CAL_OptimizeNodes (grhuffman);
 //
 // load the data offsets from ???head.ext
 //
@@ -1209,12 +1198,10 @@ void CA_Startup (void)
 	CAL_SetupMapFile ();
 	CAL_SetupGrFile ();
 	CAL_SetupAudioFile ();
-    return;
 
 	mapon = -1;
 	ca_levelbit = 1;
 	ca_levelnum = 0;
-
 }
 
 //==========================================================================

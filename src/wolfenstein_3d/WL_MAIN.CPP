@@ -718,9 +718,9 @@ void SignonScreen (void)                        // VGA version
 {
 	  //uint16_t        segstart,seglength;
 
-	  //VL_SetVGAPlaneMode ();
-	  //VL_TestPaletteSet ();
-	  //VL_SetPalette (&gamepal);
+	  VL_SetVGAPlaneMode ();
+	  VL_TestPaletteSet ();
+	  VL_SetPalette ((byte*)gamepal);
 
 	  //if (!virtualreality)
 	  //{

@@ -313,6 +313,9 @@ US_SetPrintRoutines(void (*measure)(char  *,word *,word *),void (*print)(char  *
 void
 US_Print(char  *s)
 {
+    static std::string cpy;
+    cpy = s;
+    s = (char*)cpy.c_str();
 	char	c, *se;
 	word	w,h;
 

@@ -1,5 +1,8 @@
 {
     "files.associations": {
+        "*.pcc": "pcc",
+        "*.shader.meta": "json",
+        "*.texture.meta": "json",
         "WL_MAIN.C": "cpp",
         "WL_GAME.C": "cpp",
         "ID_US_1.C": "cpp",
@@ -95,6 +98,7 @@
         "memory_resource": "cpp",
         "cinttypes": "cpp",
         "WOLFHACK.C": "cpp",
-        "MUNGE.C": "cpp"
+        "MUNGE.C": "cpp",
+        "*.inc": "cpp"
     }
 }
