@@ -14,32 +14,33 @@ project(Wolf3DShaders)
 # Some compiler flags
 set(CMAKE_CXX_STANDARD 14) # C++14
 if (MSVC)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" "/MP") # Multi core in VS (This doesn't work anymore...)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" "/MP")     # Multi core in VS
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4101")   # Unused local variable
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4068")   # Unknown pragma
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4018")   # Sign compare mismatch, there's too many...
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4102")   # Unreferenced label
 endif()
 
 # Debug/Release flags
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-D_DEBUG)
 endif()
-# SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" "RELEASE" "NDEBUG")
 
 #justwindowsthings
 if (MSVC)
-    add_definitions(-DNOMINMAX)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4101")
+    add_definitions(-DNOMINMAX)                         # Don't want Win32's min and max defined
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)          # i.e: For sprintf instead of s_sprintf
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmax-errors=5 -ferror-limit=2")
 endif()
 
 # Project files
-file(GLOB sources
-    ./src/*.cpp
-)
+file(GLOB src_wolf3d_shaders ./src/wolf3d_shaders/*.*)
+file(GLOB src_wolfenstein_3d ./src/wolfenstein_3d/*.CPP ./src/wolfenstein_3d/*.H)
 
 list(APPEND includes PUBLIC 
-    ./src/
+    ./src/wolf3d_shaders/
+    ./src/wolfenstein_3d/
 )
 
 #------------------------------------------------------------------------------
@@ -59,25 +60,32 @@ list(APPEND includes PUBLIC ./thirdparty/SDL-mirror/include/)
 
 # gl3w
 list(APPEND includes PUBLIC ./thirdparty/gl3w/include/)
-list(APPEND srcthirdparty ./thirdparty/gl3w/src/gl3w.c)
+list(APPEND src_thirdparty ./thirdparty/gl3w/src/gl3w.c)
 
 # tinyfiledialogs
 list(APPEND includes PUBLIC ./thirdparty/tinyfiledialogs/)
-list(APPEND srcthirdparty ./thirdparty/tinyfiledialogs/tinyfiledialogs.c)
+list(APPEND src_thirdparty ./thirdparty/tinyfiledialogs/tinyfiledialogs.c)
+
+# dirent
+list(APPEND includes PUBLIC ./thirdparty/dirent/)
 
 #------------------------------------------------------------------------------
 # Exe
 #------------------------------------------------------------------------------
 
 # Wolf3DShaders.exe, use WinMain on Windows
-add_executable(Wolf3DShaders WIN32 
-    ${sources}
-    ${srcthirdparty})
+source_group("wolf3d_shaders" FILES ${src_wolf3d_shaders})
+source_group("wolfenstein_3d" FILES ${src_wolfenstein_3d})
+source_group("thirdparty" FILES ${src_thirdparty})
+add_executable(${PROJECT_NAME} WIN32 
+    ${src_wolf3d_shaders}
+    ${src_wolfenstein_3d}
+    ${src_thirdparty})
 
 # Work dir, copy your WAD files there
-set_property(TARGET Wolf3DShaders PROPERTY
+set_property(TARGET ${PROJECT_NAME} PROPERTY
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/")
 
 # Lib/Headers
-target_include_directories(Wolf3DShaders ${includes})
-target_link_libraries(Wolf3DShaders ${libs})
+target_include_directories(${PROJECT_NAME} ${includes})
+target_link_libraries(${PROJECT_NAME} ${libs})
