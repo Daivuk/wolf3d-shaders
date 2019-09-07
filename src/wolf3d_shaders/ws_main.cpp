@@ -166,6 +166,7 @@ struct Resources
 #define DRAW_MODE_PTC 1
 int drawMode = -1;
 GLenum drawModePrim = 0;
+float fade_val = 1.0f;
 
 #define wolf_RGB(r, g, b) {(float)((r)*255/63)/255.0f, (float)((g)*255/63)/255.0f, (float)((b)*255/63)/255.0f, 1.0f}
 Color palette[] = {
@@ -542,6 +543,8 @@ int main(int argc, char** argv)
 
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         //glBindTexture(GL_TEXTURE_2D, resources.checkerTexture);
 
         //prepareForPTC(GL_QUADS);
@@ -635,7 +638,7 @@ void ws_update_sdl()
     }
 
     prepareForPTC(GL_QUADS);
-    ptcCount += drawRect(resources.pPTCVertices, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, { 1, 1, 1, 1 });
+    ptcCount += drawRect(resources.pPTCVertices, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, { 1, 1, 1, fade_val });
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, resources.mainRT.handle);
     drawPTC(resources.pPTCVertices, ptcCount, GL_QUADS);

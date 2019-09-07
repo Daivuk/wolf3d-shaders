@@ -7,6 +7,8 @@
 #include "ID_HEADS.H"
 #include "ID_VL.H"
 #include "ws_main.h"
+#include <thread>
+#include <chrono>
 #pragma hdrstop
 
 //
@@ -36,7 +38,19 @@ byte            gamepal[256][3];
 int16_t	 VL_VideoID (void);
 void VL_SetCRTC (int16_t crtc);
 void VL_SetScreen (int16_t crtc, int16_t pelpan) {}
-void VL_WaitVBL (int16_t vbls) {}
+void VL_WaitVBL (int16_t vbls)
+{
+    auto timeBefore = std::chrono::high_resolution_clock::now();
+    ws_update_sdl();
+    auto timeAfter = std::chrono::high_resolution_clock::now();
+    auto diff = timeAfter - timeBefore;
+    auto waitTime = std::chrono::milliseconds(vbls * 8);
+    if (diff < waitTime)
+    {
+        auto timeToSleep = waitTime - diff;
+        std::this_thread::sleep_for(timeToSleep);
+    }
+}
 
 //===========================================================================
 
@@ -504,11 +518,14 @@ void VL_FadeOut (int16_t start, int16_t end, int16_t red, int16_t green, int16_t
 
 void VL_FadeIn (int16_t start, int16_t end, byte  *palette, int16_t steps)
 {
+    extern float fade_val;
  	int16_t		i,j,delta;
 
+    fade_val = 0.0f;
+
  	VL_WaitVBL(1);
- 	VL_GetPalette (&palette1[0][0]);
- 	memcpy (&palette2[0][0],&palette1[0][0],sizeof(palette1));
+ 	//VL_GetPalette (&palette1[0][0]);
+ 	//memcpy (&palette2[0][0],&palette1[0][0],sizeof(palette1));
 
  	start *= 3;
  	end = end*3+2;
@@ -518,21 +535,23 @@ void VL_FadeIn (int16_t start, int16_t end, byte  *palette, int16_t steps)
  //
  	for (i=0;i<steps;i++)
  	{
- 		for (j=start;j<=end;j++)
- 		{
- 			delta = palette[j]-palette1[0][j];
- 			palette2[0][j] = palette1[0][j] + delta * i / steps;
- 		}
+ 		//for (j=start;j<=end;j++)
+ 		//{
+ 		//	delta = palette[j]-palette1[0][j];
+ 		//	palette2[0][j] = palette1[0][j] + delta * i / steps;
+ 		//}
 
- 		VL_WaitVBL(1);
- 		VL_SetPalette (&palette2[0][0]);
+ 		VL_WaitVBL(1); 
+        fade_val = (float)i / (float)steps;
+ 		//VL_SetPalette (&palette2[0][0]);
  	}
 
  //
  // final color
  //
- 	VL_SetPalette (palette);
+ 	//VL_SetPalette (palette);
  	screenfaded = _false;
+    fade_val = 1.0f;
 }
 
 
