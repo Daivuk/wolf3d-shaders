@@ -40,16 +40,17 @@ void VL_SetCRTC (int16_t crtc);
 void VL_SetScreen (int16_t crtc, int16_t pelpan) {}
 void VL_WaitVBL (int16_t vbls)
 {
-    auto timeBefore = std::chrono::high_resolution_clock::now();
     ws_update_sdl();
-    auto timeAfter = std::chrono::high_resolution_clock::now();
-    auto diff = timeAfter - timeBefore;
-    auto waitTime = std::chrono::milliseconds(vbls * 8);
-    if (diff < waitTime)
-    {
-        auto timeToSleep = waitTime - diff;
-        std::this_thread::sleep_for(timeToSleep);
-    }
+    //auto waitTime = std::chrono::milliseconds(vbls * 8);
+    //auto timeBefore = std::chrono::high_resolution_clock::now();
+    //auto timeAfter = std::chrono::high_resolution_clock::now();
+    //auto diff = timeAfter - timeBefore;
+    //while (diff < waitTime)
+    //{
+    //    ws_update_sdl();
+    //    timeAfter = std::chrono::high_resolution_clock::now();
+    //    diff = timeAfter - timeBefore;
+    //}
 }
 
 //===========================================================================
@@ -644,41 +645,41 @@ void VL_Plot (int16_t x, int16_t y, int16_t color)
 =================
 */
 
-void VL_Hlin (uint16_t x, uint16_t y, uint16_t width, uint16_t color)
-{
-	// uint16_t		xbyte;
-	// byte			 *dest;
-	// byte			leftmask,rightmask;
-	// int16_t				midbytes;
-
-	// xbyte = x>>2;
-	// leftmask = leftmasks[x&3];
-	// rightmask = rightmasks[(x+width-1)&3];
-	// midbytes = ((x+width+3)>>2) - xbyte - 2;
-
-	// dest = MK_FP(SCREENSEG,bufferofs+ylookup[y]+xbyte);
-
-	// if (midbytes<0)
-	// {
-	// // all in one byte
-	// 	VGAMAPMASK(leftmask&rightmask);
-	// 	*dest = color;
-	// 	VGAMAPMASK(15);
-	// 	return;
-	// }
-
-	// VGAMAPMASK(leftmask);
-	// *dest++ = color;
-
-	// VGAMAPMASK(15);
-	// _fmemset (dest,color,midbytes);
-	// dest+=midbytes;
-
-	// VGAMAPMASK(rightmask);
-	// *dest = color;
-
-	// VGAMAPMASK(15);
-}
+//void VL_Hlin (uint16_t x, uint16_t y, uint16_t width, uint16_t color)
+//{
+//	// uint16_t		xbyte;
+//	// byte			 *dest;
+//	// byte			leftmask,rightmask;
+//	// int16_t				midbytes;
+//
+//	// xbyte = x>>2;
+//	// leftmask = leftmasks[x&3];
+//	// rightmask = rightmasks[(x+width-1)&3];
+//	// midbytes = ((x+width+3)>>2) - xbyte - 2;
+//
+//	// dest = MK_FP(SCREENSEG,bufferofs+ylookup[y]+xbyte);
+//
+//	// if (midbytes<0)
+//	// {
+//	// // all in one byte
+//	// 	VGAMAPMASK(leftmask&rightmask);
+//	// 	*dest = color;
+//	// 	VGAMAPMASK(15);
+//	// 	return;
+//	// }
+//
+//	// VGAMAPMASK(leftmask);
+//	// *dest++ = color;
+//
+//	// VGAMAPMASK(15);
+//	// _fmemset (dest,color,midbytes);
+//	// dest+=midbytes;
+//
+//	// VGAMAPMASK(rightmask);
+//	// *dest = color;
+//
+//	// VGAMAPMASK(15);
+//}
 
 
 /*
@@ -689,23 +690,23 @@ void VL_Hlin (uint16_t x, uint16_t y, uint16_t width, uint16_t color)
 =================
 */
 
-void VL_Vlin (int16_t x, int16_t y, int16_t height, int16_t color)
-{
-	// byte	 *dest,mask;
-
-	// mask = pixmasks[x&3];
-	// VGAMAPMASK(mask);
-
-	// dest = MK_FP(SCREENSEG,bufferofs+ylookup[y]+(x>>2));
-
-	// while (height--)
-	// {
-	// 	*dest = color;
-	// 	dest += linewidth;
-	// }
-
-	// VGAMAPMASK(15);
-}
+//void VL_Vlin (int16_t x, int16_t y, int16_t height, int16_t color)
+//{
+//	// byte	 *dest,mask;
+//
+//	// mask = pixmasks[x&3];
+//	// VGAMAPMASK(mask);
+//
+//	// dest = MK_FP(SCREENSEG,bufferofs+ylookup[y]+(x>>2));
+//
+//	// while (height--)
+//	// {
+//	// 	*dest = color;
+//	// 	dest += linewidth;
+//	// }
+//
+//	// VGAMAPMASK(15);
+//}
 
 
 /*

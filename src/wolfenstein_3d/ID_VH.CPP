@@ -1,6 +1,7 @@
 // ID_VH.C
 
 #include "ID_HEADS.H"
+#include "ws_main.h"
 
 #define	SCREENWIDTH		80
 #define CHARWIDTH		2
@@ -342,17 +343,18 @@ void VWB_Plot (int16_t x, int16_t y, int16_t color)
 void VWB_Hlin (int16_t x1, int16_t x2, int16_t y, int16_t color)
 {
 	// if (VW_MarkUpdateBlock (x1,y,x2,y))
-	// 	VW_Hlin(x1,x2,y,color);
+	 	VW_Hlin(x1,x2,y,color);
 }
 
 void VWB_Vlin (int16_t y1, int16_t y2, int16_t x, int16_t color)
 {
 	// if (VW_MarkUpdateBlock (x,y1,x,y2))
-	// 	VW_Vlin(y1,y2,x,color);
+	 	VW_Vlin(y1,y2,x,color);
 }
 
 void VW_UpdateScreen (void)
 {
+    ws_update_sdl();
 	// VH_UpdateScreen ();
 }
 

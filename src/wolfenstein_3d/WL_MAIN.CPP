@@ -1343,7 +1343,7 @@ void NewViewSize (int16_t width)
 
 void Quit (char *error)
 {
-	if (!*error)
+	if (!error)
 	{
 	 WriteConfig ();
 	}

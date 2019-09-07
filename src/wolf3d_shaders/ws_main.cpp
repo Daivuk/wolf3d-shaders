@@ -43,79 +43,78 @@ static byte scancode = 0;
 static Interrupt KeyInt_in = nullptr;
 
 std::map<int, int> SDL2DosKeymap = {
-    {SDL_SCANCODE_UNKNOWN, sc_None},
-    {0xff, sc_Bad},
-    {SDL_SCANCODE_RETURN, sc_Return},
-    {sc_Return, sc_Enter},
-    {SDL_SCANCODE_ESCAPE, sc_Escape},
-    {SDL_SCANCODE_SPACE, sc_Space},
-    {SDL_SCANCODE_BACKSPACE, sc_BackSpace},
-    {SDL_SCANCODE_TAB, sc_Tab},
-    {SDL_SCANCODE_LALT, sc_Alt},
-    {SDL_SCANCODE_LCTRL, sc_Control},
-    {SDL_SCANCODE_CAPSLOCK, sc_CapsLock},
-    {SDL_SCANCODE_LSHIFT, sc_LShift},
-    {SDL_SCANCODE_RSHIFT, sc_RShift},
-    {SDL_SCANCODE_UP, sc_UpArrow},
-    {SDL_SCANCODE_DOWN, sc_DownArrow},
-    {SDL_SCANCODE_LEFT, sc_LeftArrow},
-    {SDL_SCANCODE_RIGHT, sc_RightArrow},
-    {SDL_SCANCODE_INSERT, sc_Insert},
-    {SDL_SCANCODE_DELETE, sc_Delete},
-    {SDL_SCANCODE_HOME, sc_Home},
-    {SDL_SCANCODE_END, sc_End},
-    {SDL_SCANCODE_PAGEUP, sc_PgUp},
-    {SDL_SCANCODE_PAGEDOWN, sc_PgDn},
-    {SDL_SCANCODE_F1, sc_F1},
-    {SDL_SCANCODE_F2, sc_F2},
-    {SDL_SCANCODE_F3, sc_F3},
-    {SDL_SCANCODE_F4, sc_F4},
-    {SDL_SCANCODE_F5, sc_F5},
-    {SDL_SCANCODE_F6, sc_F6},
-    {SDL_SCANCODE_F7, sc_F7},
-    {SDL_SCANCODE_F8, sc_F8},
-    {SDL_SCANCODE_F9, sc_F9},
-    {SDL_SCANCODE_F10, sc_F10},
-    {SDL_SCANCODE_F11, sc_F11},
-    {SDL_SCANCODE_F12, sc_F12},
+    std::make_pair<int, int>(SDL_SCANCODE_UNKNOWN, sc_None),
+    std::make_pair<int, int>(0xff, sc_Bad),
+    std::make_pair<int, int>(SDL_SCANCODE_RETURN, sc_Return),
+    std::make_pair<int, int>(SDL_SCANCODE_ESCAPE, sc_Escape),
+    std::make_pair<int, int>(SDL_SCANCODE_SPACE, sc_Space),
+    std::make_pair<int, int>(SDL_SCANCODE_BACKSPACE, sc_BackSpace),
+    std::make_pair<int, int>(SDL_SCANCODE_TAB, sc_Tab),
+    std::make_pair<int, int>(SDL_SCANCODE_LALT, sc_Alt),
+    std::make_pair<int, int>(SDL_SCANCODE_LCTRL, sc_Control),
+    std::make_pair<int, int>(SDL_SCANCODE_CAPSLOCK, sc_CapsLock),
+    std::make_pair<int, int>(SDL_SCANCODE_LSHIFT, sc_LShift),
+    std::make_pair<int, int>(SDL_SCANCODE_RSHIFT, sc_RShift),
+    std::make_pair<int, int>(SDL_SCANCODE_UP, sc_UpArrow),
+    std::make_pair<int, int>(SDL_SCANCODE_DOWN, sc_DownArrow),
+    std::make_pair<int, int>(SDL_SCANCODE_LEFT, sc_LeftArrow),
+    std::make_pair<int, int>(SDL_SCANCODE_RIGHT, sc_RightArrow),
+    std::make_pair<int, int>(SDL_SCANCODE_INSERT, sc_Insert),
+    std::make_pair<int, int>(SDL_SCANCODE_DELETE, sc_Delete),
+    std::make_pair<int, int>(SDL_SCANCODE_HOME, sc_Home),
+    std::make_pair<int, int>(SDL_SCANCODE_END, sc_End),
+    std::make_pair<int, int>(SDL_SCANCODE_PAGEUP, sc_PgUp),
+    std::make_pair<int, int>(SDL_SCANCODE_PAGEDOWN, sc_PgDn),
+    std::make_pair<int, int>(SDL_SCANCODE_F1, sc_F1),
+    std::make_pair<int, int>(SDL_SCANCODE_F2, sc_F2),
+    std::make_pair<int, int>(SDL_SCANCODE_F3, sc_F3),
+    std::make_pair<int, int>(SDL_SCANCODE_F4, sc_F4),
+    std::make_pair<int, int>(SDL_SCANCODE_F5, sc_F5),
+    std::make_pair<int, int>(SDL_SCANCODE_F6, sc_F6),
+    std::make_pair<int, int>(SDL_SCANCODE_F7, sc_F7),
+    std::make_pair<int, int>(SDL_SCANCODE_F8, sc_F8),
+    std::make_pair<int, int>(SDL_SCANCODE_F9, sc_F9),
+    std::make_pair<int, int>(SDL_SCANCODE_F10, sc_F10),
+    std::make_pair<int, int>(SDL_SCANCODE_F11, sc_F11),
+    std::make_pair<int, int>(SDL_SCANCODE_F12, sc_F12),
 
-    {SDL_SCANCODE_1, sc_1},
-    {SDL_SCANCODE_2, sc_2},
-    {SDL_SCANCODE_3, sc_3},
-    {SDL_SCANCODE_4, sc_4},
-    {SDL_SCANCODE_5, sc_5},
-    {SDL_SCANCODE_6, sc_6},
-    {SDL_SCANCODE_7, sc_7},
-    {SDL_SCANCODE_8, sc_8},
-    {SDL_SCANCODE_9, sc_9},
-    {SDL_SCANCODE_0, sc_0},
+    std::make_pair<int, int>(SDL_SCANCODE_1, sc_1),
+    std::make_pair<int, int>(SDL_SCANCODE_2, sc_2),
+    std::make_pair<int, int>(SDL_SCANCODE_3, sc_3),
+    std::make_pair<int, int>(SDL_SCANCODE_4, sc_4),
+    std::make_pair<int, int>(SDL_SCANCODE_5, sc_5),
+    std::make_pair<int, int>(SDL_SCANCODE_6, sc_6),
+    std::make_pair<int, int>(SDL_SCANCODE_7, sc_7),
+    std::make_pair<int, int>(SDL_SCANCODE_8, sc_8),
+    std::make_pair<int, int>(SDL_SCANCODE_9, sc_9),
+    std::make_pair<int, int>(SDL_SCANCODE_0, sc_0),
 
-    {SDL_SCANCODE_A, sc_A},
-    {SDL_SCANCODE_B, sc_B},
-    {SDL_SCANCODE_C, sc_C},
-    {SDL_SCANCODE_D, sc_D},
-    {SDL_SCANCODE_E, sc_E},
-    {SDL_SCANCODE_F, sc_F},
-    {SDL_SCANCODE_G, sc_G},
-    {SDL_SCANCODE_H, sc_H},
-    {SDL_SCANCODE_I, sc_I},
-    {SDL_SCANCODE_J, sc_J},
-    {SDL_SCANCODE_K, sc_K},
-    {SDL_SCANCODE_L, sc_L},
-    {SDL_SCANCODE_M, sc_M},
-    {SDL_SCANCODE_N, sc_N},
-    {SDL_SCANCODE_O, sc_O},
-    {SDL_SCANCODE_P, sc_P},
-    {SDL_SCANCODE_Q, sc_Q},
-    {SDL_SCANCODE_R, sc_R},
-    {SDL_SCANCODE_S, sc_S},
-    {SDL_SCANCODE_T, sc_T},
-    {SDL_SCANCODE_U, sc_U},
-    {SDL_SCANCODE_V, sc_V},
-    {SDL_SCANCODE_W, sc_W},
-    {SDL_SCANCODE_X, sc_X},
-    {SDL_SCANCODE_Y, sc_Y},
-    {SDL_SCANCODE_Z, sc_Z},
+    std::make_pair<int, int>(SDL_SCANCODE_A, sc_A),
+    std::make_pair<int, int>(SDL_SCANCODE_B, sc_B),
+    std::make_pair<int, int>(SDL_SCANCODE_C, sc_C),
+    std::make_pair<int, int>(SDL_SCANCODE_D, sc_D),
+    std::make_pair<int, int>(SDL_SCANCODE_E, sc_E),
+    std::make_pair<int, int>(SDL_SCANCODE_F, sc_F),
+    std::make_pair<int, int>(SDL_SCANCODE_G, sc_G),
+    std::make_pair<int, int>(SDL_SCANCODE_H, sc_H),
+    std::make_pair<int, int>(SDL_SCANCODE_I, sc_I),
+    std::make_pair<int, int>(SDL_SCANCODE_J, sc_J),
+    std::make_pair<int, int>(SDL_SCANCODE_K, sc_K),
+    std::make_pair<int, int>(SDL_SCANCODE_L, sc_L),
+    std::make_pair<int, int>(SDL_SCANCODE_M, sc_M),
+    std::make_pair<int, int>(SDL_SCANCODE_N, sc_N),
+    std::make_pair<int, int>(SDL_SCANCODE_O, sc_O),
+    std::make_pair<int, int>(SDL_SCANCODE_P, sc_P),
+    std::make_pair<int, int>(SDL_SCANCODE_Q, sc_Q),
+    std::make_pair<int, int>(SDL_SCANCODE_R, sc_R),
+    std::make_pair<int, int>(SDL_SCANCODE_S, sc_S),
+    std::make_pair<int, int>(SDL_SCANCODE_T, sc_T),
+    std::make_pair<int, int>(SDL_SCANCODE_U, sc_U),
+    std::make_pair<int, int>(SDL_SCANCODE_V, sc_V),
+    std::make_pair<int, int>(SDL_SCANCODE_W, sc_W),
+    std::make_pair<int, int>(SDL_SCANCODE_X, sc_X),
+    std::make_pair<int, int>(SDL_SCANCODE_Y, sc_Y),
+    std::make_pair<int, int>(SDL_SCANCODE_Z, sc_Z),
 };
 
 struct RenderTarget
@@ -354,7 +353,6 @@ static void drawPTC(const VertexPTC *pVertices, int count, GLenum mode)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(8));
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(16));
     glDrawArrays(mode, 0, count);
-    drawMode = DRAW_MODE_PC;
 }
 
 void drawLines(const VertexPTC *pVertices, int count)
@@ -544,9 +542,9 @@ int main(int argc, char** argv)
     wolf3d_init(); // This also pretty much runs the main loop
 
     // Cleanup
-    SDL_GL_DeleteContext(glContext);
-    SDL_DestroyWindow(sdlWindow);
-    SDL_Quit();
+    //SDL_GL_DeleteContext(glContext); // We will never get there
+    //SDL_DestroyWindow(sdlWindow);
+    //SDL_Quit();
 }
 
 void audioCallback(void *userdata, Uint8 *stream, int len)
@@ -580,7 +578,7 @@ void ws_update_sdl()
             if (KeyInt_in) KeyInt_in();
             break;
         case SDL_KEYUP:
-            scancode = getDosScanCode(event.key.keysym.scancode);
+            scancode = getDosScanCode(event.key.keysym.scancode) | 0x80;
             if (KeyInt_in) KeyInt_in();
             break;
         case SDL_MOUSEBUTTONDOWN:
@@ -655,6 +653,20 @@ void ws_update_sdl()
     ptcCount = 0;
     drawMode = -1;
     drawModePrim = 0;
+
+    static auto lastTime = std::chrono::high_resolution_clock::now();
+    auto curTime = std::chrono::high_resolution_clock::now();
+    auto elapsed = curTime - lastTime;
+    static const long long TARGET_FPS = 1000000 / 70;
+    static long long curStep = 0;
+    curStep += std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+    lastTime = curTime;
+
+    while (curStep >= TARGET_FPS)
+    {
+        curStep -= TARGET_FPS;
+        ++TimeCount;
+    }
 }
 
 int palidx = 0;
@@ -743,6 +755,18 @@ void VL_Bar(int16_t x, int16_t y, int16_t width, int16_t height, int16_t color)
     pcCount += drawRect(resources.pPCVertices + pcCount, (float)x, (float)y, (float)width, (float)height, palette[color]);
 }
 
+void VL_Hlin(uint16_t x, uint16_t y, uint16_t width, uint16_t color)
+{
+    prepareForPC(GL_QUADS);
+    pcCount += drawRect(resources.pPCVertices + pcCount, (float)x, (float)y, (float)width, 1, palette[color]);
+}
+
+void VL_Vlin(int16_t x, int16_t y, int16_t height, int16_t color)
+{
+    prepareForPC(GL_QUADS);
+    pcCount += drawRect(resources.pPCVertices + pcCount, (float)x, (float)y, 1, (float)height, palette[color]);
+}
+
 struct BakedFont
 {
     GLuint tex;
@@ -753,10 +777,12 @@ std::map<int, BakedFont> fontTextures;
 
 BakedFont& getBakedFont(int id)
 {
-    auto it = fontTextures.find(id);
+    //fontcolor = f; backcolor
+    auto kid = id | (backcolor << 16) | (fontcolor << 24); // Generate a unique id by font color. A bit overkill, but meh...
+    auto it = fontTextures.find(kid);
     if (it == fontTextures.end())
     {
-        auto& bakedFont = fontTextures[id];
+        auto& bakedFont = fontTextures[kid];
 
         // Load it
         auto font = (fontstruct*)grsegs[id];
@@ -770,6 +796,8 @@ BakedFont& getBakedFont(int id)
         auto data = new uint8_t[w * h * 4];
 
         auto lx = 0;
+        auto fg = palette[fontcolor];
+        auto bg = palette[backcolor];
         for (int i = 0; i < 256; ++i)
         {
             auto cw = font->width[i];
@@ -782,7 +810,8 @@ BakedFont& getBakedFont(int id)
                 for (int x = lx; x < lx + cw; ++x)
                 {
                     auto k = (y * w + x) * 4;
-                    auto col = palette[*src++];
+                    Color col = bg;
+                    if (*src++) col = fg;
                     data[k + 0] = (byte)(col.r * 255.0f);
                     data[k + 1] = (byte)(col.g * 255.0f);
                     data[k + 2] = (byte)(col.b * 255.0f);
