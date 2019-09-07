@@ -40,7 +40,7 @@ void VL_SetCRTC (int16_t crtc);
 void VL_SetScreen (int16_t crtc, int16_t pelpan) {}
 void VL_WaitVBL (int16_t vbls)
 {
-    ws_update_sdl();
+    VW_UpdateScreen();
     //auto waitTime = std::chrono::milliseconds(vbls * 8);
     //auto timeBefore = std::chrono::high_resolution_clock::now();
     //auto timeAfter = std::chrono::high_resolution_clock::now();

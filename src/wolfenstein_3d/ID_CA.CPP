@@ -40,7 +40,7 @@ typedef struct
 typedef struct
 {
 	uint16_t	RLEWtag;
-	int32_t		headeroffsets[100];
+	int16_t		headeroffsets[100];
 	byte*		tileinfo;
 } mapfiletype;
 
@@ -123,8 +123,8 @@ SDMode		oldsoundmode=(SDMode)0;
 
 
 
-void	CAL_CarmackExpand (uint16_t  *source, uint16_t  *dest,
-		uint16_t length);
+//void	CAL_CarmackExpand (uint16_t  *source, uint16_t  *dest,
+//		uint16_t length);
 
 
 #ifdef THREEBYTEGRSTARTS
@@ -679,66 +679,134 @@ static void CAL_HuffExpand(byte *source, byte *dest, int32_t length, huffnode *h
 #define NEARTAG	0xa7
 #define FARTAG	0xa8
 
-void CAL_CarmackExpand (uint16_t  *source, uint16_t  *dest, uint16_t length)
+static inline word READWORD(byte *&ptr)
 {
-	uint16_t	ch,chhigh,count,offset;
-	uint16_t	 *copyptr,  *inptr,  *outptr;
-
-	length/=2;
-
-	inptr = source;
-	outptr = dest;
-
-	while (length)
-	{
-		ch = *inptr++;
-		chhigh = ch>>8;
-		if (chhigh == NEARTAG)
-		{
-			count = ch&0xff;
-			if (!count)
-			{				// have to insert a word containing the tag byte
-				ch |= *((uint8_t  *)inptr);
-                inptr = (uint16_t*)((uint8_t  *)inptr + 1);
-				*outptr++ = ch;
-				length--;
-			}
-			else
-			{
-				offset = *((uint8_t  *)inptr);
-                inptr = (uint16_t*)((uint8_t  *)inptr + 1);
-				copyptr = outptr - offset;
-				length -= count;
-				while (count--)
-					*outptr++ = *copyptr++;
-			}
-		}
-		else if (chhigh == FARTAG)
-		{
-			count = ch&0xff;
-			if (!count)
-			{				// have to insert a word containing the tag byte
-				ch |= *((uint8_t *)inptr);
-                inptr = (uint16_t*)((uint8_t  *)inptr + 1);
-				*outptr++ = ch;
-				length --;
-			}
-			else
-			{
-				offset = *inptr++;
-				copyptr = dest + offset;
-				length -= count;
-				while (count--)
-					*outptr++ = *copyptr++;
-			}
-		}
-		else
-		{
-			*outptr++ = ch;
-			length --;
-		}
-	}
+    word val = ptr[0] | ptr[1] << 8;
+    ptr += 2;
+    return val;
 }
+
+void CAL_CarmackExpand(byte *source, word *dest, int length)
+{
+    word ch, chhigh, count, offset;
+    byte *inptr;
+    word *copyptr, *outptr;
+
+    length /= 2;
+
+    inptr = (byte *)source;
+    outptr = dest;
+
+    while (length > 0)
+    {
+        ch = READWORD(inptr);
+        chhigh = ch >> 8;
+        if (chhigh == NEARTAG)
+        {
+            count = ch & 0xff;
+            if (!count)
+            {                               // have to insert a word containing the tag byte
+                ch |= *inptr++;
+                *outptr++ = ch;
+                length--;
+            }
+            else
+            {
+                offset = *inptr++;
+                copyptr = outptr - offset;
+                length -= count;
+                if (length < 0) return;
+                while (count--)
+                    *outptr++ = *copyptr++;
+            }
+        }
+        else if (chhigh == FARTAG)
+        {
+            count = ch & 0xff;
+            if (!count)
+            {                               // have to insert a word containing the tag byte
+                ch |= *inptr++;
+                *outptr++ = ch;
+                length--;
+            }
+            else
+            {
+                offset = READWORD(inptr);
+                copyptr = dest + offset;
+                length -= count;
+                if (length < 0) return;
+                while (count--)
+                    *outptr++ = *copyptr++;
+            }
+        }
+        else
+        {
+            *outptr++ = ch;
+            length--;
+        }
+    }
+}
+
+//void CAL_CarmackExpand(uint16_t *source, uint16_t *dest, uint16_t length)
+//{
+//    uint16_t	ch, chhigh, count, offset;
+//    uint16_t	*copyptr, *inptr, *outptr;
+//
+//    length /= 2;
+//
+//    inptr = source;
+//    outptr = dest;
+//
+//    while (length)
+//    {
+//        ch = *inptr++;
+//        chhigh = ch >> 8;
+//        if (chhigh == NEARTAG)
+//        {
+//            count = ch & 0xff;
+//            if (!count)
+//            {				// have to insert a word containing the tag byte
+//                ch |= *((unsigned char *)inptr);
+//                inptr = (uint16_t*)((unsigned char *)inptr + 1);
+//                *outptr++ = ch;
+//                length--;
+//            }
+//            else
+//            {
+//                offset = *((unsigned char *)inptr);
+//                inptr = (uint16_t*)((unsigned char *)inptr + 1);
+//                copyptr = outptr - offset;
+//                length -= count;
+//                while (count--)
+//                    *outptr++ = *copyptr++;
+//            }
+//        }
+//        else if (chhigh == FARTAG)
+//        {
+//            count = ch & 0xff;
+//            if (!count)
+//            {				// have to insert a word containing the tag byte
+//                ch |= *((unsigned char *)inptr);
+//                inptr = (uint16_t*)((unsigned char *)inptr + 1);
+//                *outptr++ = ch;
+//                length--;
+//            }
+//            else
+//            {
+//                offset = *inptr++;
+//                copyptr = dest + offset;
+//                length -= count;
+//                while (count--)
+//                    *outptr++ = *copyptr++;
+//            }
+//        }
+//        else
+//        {
+//            *outptr++ = ch;
+//            length--;
+//        }
+//    }
+//}
 
 
 
@@ -1044,79 +1112,74 @@ void CAL_SetupGrFile (void)
 
 void CAL_SetupMapFile (void)
 {
-	int16_t	i;
-	int16_t handle;
-	int32_t length,pos;
-	char fname[13];
+    int	i;
+    int handle;
+    long length, pos;
+    char fname[13];
 
-//
-// load maphead.ext (offsets and tileinfo for map file)
-//
+    //
+    // load maphead.ext (offsets and tileinfo for map file)
+    //
 #ifndef MAPHEADERLINKED
-	strcpy(fname,mheadname);
-	strcat(fname,extension);
+    strcpy(fname, mheadname);
+    strcat(fname, extension);
 
-	if ((handle = file_open(fname,
-		 O_RDONLY | O_BINARY, S_IREAD)) == -1)
-		CA_CannotOpen(fname);
+    if ((handle = file_open(fname,
+        O_RDONLY | O_BINARY, S_IREAD)) == -1)
+        CA_CannotOpen(fname);
 
-	length = filelength(handle);
-	MM_GetPtr ((memptr*)&tinf,length);
-	CA_FarRead(handle, tinf, length);
-	file_close(handle);
+    length = filelength(handle);
+    MM_GetPtr((memptr*)&tinf, length);
+    CA_FarRead(handle, tinf, length);
+    file_close(handle);
 #else
 
-	tinf = (byte  *)FP_SEG(&maphead);
+    tinf = (byte _seg *)FP_SEG(&maphead);
 
 #endif
 
-//
-// open the data file
-//
+    //
+    // open the data file
+    //
 #ifdef CARMACIZED
-	strcpy(fname,"GAMEMAPS.");
-	strcat(fname,extension);
+    strcpy(fname, "GAMEMAPS.");
+    strcat(fname, extension);
 
-	if ((maphandle = file_open(fname,
-		 O_RDONLY | O_BINARY, S_IREAD)) == -1)
-		CA_CannotOpen(fname);
+    if ((maphandle = file_open(fname,
+        O_RDONLY | O_BINARY, S_IREAD)) == -1)
+        CA_CannotOpen(fname);
 #else
-	strcpy(fname,mfilename);
-	strcat(fname,extension);
+    strcpy(fname, mfilename);
+    strcat(fname, extension);
 
-	if ((maphandle = file_open(fname,
-		 O_RDONLY | O_BINARY, S_IREAD)) == -1)
-		CA_CannotOpen(fname);
+    if ((maphandle = open(fname,
+        O_RDONLY | O_BINARY, S_IREAD)) == -1)
+        CA_CannotOpen(fname);
 #endif
-//
-// load all map header
-//
-	for (i=0;i<NUMMAPS;i++)
-	{
-		pos = ((mapfiletype *)tinf)->headeroffsets[i];
-		if (pos<0)						// $FFFFFFFF start is a sparse map
-			continue;
 
-		MM_GetPtr((memptr*)&mapheaderseg[i],sizeof(maptype));
-		MM_SetLock((memptr*)&mapheaderseg[i],_true);
-		file_seek(maphandle,pos,SEEK_SET);
-		CA_FarRead (maphandle,(byte*)mapheaderseg[i],sizeof(maptype));
+    //
+    // load all map header
+    //
+    for (i = 0; i < NUMMAPS; i++)
+    {
+        pos = ((mapfiletype*)tinf)->headeroffsets[i];
+        if (pos < 0)						// $FFFFFFFF start is a sparse map
+            continue;
 
-        // printf("%i, %i, %i, %s\n", (int16_t)(mapheaderseg[i]->planelength[0]), (int16_t)(mapheaderseg[i]->width), (int16_t)(mapheaderseg[i]->height), mapheaderseg[i]->name);	
-    //     int32_t		planestart[3];
-	// uint16_t	planelength[3];
-	// uint16_t	width,height;
-	// char		name[16];
-	}
+        MM_GetPtr(&(memptr)mapheaderseg[i], sizeof(maptype));
+        MM_SetLock(&(memptr)mapheaderseg[i], _true);
+        file_seek(maphandle, pos, SEEK_SET);
+        CA_FarRead(maphandle, (byte*)mapheaderseg[i], sizeof(maptype));
+    }
 
-//
-// allocate space for 3 64*64 planes
-//
-	for (i=0;i<MAPPLANES;i++)
-	{
-		MM_GetPtr ((memptr*)&mapsegs[i],64*64*2);
-		MM_SetLock ((memptr*)&mapsegs[i],_true);
-	}
+    //
+    // allocate space for 3 64*64 planes
+    //
+    for (i = 0; i < MAPPLANES; i++)
+    {
+        MM_GetPtr(&(memptr)mapsegs[i], 64 * 64 * 2);
+        MM_SetLock(&(memptr)mapsegs[i], _true);
+    }
 }
 
 
@@ -1582,7 +1645,7 @@ void CA_CacheMap (int16_t mapnum)
 		expanded = *source;
 		source++;
 		MM_GetPtr (&buffer2seg,expanded);
-		CAL_CarmackExpand (source, (uint16_t *)buffer2seg,expanded);
+		CAL_CarmackExpand ((byte*)source, (uint16_t *)buffer2seg,expanded);
 		CA_RLEWexpand (((uint16_t *)buffer2seg)+1,(uint16_t*)*dest,size,
 		((mapfiletype *)tinf)->RLEWtag);
 		MM_FreePtr (&buffer2seg);
@@ -1591,7 +1654,7 @@ void CA_CacheMap (int16_t mapnum)
 		//
 		// unRLEW, skipping expanded length
 		//
-		CA_RLEWexpand (source+1, *dest,size,
+		CA_RLEWexpand (source+1, (uint16_t*)*dest,size,
 		((mapfiletype  *)tinf)->RLEWtag);
 #endif
 

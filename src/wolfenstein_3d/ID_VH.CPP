@@ -352,11 +352,11 @@ void VWB_Vlin (int16_t y1, int16_t y2, int16_t x, int16_t color)
 	 	VW_Vlin(y1,y2,x,color);
 }
 
-void VW_UpdateScreen (void)
-{
-    ws_update_sdl();
-	// VH_UpdateScreen ();
-}
+//void VW_UpdateScreen (void)
+//{
+//    ws_update_sdl();
+//	// VH_UpdateScreen ();
+//}
 
 
 /*

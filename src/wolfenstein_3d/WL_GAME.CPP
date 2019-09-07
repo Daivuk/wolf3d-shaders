@@ -1253,7 +1253,6 @@ restartgame:
 	DrawPlayScreen ();
     extern float fade_val;
     fade_val = 1.0f;
-    while (true) ws_update_sdl();
 	died = _false;
 restart:
 	do

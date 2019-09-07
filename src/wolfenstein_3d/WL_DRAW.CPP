@@ -1,6 +1,7 @@
 // WL_DRAW.C
 
 #include "WL_DEF.H"
+#include "ws_main.h"
 // #include <DOS.H>
 #pragma hdrstop
 
@@ -1252,6 +1253,7 @@ void CalcTics (void)
 	{
 		newtime = TimeCount;
 		tics = newtime-lasttimecount;
+        ws_update_sdl();
 	} while (!tics);			// make sure at least one tic passes
 
 	lasttimecount = newtime;

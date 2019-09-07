@@ -555,6 +555,7 @@ int main(int argc, char** argv)
     resources.checkerTexture = ws_create_texture((uint8_t*)&checkerBytes, 2, 2);
 
     ws_update_sdl();
+    VW_UpdateScreen();
 
     // Init wolf
     wolf3d_init(); // This also pretty much runs the main loop
@@ -579,8 +580,6 @@ int getDosScanCode(int sdlScanCode)
 
 void ws_update_sdl()
 {
-    flush();
-
     // Poll events
     SDL_LockAudio();
     SDL_Event event;
@@ -620,6 +619,26 @@ void ws_update_sdl()
     }
 
     SDL_UnlockAudio();
+
+    // Update ticks
+    static auto lastTime = std::chrono::high_resolution_clock::now();
+    auto curTime = std::chrono::high_resolution_clock::now();
+    auto elapsed = curTime - lastTime;
+    static const long long TARGET_FPS = 1000000 / 70;
+    static long long curStep = 0;
+    curStep += std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+    lastTime = curTime;
+
+    while (curStep >= TARGET_FPS)
+    {
+        curStep -= TARGET_FPS;
+        ++TimeCount;
+    }
+}
+
+void VW_UpdateScreen()
+{
+    flush();
 
     // Draw game
     pcCount = 0;
@@ -712,20 +731,6 @@ void ws_update_sdl()
     ptcCount = 0;
     drawMode = -1;
     drawModePrim = 0;
-
-    static auto lastTime = std::chrono::high_resolution_clock::now();
-    auto curTime = std::chrono::high_resolution_clock::now();
-    auto elapsed = curTime - lastTime;
-    static const long long TARGET_FPS = 1000000 / 70;
-    static long long curStep = 0;
-    curStep += std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    lastTime = curTime;
-
-    while (curStep >= TARGET_FPS)
-    {
-        curStep -= TARGET_FPS;
-        ++TimeCount;
-    }
 }
 
 int palidx = 0;

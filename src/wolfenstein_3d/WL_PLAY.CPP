@@ -1,6 +1,7 @@
 // WL_PLAY.C
 
 #include "WL_DEF.H"
+#include "ws_main.h"
 #pragma hdrstop
 
 
@@ -473,8 +474,7 @@ void PollControls (void)
 //
 // take DEMOTICS or more tics, and modify Timecount to reflect time taken
 //
-		while (TimeCount<lasttimecount+DEMOTICS)
-		;
+		while (TimeCount<lasttimecount+DEMOTICS) ws_update_sdl();
 		TimeCount = lasttimecount + DEMOTICS;
 		lasttimecount += DEMOTICS;
 		tics = DEMOTICS;
