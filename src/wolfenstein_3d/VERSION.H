@@ -2,7 +2,7 @@
 //#define JAPAN
 #define GOODTIMES
 #define ARTSEXTERN
-#define DEMOSEXTERN
+//#define DEMOSEXTERN
 //#define MYPROFILE
 //#define DEBCHECK
 #define CARMACIZED

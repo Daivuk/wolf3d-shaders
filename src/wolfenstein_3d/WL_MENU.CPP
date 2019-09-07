@@ -51,7 +51,7 @@ char endStrings[9][80]=
 };
 
 CP_iteminfo
-	MainItems={MENU_X,MENU_Y,10,STARTITEM,24},
+	MainItems={MENU_X,MENU_Y,8,STARTITEM,24},
 	SndItems={SM_X,SM_Y1,12,0,52},
 	LSItems={LSM_X,LSM_Y,10,0,24},
 	CtlItems={CTL_X,CTL_Y,6,-1,56},
@@ -81,7 +81,7 @@ MainMenu[]=
 	{1,STR_CL,(void(*)(int16_t))CP_Control},
 	{1,STR_LG,(void(*)(int16_t))CP_LoadGame},
 	{0,STR_SG,(void(*)(int16_t))CP_SaveGame},
-	{1,STR_CV,(void(*)(int16_t))CP_ChangeView},
+	//{1,STR_CV,(void(*)(int16_t))CP_ChangeView},
 
 #ifndef GOODTIMES
 #ifndef SPEAR
@@ -89,7 +89,7 @@ MainMenu[]=
 	#ifdef SPANISH
 	{2,"Ve esto!",CP_ReadThis},
 	#else
-	{2,"Read This!",CP_ReadThis},
+	{2,"Read This!",(void(*)(int16_t))CP_ReadThis},
 	#endif
 
 #endif
@@ -610,9 +610,9 @@ void DrawMainMenu(void)
 ////////////////////////////////////////////////////////////////////
 void CP_ReadThis(void)
 {
-	// StartCPMusic(CORNER_MUS);
-	// HelpScreens();
-	// StartCPMusic(MENUSONG);
+	 StartCPMusic(CORNER_MUS);
+	 HelpScreens();
+	 StartCPMusic(MENUSONG);
 }
 #endif
 #endif

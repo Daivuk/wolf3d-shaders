@@ -49,7 +49,7 @@
 #define MENU_Y	55
 #define MENU_W	178
 #ifndef SPEAR
-#define MENU_H	13*10+6
+#define MENU_H	13*8+6
 #else
 #define MENU_H	13*9+6
 #endif
@@ -204,7 +204,7 @@ enum menuitems
 	control,
 	loadgame,
 	savegame,
-	changeview,
+	//changeview,
 
 #ifndef GOODTIMES
 #ifndef SPEAR

@@ -313,6 +313,7 @@ US_SetPrintRoutines(void (*measure)(char  *,word *,word *),void (*print)(char  *
 void
 US_Print(char  *s)
 {
+    if (!s) return;
     static std::string cpy;
     cpy = s;
     s = (char*)cpy.c_str();
@@ -445,6 +446,7 @@ US_CPrintLine(char  *s)
 void
 US_CPrint(char  *s)
 {
+    if (!s) return;
     static std::string cpy;
     cpy = s;
     s = (char*)cpy.c_str();

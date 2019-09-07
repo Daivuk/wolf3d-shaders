@@ -162,11 +162,29 @@ struct Resources
     RenderTarget mainRT;
 } resources;
 
+struct Pic
+{
+    int w, h;
+    GLuint tex;
+};
+
+struct BakedFont
+{
+    GLuint tex;
+    float ws[256];
+    float os[256];
+};
+
+std::map<int16_t, Pic> pics;
+std::map<int16_t, GLuint> screenRaws;
+std::map<int, BakedFont> fontTextures;
+
 #define DRAW_MODE_PC 0
 #define DRAW_MODE_PTC 1
 int drawMode = -1;
 GLenum drawModePrim = 0;
 float fade_val = 1.0f;
+bool showDebug = false;
 
 #define wolf_RGB(r, g, b) {(float)((r)*255/63)/255.0f, (float)((g)*255/63)/255.0f, (float)((b)*255/63)/255.0f, 1.0f}
 Color palette[] = {
@@ -574,12 +592,20 @@ void ws_update_sdl()
             exit(0);
             break;
         case SDL_KEYDOWN:
-            scancode = getDosScanCode(event.key.keysym.scancode);
-            if (KeyInt_in) KeyInt_in();
+            if (event.key.keysym.scancode == SDL_SCANCODE_F1) showDebug = true;
+            else
+            {
+                scancode = getDosScanCode(event.key.keysym.scancode);
+                if (KeyInt_in) KeyInt_in();
+            }
             break;
         case SDL_KEYUP:
-            scancode = getDosScanCode(event.key.keysym.scancode) | 0x80;
-            if (KeyInt_in) KeyInt_in();
+            if (event.key.keysym.scancode == SDL_SCANCODE_F1) showDebug = false;
+            else
+            {
+                scancode = getDosScanCode(event.key.keysym.scancode) | 0x80;
+                if (KeyInt_in) KeyInt_in();
+            }
             break;
         case SDL_MOUSEBUTTONDOWN:
             // Input::onMouseButtonDown(registry, event.button.button);
@@ -622,10 +648,43 @@ void ws_update_sdl()
     }
 
     prepareForPTC(GL_QUADS);
-    ptcCount += drawRect(resources.pPTCVertices, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, { 1, 1, 1, fade_val });
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, resources.mainRT.handle);
-    drawPTC(resources.pPTCVertices, ptcCount, GL_QUADS);
+    if (showDebug)
+    {
+        //std::map<int16_t, Pic> pics;
+        //std::map<int, BakedFont> fontTextures;
+        //std::map<int16_t, GLuint> screenRaws;
+        float y = 0;
+        for (auto& kv : fontTextures)
+        {
+            glBindTexture(GL_TEXTURE_2D, kv.second.tex);
+            ptcCount += drawRect(resources.pPTCVertices, 0, y, (float)screen_w, 10, 0, 0, 1, 1, { 1, 1, 1, 1 });
+            flush();
+            y += 12.0f;
+        }
+        float maxy = 0;
+        float x = 0;
+        for (auto& kv : pics)
+        {
+            if (x + (float)kv.second.w + 2 > (float)screen_w)
+            {
+                x = 0.0f;
+                y += maxy + 2;
+                maxy = 0.0f;
+            }
+            glBindTexture(GL_TEXTURE_2D, kv.second.tex);
+            ptcCount += drawRect(resources.pPTCVertices, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, { 1, 1, 1, 1 });
+            flush();
+            x += (float)kv.second.w + 2;
+            maxy = std::max(maxy, (float)kv.second.h);
+        }
+    }
+    else
+    {
+        ptcCount += drawRect(resources.pPTCVertices, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, { 1, 1, 1, fade_val });
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, resources.mainRT.handle);
+        drawPTC(resources.pPTCVertices, ptcCount, GL_QUADS);
+    }
 
     // Swap buffers
     SDL_GL_SwapWindow(sdlWindow);
@@ -767,14 +826,6 @@ void VL_Vlin(int16_t x, int16_t y, int16_t height, int16_t color)
     pcCount += drawRect(resources.pPCVertices + pcCount, (float)x, (float)y, 1, (float)height, palette[color]);
 }
 
-struct BakedFont
-{
-    GLuint tex;
-    float ws[256];
-    float os[256];
-};
-std::map<int, BakedFont> fontTextures;
-
 BakedFont& getBakedFont(int id)
 {
     //fontcolor = f; backcolor
@@ -798,6 +849,7 @@ BakedFont& getBakedFont(int id)
         auto lx = 0;
         auto fg = palette[fontcolor];
         auto bg = palette[backcolor];
+        bg.a = 0.0f;
         for (int i = 0; i < 256; ++i)
         {
             auto cw = font->width[i];
@@ -815,7 +867,7 @@ BakedFont& getBakedFont(int id)
                     data[k + 0] = (byte)(col.r * 255.0f);
                     data[k + 1] = (byte)(col.g * 255.0f);
                     data[k + 2] = (byte)(col.b * 255.0f);
-                    data[k + 3] = 255;
+                    data[k + 3] = (byte)(col.a * 255.0f);
                 }
             }
             lx += cw;
@@ -856,8 +908,6 @@ void VW_DrawPropString(char  *string)
     flush();
 }
 
-std::map<int16_t, GLuint> screenRaws;
-
 void ws_draw_screen_from_raw(byte* _data, int16_t chunk)
 {
     GLuint texture = 0;
@@ -894,13 +944,6 @@ void ws_draw_screen_from_raw(byte* _data, int16_t chunk)
     ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)0, (float)0, (float)MaxX, (float)MaxY, 0, 0, 1, 1, { 1, 1, 1, 1 });
     flush();
 }
-
-struct Pic
-{
-    int w, h;
-    GLuint tex;
-};
-std::map<int16_t, Pic> pics;
 
 void VWB_DrawPic (int16_t x, int16_t y, int16_t chunknum)
 {
