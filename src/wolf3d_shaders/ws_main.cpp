@@ -10,6 +10,7 @@
 #include "ws_main.h"
 #include "ws_shaders.h"
 
+#include <algorithm>
 #include <assert.h>
 #include <chrono>
 #include <stdio.h>
@@ -537,23 +538,7 @@ int main(int argc, char** argv)
     uint32_t checkerBytes[] = { 0xFF880088, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF880088 };
     resources.checkerTexture = ws_create_texture((uint8_t*)&checkerBytes, 2, 2);
 
-    // Draw test checker
-    {
-        ws_update_sdl();
-
-        glClearColor(0, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        //glBindTexture(GL_TEXTURE_2D, resources.checkerTexture);
-
-        //prepareForPTC(GL_QUADS);
-        ////ptcCount += drawRect(resources.pPTCVertices, (float)MaxX / 2 - 50, (float)MaxY / 2 - 50, 100, 100, 0, 0, 4, 4, { 1, 1, 1, 1 });
-        //ptcCount += drawRect(resources.pPTCVertices, MaxX/2-32, MaxY/2-32, 64, 64, 0, 0, 4, 4, { 1, 1, 1, 1 });
-        //drawPTC(resources.pPTCVertices, ptcCount, GL_QUADS);
-        //ptcCount = 0;
-        //flush();
-    }
+    ws_update_sdl();
 
     // Init wolf
     wolf3d_init(); // This also pretty much runs the main loop
@@ -579,7 +564,6 @@ int getDosScanCode(int sdlScanCode)
 void ws_update_sdl()
 {
     flush();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Poll events
     SDL_LockAudio();
@@ -622,6 +606,8 @@ void ws_update_sdl()
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glViewport(0, 0, screen_w, screen_h);
 
     matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)screen_w, (float)screen_h, 0, -999, 999);
@@ -877,6 +863,62 @@ void ws_draw_screen_from_raw(byte* _data, int16_t chunk)
     prepareForPTC(GL_QUADS);
     glBindTexture(GL_TEXTURE_2D, texture);
     ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)0, (float)0, (float)MaxX, (float)MaxY, 0, 0, 1, 1, { 1, 1, 1, 1 });
+    flush();
+}
+
+struct Pic
+{
+    int w, h;
+    GLuint tex;
+};
+std::map<int16_t, Pic> pics;
+
+void VWB_DrawPic (int16_t x, int16_t y, int16_t chunknum)
+{
+    int16_t	picnum = chunknum - STARTPICS;
+    uint16_t width, height;
+    width = pictable[picnum].width;
+    height = pictable[picnum].height;
+    x &= ~7;
+
+    auto _data = (byte*)grsegs[chunknum];
+    GLuint texture = 0;
+    Pic pic;
+    auto it = pics.find(picnum);
+    auto lw = 40;
+    if (it == pics.end())
+    {
+        auto data = new uint8_t[width * height * 4];
+
+        int k = 0;
+        for (int y = 0; y < height; ++y)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                auto col = palette[_data[(y*(width >> 2) + (x >> 2)) + (x & 3)*(width >> 2)*height]];
+                data[k + 0] = (byte)(col.r * 255.0f);
+                data[k + 1] = (byte)(col.g * 255.0f);
+                data[k + 2] = (byte)(col.b * 255.0f);
+                data[k + 3] = 255;
+                k += 4;
+            }
+        }
+        texture = ws_create_texture(data, width, height);
+        delete[] data;
+        pic.w = width;
+        pic.h = height;
+        pic.tex = texture;
+        pics[picnum] = pic;
+    }
+    else
+    {
+        pic = it->second;
+    }
+
+    flush();
+    prepareForPTC(GL_QUADS);
+    glBindTexture(GL_TEXTURE_2D, pic.tex);
+    ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)x, (float)y, (float)pic.w, (float)pic.h, 0, 0, 1, 1, { 1, 1, 1, 1 });
     flush();
 }
 

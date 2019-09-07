@@ -134,7 +134,7 @@ void	VL_SetVGAPlaneMode (void)
 // asm	int16_t	0x10
 // 	VL_DePlaneVGA ();
 // 	VGAMAPMASK(15);
-// 	VL_SetLineWidth (40);
+ 	VL_SetLineWidth (40);
 }
 
 
@@ -261,25 +261,25 @@ void VL_DePlaneVGA (void)
 
 void VL_SetLineWidth (uint16_t width)
 {
-// 	int16_t i,offset;
+	int16_t i,offset;
 
 // //
 // // set wide virtual screen
 // //
-// 	outport (CRTC_INDEX,CRTC_OFFSET+width*256);
+	// outport (CRTC_INDEX,CRTC_OFFSET+width*256);
 
-// //
-// // set up lookup tables
-// //
-// 	linewidth = width*2;
+//
+// set up lookup tables
+//
+	linewidth = width*2;
 
-// 	offset = 0;
+	offset = 0;
 
-// 	for (i=0;i<MAXSCANLINES;i++)
-// 	{
-// 		ylookup[i]=offset;
-// 		offset += linewidth;
-// 	}
+	for (i=0;i<MAXSCANLINES;i++)
+	{
+		ylookup[i]=offset;
+		offset += linewidth;
+	}
 }
 
 /*
@@ -468,42 +468,45 @@ void VL_GetPalette (byte  *palette)
 
 void VL_FadeOut (int16_t start, int16_t end, int16_t red, int16_t green, int16_t blue, int16_t steps)
 {
+    extern float fade_val;
  	int16_t		i,j,orig,delta;
  	byte	 *origptr,  *newptr;
 
- 	VL_WaitVBL(1);
- 	VL_GetPalette (&palette1[0][0]);
- 	memcpy (palette2,palette1,768);
+    fade_val = 1.0f;
 
+ 	VL_WaitVBL(1);
+ 	//VL_GetPalette (&palette1[0][0]);
+ 	//memcpy (palette2,palette1,768);
  //
  // fade through intermediate frames
  //
  	for (i=0;i<steps;i++)
  	{
- 		origptr = &palette1[start][0];
- 		newptr = &palette2[start][0];
- 		for (j=start;j<=end;j++)
- 		{
- 			orig = *origptr++;
- 			delta = red-orig;
- 			*newptr++ = orig + delta * i / steps;
- 			orig = *origptr++;
- 			delta = green-orig;
- 			*newptr++ = orig + delta * i / steps;
- 			orig = *origptr++;
- 			delta = blue-orig;
- 			*newptr++ = orig + delta * i / steps;
- 		}
+ 		//origptr = &palette1[start][0];
+ 		//newptr = &palette2[start][0];
+ 		//for (j=start;j<=end;j++)
+ 		//{
+ 		//	orig = *origptr++;
+ 		//	delta = red-orig;
+ 		//	*newptr++ = orig + delta * i / steps;
+ 		//	orig = *origptr++;
+ 		//	delta = green-orig;
+ 		//	*newptr++ = orig + delta * i / steps;
+ 		//	orig = *origptr++;
+ 		//	delta = blue-orig;
+ 		//	*newptr++ = orig + delta * i / steps;
+ 		//}
 
  		VL_WaitVBL(1);
- 		VL_SetPalette (&palette2[0][0]);
+        fade_val = 1.0f - (float)i / (float)steps;
+ 		//VL_SetPalette (&palette2[0][0]);
  	}
 
  //
  // final color
  //
- 	VL_FillPalette (red,green,blue);
-
+ 	//VL_FillPalette (red,green,blue);
+    fade_val = 0.0f;
  	screenfaded = _true;
 }
 

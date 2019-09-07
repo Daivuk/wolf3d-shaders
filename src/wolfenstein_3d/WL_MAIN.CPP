@@ -1419,36 +1419,36 @@ void    DemoLoop (void)
 	nsize = (int32_t)40*1024;
 	MM_GetPtr(&nullblock,nsize);
 
-// #ifndef DEMOTEST
+ #ifndef DEMOTEST
 
-// 	#ifndef UPLOAD
+ 	#ifndef UPLOAD
 
-// 		#ifndef GOODTIMES
-// 		#ifndef SPEAR
-// 		#ifndef JAPAN
-// 		if (!NoWait)
-// 			NonShareware();
-// 		#endif
-// 		#else
+ 		#ifndef GOODTIMES
+ 		#ifndef SPEAR
+ 		#ifndef JAPAN
+ 		if (!NoWait)
+ 			NonShareware();
+ 		#endif
+ 		#else
 
-// 			#ifndef GOODTIMES
-// 			#ifndef SPEARDEMO
-// 			CopyProtection();
-// 			#endif
-// 			#endif
+ 			#ifndef GOODTIMES
+ 			#ifndef SPEARDEMO
+ 			CopyProtection();
+ 			#endif
+ 			#endif
 
-// 		#endif
-// 		#endif
-// 	#endif
+ 		#endif
+ 		#endif
+ 	#endif
 
-// 	StartCPMusic(INTROSONG);
+ 	StartCPMusic(INTROSONG);
 
-// #ifndef JAPAN
-// 	if (!NoWait)
-// 		PG13 ();
-// #endif
+ #ifndef JAPAN
+ 	if (!NoWait)
+ 		PG13 ();
+ #endif
 
-// #endif
+ #endif
 
 	while (1)
 	{

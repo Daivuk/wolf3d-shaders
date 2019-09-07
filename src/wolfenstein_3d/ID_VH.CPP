@@ -301,19 +301,19 @@ void VWB_DrawTile8M (int16_t x, int16_t y, int16_t tile)
 }
 
 
-void VWB_DrawPic (int16_t x, int16_t y, int16_t chunknum)
-{
-	// int16_t	picnum = chunknum - STARTPICS;
-	// uint16_t width,height;
-
-	// x &= ~7;
-
-	// width = pictable[picnum].width;
-	// height = pictable[picnum].height;
-
-	// if (VW_MarkUpdateBlock (x,y,x+width-1,y+height-1))
-	// 	VL_MemToScreen (grsegs[chunknum],width,height,x,y);
-}
+//void VWB_DrawPic (int16_t x, int16_t y, int16_t chunknum)
+//{
+//	// int16_t	picnum = chunknum - STARTPICS;
+//	// uint16_t width,height;
+//
+//	// x &= ~7;
+//
+//	// width = pictable[picnum].width;
+//	// height = pictable[picnum].height;
+//
+//	// if (VW_MarkUpdateBlock (x,y,x+width-1,y+height-1))
+//	// 	VL_MemToScreen (grsegs[chunknum],width,height,x,y);
+//}
 
 
 
