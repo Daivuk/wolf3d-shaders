@@ -816,3 +816,42 @@ void VW_DrawPropString(char  *string)
 
     flush();
 }
+
+std::map<int16_t, GLuint> screenRaws;
+
+void ws_draw_screen_from_raw(byte* _data, int16_t chunk)
+{
+    GLuint texture = 0;
+    auto it = screenRaws.find(chunk);
+    if (it == screenRaws.end())
+    {
+        auto data = new uint8_t[MaxX * MaxY * 4];
+        
+        int k = 0;
+        for (int y = 0; y < MaxY; ++y)
+        {
+            for (int x = 0; x < MaxX; ++x)
+            {
+                auto col = palette[_data[(y * 80 + (x >> 2)) + (x & 3) * 80 * 200]];
+                data[k + 0] = (byte)(col.r * 255.0f);
+                data[k + 1] = (byte)(col.g * 255.0f);
+                data[k + 2] = (byte)(col.b * 255.0f);
+                data[k + 3] = 255;
+                k += 4;
+            }
+        }
+        texture = ws_create_texture(data, MaxX, MaxY);
+        delete[] data;
+        screenRaws[chunk] = texture;
+    }
+    else
+    {
+        texture = it->second;
+    }
+
+    flush();
+    prepareForPTC(GL_QUADS);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)0, (float)0, (float)MaxX, (float)MaxY, 0, 0, 1, 1, { 1, 1, 1, 1 });
+    flush();
+}

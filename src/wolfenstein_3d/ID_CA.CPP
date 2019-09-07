@@ -15,6 +15,7 @@ loaded into the data segment
 */
 
 #include "ID_HEADS.H"
+#include "ws_main.h"
 // #pragma hdrstop
 
 // #pragma warn -pro
@@ -1497,6 +1498,8 @@ void CA_CacheGrChunk (int16_t chunk)
 ======================
 */
 
+static byte fullscreen_buf[320 * 200];
+
 void CA_CacheScreen (int16_t chunk)
 {
 	int32_t	pos=0,compressed=0,expanded=0;
@@ -1527,7 +1530,8 @@ void CA_CacheScreen (int16_t chunk)
 // allocate final space, decompress it, and free bigbuffer
 // Sprites need to have shifts made and various other junk
 //
-	CAL_HuffExpand (source,(byte*)bufferofs,expanded,grhuffman,_true);
+	CAL_HuffExpand (source,(byte*)fullscreen_buf,expanded,grhuffman,_true);
+    ws_draw_screen_from_raw((byte*)fullscreen_buf, chunk);
 	VW_MarkUpdateBlock (0,0,319,199);
 	MM_FreePtr(&bigbufferseg);
 }

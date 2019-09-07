@@ -1452,7 +1452,7 @@ void    DemoLoop (void)
 
 	while (1)
 	{
-		while (true)//!NoWait)
+		while (!NoWait)
 		{
 //
 // title page
@@ -1463,76 +1463,76 @@ void    DemoLoop (void)
 #ifdef SPEAR
 			CA_CacheGrChunk (TITLEPALETTE);
 
-			// CA_CacheGrChunk (TITLE1PIC);
-			// VWB_DrawPic (0,0,TITLE1PIC);
-			// UNCACHEGRCHUNK (TITLE1PIC);
+			 CA_CacheGrChunk (TITLE1PIC);
+			 VWB_DrawPic (0,0,TITLE1PIC);
+			 UNCACHEGRCHUNK (TITLE1PIC);
 
-			// CA_CacheGrChunk (TITLE2PIC);
-			// VWB_DrawPic (0,80,TITLE2PIC);
-			// UNCACHEGRCHUNK (TITLE2PIC);
-			// VW_UpdateScreen ();
-// 			VL_FadeIn(0,255,grsegs[TITLEPALETTE],30);
+			 CA_CacheGrChunk (TITLE2PIC);
+			 VWB_DrawPic (0,80,TITLE2PIC);
+			 UNCACHEGRCHUNK (TITLE2PIC);
+			 VW_UpdateScreen ();
+ 			VL_FadeIn(0,255,grsegs[TITLEPALETTE],30);
 
-// 			UNCACHEGRCHUNK (TITLEPALETTE);
+ 			UNCACHEGRCHUNK (TITLEPALETTE);
 #else
-// 			CA_CacheScreen (TITLEPIC);
-// 			VW_UpdateScreen ();
-// 			VW_FadeIn();
+ 			CA_CacheScreen (TITLEPIC);
+ 			VW_UpdateScreen ();
+ 			VW_FadeIn();
 #endif
-// 			if (IN_UserInput(TickBase*15))
-// 				break;
-// 			VW_FadeOut();
-//
-// credits page
-//
-// 			CA_CacheScreen (CREDITSPIC);
-// 			VW_UpdateScreen();
-// 			VW_FadeIn ();
-// 			if (IN_UserInput(TickBase*10))
-// 				break;
-// 			VW_FadeOut ();
-// //
-// // high scores
-// //
-// 			DrawHighScores ();
-// 			VW_UpdateScreen ();
-// 			VW_FadeIn ();
+ 			if (IN_UserInput(TickBase*15))
+ 				break;
+ 			VW_FadeOut();
 
-// 			if (IN_UserInput(TickBase*10))
-// 				break;
+ //credits page
+
+ 			CA_CacheScreen (CREDITSPIC);
+ 			VW_UpdateScreen();
+ 			VW_FadeIn ();
+ 			if (IN_UserInput(TickBase*10))
+ 				break;
+ 			VW_FadeOut ();
+ //
+ // high scores
+ //
+ 			DrawHighScores ();
+ 			VW_UpdateScreen ();
+ 			VW_FadeIn ();
+
+ 			if (IN_UserInput(TickBase*10))
+ 				break;
 #endif
-// //
-// // demo
-// //
+ //
+ // demo
+ //
 
-// 			#ifndef SPEARDEMO
-// 			PlayDemo (LastDemo++%4);
-// 			#else
-// 			PlayDemo (0);
-// 			#endif
+ 			#ifndef SPEARDEMO
+ 			PlayDemo (LastDemo++%4);
+ 			#else
+ 			PlayDemo (0);
+ 			#endif
 
-// 			if (playstate == ex_abort)
-// 				break;
-// 			StartCPMusic(INTROSONG);
+ 			if (playstate == ex_abort)
+ 				break;
+ 			StartCPMusic(INTROSONG);
 		}
 
-// 		VW_FadeOut ();
+ 		VW_FadeOut ();
 
-// #ifndef SPEAR
-// 		if (Keyboard[sc_Tab] && MS_CheckParm((char*)"goobers"))
-// #else
-// 		if (Keyboard[sc_Tab] && MS_CheckParm((char*)"debugmode"))
-// #endif
-// 			RecordDemo ();
-// 		else
-// 			US_ControlPanel (0);
+ #ifndef SPEAR
+ 		if (Keyboard[sc_Tab] && MS_CheckParm((char*)"goobers"))
+ #else
+ 		if (Keyboard[sc_Tab] && MS_CheckParm((char*)"debugmode"))
+ #endif
+ 			RecordDemo ();
+ 		else
+ 			US_ControlPanel (0);
 
-		// if (startgame || loadedgame)
-		// {
-		// 	GameLoop ();
-		// 	VW_FadeOut();
-		// 	StartCPMusic(INTROSONG);
-		// }
+		 if (startgame || loadedgame)
+		 {
+		 	GameLoop ();
+		 	VW_FadeOut();
+		 	StartCPMusic(INTROSONG);
+		 }
 	}
 }
 
@@ -1587,8 +1587,8 @@ void wolf3d_init()
 {
 	CheckForEpisodes();
 	InitGame();
-
-    // CA_CacheScreen(TITLE1PIC);
+    DemoLoop();
+    Quit((char*)"Demo loop exited???");
 }
 
 void wolf3d_update()
