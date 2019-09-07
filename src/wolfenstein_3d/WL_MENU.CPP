@@ -1909,7 +1909,7 @@ void MouseSensitivity(void)
 					VWB_Bar(61+20*mouseadjustment,98,19,9,READHCOLOR);
 					VW_UpdateScreen();
 					SD_PlaySound(MOVEGUN1SND);
-					while(Keyboard[sc_LeftArrow]);
+                    while (Keyboard[sc_LeftArrow]) { ws_update_sdl(); }
 					WaitKeyUp();
 				}
 				break;
@@ -1925,7 +1925,7 @@ void MouseSensitivity(void)
 					VWB_Bar(61+20*mouseadjustment,98,19,9,READHCOLOR);
 					VW_UpdateScreen();
 					SD_PlaySound(MOVEGUN1SND);
-					while(Keyboard[sc_RightArrow]);
+                    while (Keyboard[sc_RightArrow]) { ws_update_sdl(); }
 					WaitKeyUp();
 				}
 				break;
@@ -2137,233 +2137,237 @@ void DefineKeyMove(void)
 enum {FWRD,RIGHT,BKWD,LEFT};
 int16_t moveorder[4]={LEFT,RIGHT,FWRD,BKWD};
 
-void EnterCtrlData(int16_t index,CustomCtrls *cust,void (*DrawRtn)(int16_t),void (*PrintRtn)(int16_t),int16_t type)
+void EnterCtrlData(int16_t index, CustomCtrls *cust, void(*DrawRtn)(int16_t), void(*PrintRtn)(int16_t), int16_t type)
 {
- int16_t j,exit,tick,redraw,which,x,picked;
- ControlInfo ci;
+    int16_t j, exit, tick, redraw, which, x, picked;
+    ControlInfo ci;
 
 
- ShootSnd();
- PrintY=CST_Y+13*index;
- IN_ClearKeysDown();
- exit=0;
- redraw=1;
- //
- // FIND FIRST SPOT IN ALLOWED ARRAY
- //
- for (j=0;j<4;j++)
-   if (cust->allowed[j])
-   {
-	which=j;
-	break;
-   }
+    ShootSnd();
+    PrintY = CST_Y + 13 * index;
+    IN_ClearKeysDown();
+    exit = 0;
+    redraw = 1;
+    //
+    // FIND FIRST SPOT IN ALLOWED ARRAY
+    //
+    for (j = 0; j < 4; j++)
+        if (cust->allowed[j])
+        {
+            which = j;
+            break;
+        }
 
- do
- {
-  if (redraw)
-  {
-   x=CST_START+CST_SPC*which;
-   DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
+    do
+    {
+        if (redraw)
+        {
+            x = CST_START + CST_SPC * which;
+            DrawWindow(5, PrintY - 1, 310, 13, BKGDCOLOR);
 
-   DrawRtn(1);
-   DrawWindow(x-2,PrintY,CST_SPC,11,TEXTCOLOR);
-   DrawOutline(x-2,PrintY,CST_SPC,11,0,HIGHLIGHT);
-   SETFONTCOLOR(0,TEXTCOLOR);
-   PrintRtn(which);
-   PrintX=x;
-   SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
-   VW_UpdateScreen();
-   WaitKeyUp();
-   redraw=0;
-  }
+            DrawRtn(1);
+            DrawWindow(x - 2, PrintY, CST_SPC, 11, TEXTCOLOR);
+            DrawOutline(x - 2, PrintY, CST_SPC, 11, 0, HIGHLIGHT);
+            SETFONTCOLOR(0, TEXTCOLOR);
+            PrintRtn(which);
+            PrintX = x;
+            SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
+            VW_UpdateScreen();
+            WaitKeyUp();
+            redraw = 0;
+        }
 
-  ReadAnyControl(&ci);
+        ReadAnyControl(&ci);
 
-  if (type==MOUSE || type==JOYSTICK)
-	if (IN_KeyDown(sc_Enter)||IN_KeyDown(sc_Control)||IN_KeyDown(sc_Alt))
-	{
-	 IN_ClearKeysDown();
-	 ci.button0=ci.button1=_false;
-	}
+        if (type == MOUSE || type == JOYSTICK)
+            if (IN_KeyDown(sc_Enter) || IN_KeyDown(sc_Control) || IN_KeyDown(sc_Alt))
+            {
+                IN_ClearKeysDown();
+                ci.button0 = ci.button1 = _false;
+            }
 
-  //
-  // CHANGE BUTTON VALUE?
-  //
-  if ((ci.button0|ci.button1|ci.button2|ci.button3)||
-	  ((type==KEYBOARDBTNS||type==KEYBOARDMOVE) && LastScan==sc_Enter))
-  {
-   tick=TimeCount=picked=0;
-   SETFONTCOLOR(0,TEXTCOLOR);
+        //
+        // CHANGE BUTTON VALUE?
+        //
+        if ((ci.button0 | ci.button1 | ci.button2 | ci.button3) ||
+            ((type == KEYBOARDBTNS || type == KEYBOARDMOVE) && LastScan == sc_Enter))
+        {
+            tick = TimeCount = picked = 0;
+            SETFONTCOLOR(0, TEXTCOLOR);
 
-   do
-   {
-	int16_t button,result=0;
+            if (type == KEYBOARDBTNS || type == KEYBOARDMOVE) // [dsl] I added this
+                IN_ClearKeysDown();
 
+            do
+            {
+                int16_t button, result = 0;
 
-	if (type==KEYBOARDBTNS||type==KEYBOARDMOVE)
-	  IN_ClearKeysDown();
+                ws_update_sdl();
 
-	//
-	// FLASH CURSOR
-	//
-	if (TimeCount>10)
-	{
-	 switch(tick)
-	 {
-	  case 0:
-	VWB_Bar(x,PrintY+1,CST_SPC-2,10,TEXTCOLOR);
-	break;
-	  case 1:
-	PrintX=x;
-	US_Print((char*)"?");
-	SD_PlaySound(HITWALLSND);
-	 }
-	 tick^=1;
-	 TimeCount=0;
-	 VW_UpdateScreen();
-	}
+                //if (type == KEYBOARDBTNS || type == KEYBOARDMOVE)
+                //    IN_ClearKeysDown();
 
-	//
-	// WHICH TYPE OF INPUT DO WE PROCESS?
-	//
-	switch(type)
-	{
-	 case MOUSE:
-	   Mouse(3);
-	    button=_BX;
-	   switch(button)
-	   {
-	case 1: result=1; break;
-	case 2: result=2; break;
-	case 4: result=3; break;
-	   }
+                //
+                // FLASH CURSOR
+                //
+                if (TimeCount > 10)
+                {
+                    switch (tick)
+                    {
+                    case 0:
+                        VWB_Bar(x, PrintY + 1, CST_SPC - 2, 10, TEXTCOLOR);
+                        break;
+                    case 1:
+                        PrintX = x;
+                        US_Print((char*)"?");
+                        SD_PlaySound(HITWALLSND);
+                    }
+                    tick ^= 1;
+                    TimeCount = 0;
+                    VW_UpdateScreen();
+                }
 
-	   if (result)
-	   {
-	int16_t z;
+                //
+                // WHICH TYPE OF INPUT DO WE PROCESS?
+                //
+                switch (type)
+                {
+                case MOUSE:
+                    Mouse(3);
+                    button = _BX;
+                    switch (button)
+                    {
+                    case 1: result = 1; break;
+                    case 2: result = 2; break;
+                    case 4: result = 3; break;
+                    }
 
-
-	for (z=0;z<4;z++)
-	  if (order[which]==buttonmouse[z])
-	  {
-	   buttonmouse[z]=bt_nobutton;
-	   break;
-	  }
-
-	buttonmouse[result-1]=order[which];
-	picked=1;
-	SD_PlaySound(SHOOTDOORSND);
-	   }
-	   break;
-
-	 case JOYSTICK:
-	   if (ci.button0) result=1;
-	   else
-	   if (ci.button1) result=2;
-	   else
-	   if (ci.button2) result=3;
-	   else
-	   if (ci.button3) result=4;
-
-	   if (result)
-	   {
-	int16_t z;
+                    if (result)
+                    {
+                        int16_t z;
 
 
-	for (z=0;z<4;z++)
-	  if (order[which]==buttonjoy[z])
-	  {
-	   buttonjoy[z]=bt_nobutton;
-	   break;
-	  }
+                        for (z = 0; z < 4; z++)
+                            if (order[which] == buttonmouse[z])
+                            {
+                                buttonmouse[z] = bt_nobutton;
+                                break;
+                            }
 
-	buttonjoy[result-1]=order[which];
-	picked=1;
-	SD_PlaySound(SHOOTDOORSND);
-	   }
-	   break;
+                        buttonmouse[result - 1] = order[which];
+                        picked = 1;
+                        SD_PlaySound(SHOOTDOORSND);
+                    }
+                    break;
 
-	 case KEYBOARDBTNS:
-	   if (LastScan)
-	   {
-	buttonscan[order[which]]=LastScan;
-	picked=1;
-	ShootSnd();
-	IN_ClearKeysDown();
-	   }
-	   break;
+                case JOYSTICK:
+                    if (ci.button0) result = 1;
+                    else
+                        if (ci.button1) result = 2;
+                        else
+                            if (ci.button2) result = 3;
+                            else
+                                if (ci.button3) result = 4;
 
-	 case KEYBOARDMOVE:
-	   if (LastScan)
-	   {
-	dirscan[moveorder[which]]=LastScan;
-	picked=1;
-	ShootSnd();
-	IN_ClearKeysDown();
-	   }
-	   break;
-	}
+                    if (result)
+                    {
+                        int16_t z;
 
-	//
-	// EXIT INPUT?
-	//
-	if (IN_KeyDown(sc_Escape))
-	{
-	 picked=1;
-	 continue;
-	}
 
-   } while(!picked);
+                        for (z = 0; z < 4; z++)
+                            if (order[which] == buttonjoy[z])
+                            {
+                                buttonjoy[z] = bt_nobutton;
+                                break;
+                            }
 
-   SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
-   redraw=1;
-   WaitKeyUp();
-   continue;
-  }
+                        buttonjoy[result - 1] = order[which];
+                        picked = 1;
+                        SD_PlaySound(SHOOTDOORSND);
+                    }
+                    break;
 
-  if (ci.button1 || IN_KeyDown(sc_Escape))
-	exit=1;
+                case KEYBOARDBTNS:
+                    if (LastScan)
+                    {
+                        buttonscan[order[which]] = LastScan;
+                        picked = 1;
+                        ShootSnd();
+                        IN_ClearKeysDown();
+                    }
+                    break;
 
-  //
-  // MOVE TO ANOTHER SPOT?
-  //
-  switch(ci.dir)
-  {
-      default: break;
-   case dir_West:
-	 do
-	 {
-	  which--;
-	  if (which<0)
-	which=3;
-	 } while(!cust->allowed[which]);
-	 redraw=1;
-	 SD_PlaySound(MOVEGUN1SND);
-	 while(ReadAnyControl(&ci),ci.dir!=dir_None);
-	 IN_ClearKeysDown();
-	 break;
+                case KEYBOARDMOVE:
+                    if (LastScan)
+                    {
+                        dirscan[moveorder[which]] = LastScan;
+                        picked = 1;
+                        ShootSnd();
+                        IN_ClearKeysDown();
+                    }
+                    break;
+                }
 
-   case dir_East:
-	 do
-	 {
-	  which++;
-	  if (which>3)
-	which=0;
-	 } while(!cust->allowed[which]);
-	 redraw=1;
-	 SD_PlaySound(MOVEGUN1SND);
-	 while(ReadAnyControl(&ci),ci.dir!=dir_None);
-	 IN_ClearKeysDown();
-	 break;
-   case dir_North:
-   case dir_South:
-	 exit=1;
-  }
- } while(!exit);
+                //
+                // EXIT INPUT?
+                //
+                if (IN_KeyDown(sc_Escape))
+                {
+                    picked = 1;
+                    continue;
+                }
 
- SD_PlaySound(ESCPRESSEDSND);
- WaitKeyUp();
- DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
+            } while (!picked);
+
+            SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
+            redraw = 1;
+            WaitKeyUp();
+            continue;
+        }
+
+        if (ci.button1 || IN_KeyDown(sc_Escape))
+            exit = 1;
+
+        //
+        // MOVE TO ANOTHER SPOT?
+        //
+        switch (ci.dir)
+        {
+        default: break;
+        case dir_West:
+            do
+            {
+                which--;
+                if (which < 0)
+                    which = 3;
+            } while (!cust->allowed[which]);
+            redraw = 1;
+            SD_PlaySound(MOVEGUN1SND);
+            while (ReadAnyControl(&ci), ci.dir != dir_None);
+            IN_ClearKeysDown();
+            break;
+
+        case dir_East:
+            do
+            {
+                which++;
+                if (which > 3)
+                    which = 0;
+            } while (!cust->allowed[which]);
+            redraw = 1;
+            SD_PlaySound(MOVEGUN1SND);
+            while (ReadAnyControl(&ci), ci.dir != dir_None);
+            IN_ClearKeysDown();
+            break;
+        case dir_North:
+        case dir_South:
+            exit = 1;
+        }
+    } while (!exit);
+
+    SD_PlaySound(ESCPRESSEDSND);
+    WaitKeyUp();
+    DrawWindow(5, PrintY - 1, 310, 13, BKGDCOLOR);
 }
 
 
