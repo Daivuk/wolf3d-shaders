@@ -1,6 +1,7 @@
 // WL_GAME.C
 
 #include "WL_DEF.H"
+#include "ws_main.h"
 #pragma hdrstop
 
 #ifdef MYPROFILE
@@ -879,8 +880,10 @@ void DrawPlayScreen (void)
 	for (i=0;i<3;i++)
 	{
 		bufferofs = screenloc[i];
-		DrawPlayBorder ();
+		//DrawPlayBorder (); // Dont need this anymore
+        VWB_Bar(0, 0, 320, 200, 0); // All black
 		VWB_DrawPic (0,200-STATUSLINES,STATUSBARPIC);
+        VWB_Hlin(0, 319, 160, 125); // Little line at the bottom
 	}
 
 	bufferofs = temp;
@@ -1248,6 +1251,9 @@ restartgame:
 	ClearMemory ();
 	SETFONTCOLOR(0,15);
 	DrawPlayScreen ();
+    extern float fade_val;
+    fade_val = 1.0f;
+    while (true) ws_update_sdl();
 	died = _false;
 restart:
 	do
