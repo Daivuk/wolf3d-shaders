@@ -7,6 +7,7 @@
 #include <windows.h>
 #endif
 
+#include "WL_DEF.H"
 #include "ws_main.h"
 #include "ws_shaders.h"
 
@@ -745,6 +746,15 @@ void VW_UpdateScreen()
     ptcCount = 0;
     drawMode = -1;
     drawModePrim = 0;
+}
+
+void VGAClearScreen(void)
+{
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(0, STATUSLINES, MaxX, MaxY - STATUSLINES);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glScissor(0, 0, MaxX, MaxY);
+    glDisable(GL_SCISSOR_TEST);
 }
 
 int palidx = 0;

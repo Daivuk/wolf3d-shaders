@@ -1340,38 +1340,38 @@ void WallRefresh (void)
 =
 ========================
 */
-
+void VGAClearScreen(void);
 void	ThreeDRefresh (void)
 {
-// 	int16_t tracedir;
+ 	int16_t tracedir;
 
-// // this wouldn't need to be done except for my debugger/video wierdness
-// 	// outportb (SC_INDEX,SC_MAPMASK);
+ // this wouldn't need to be done except for my debugger/video wierdness
+ 	// outportb (SC_INDEX,SC_MAPMASK);
 
-// //
-// // clear out the traced array
-// //
-// // asm	mov	ax,ds
-// // asm	mov	es,ax
-// // asm	mov	di,OFFSET spotvis
-// // asm	xor	ax,ax
-// // asm	mov	cx,2048							// 64*64 / 2
-// // asm	rep stosw
+ //
+ // clear out the traced array
+ //
+ // asm	mov	ax,ds
+ // asm	mov	es,ax
+ // asm	mov	di,OFFSET spotvis
+ // asm	xor	ax,ax
+ // asm	mov	cx,2048							// 64*64 / 2
+ // asm	rep stosw
 
-// 	bufferofs += screenofs;
+ 	bufferofs += screenofs;
 
-// //
-// // follow the walls from there to the right, drawwing as we go
-// //
-// 	// VGAClearScreen ();
+ //
+ // follow the walls from there to the right, drawwing as we go
+ //
+ 	 VGAClearScreen ();
 
-// 	WallRefresh ();
+ 	WallRefresh ();
 
-// //
-// // draw all the scaled images
-// //
-// 	DrawScaleds();			// draw scaled stuff
-// 	DrawPlayerWeapon ();	// draw player's hands
+ //
+ // draw all the scaled images
+ //
+DrawScaleds();			// draw scaled stuff
+DrawPlayerWeapon ();	// draw player's hands
 
 // //
 // // show screen and time last cycle
@@ -1403,7 +1403,7 @@ void	ThreeDRefresh (void)
 // 		bufferofs = PAGE1START;
 
 // 	frameon++;
-	PM_NextFrame();
+	//PM_NextFrame();
 }
 
 
