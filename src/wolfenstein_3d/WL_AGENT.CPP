@@ -253,7 +253,7 @@ void StatusDrawPic (uint16_t x, uint16_t y, uint16_t picnum)
 	//bufferofs = PAGE2START+(200-STATUSLINES)*SCREENWIDTH;
 	//LatchDrawPic (x,y,picnum);
 	//bufferofs = PAGE3START+(200-STATUSLINES)*SCREENWIDTH;
-	LatchDrawPic (x,y,picnum);
+	LatchDrawPic (x, (200 - STATUSLINES) + y,picnum);
 
 	//bufferofs = temp;
 }
