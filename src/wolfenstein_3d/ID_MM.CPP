@@ -440,6 +440,7 @@ void MM_GetPtr (memptr *baseptr,uint32_t size)
     auto ptr = malloc(size);
     if (!ptr) Quit ((char*)"MM_GetPtr: Out of memory!");
     *baseptr = ptr;
+    mmerror = _false;
 // 	mmblocktype  *scan, *lastscan, *endscan
 // 				, *purge, *next;
 // 	int16_t			search;

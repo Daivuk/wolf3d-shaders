@@ -203,7 +203,7 @@ void UpdateSoundLoc(void)
 
 void ClearMemory (void)
 {
-	PM_UnlockMainMem();
+	//PM_UnlockMainMem();
 	SD_StopDigitized();
 	MM_SortMem ();
 }
@@ -1018,7 +1018,7 @@ void RecordDemo (void)
 
 	SetupGameLevel ();
 	StartMusic ();
-	PM_CheckMainMem ();
+	//PM_CheckMainMem ();
 	fizzlein = _true;
 
 	PlayLoop ();
@@ -1084,7 +1084,7 @@ void PlayDemo (int16_t demonumber)
 
 	SetupGameLevel ();
 	StartMusic ();
-	PM_CheckMainMem ();
+	//PM_CheckMainMem ();
 	fizzlein = _true;
 
 	PlayLoop ();
@@ -1277,7 +1277,7 @@ restart:
 
 		ingame = _true;
 		StartMusic ();
-		PM_CheckMainMem ();
+		//PM_CheckMainMem ();
 		if (!died)
 			PreloadGraphics ();
 		else

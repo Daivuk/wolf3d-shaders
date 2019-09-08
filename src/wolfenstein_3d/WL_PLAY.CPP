@@ -740,7 +740,7 @@ void CheckKeys (void)
 			 "that - right, Cheatmeister?!");
 
 	 UNCACHEGRCHUNK(STARTFONT+1);
-	 PM_CheckMainMem ();
+	 //PM_CheckMainMem ();
 	 IN_ClearKeysDown();
 	 IN_Ack();
 

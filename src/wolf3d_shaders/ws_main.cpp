@@ -180,6 +180,7 @@ struct BakedFont
 std::map<int16_t, Pic> pics;
 std::map<int16_t, GLuint> screenRaws;
 std::map<int, BakedFont> fontTextures;
+std::map<int16_t, Pic> sprites;
 
 #define DRAW_MODE_PC 0
 #define DRAW_MODE_PTC 1
@@ -516,6 +517,7 @@ int main(int argc, char** argv)
 #endif
     _argc = argc;
     _argv = argv;
+    palette[255].a = 0.0f; // Last color is transparent
 
     // Init SDL
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
@@ -685,17 +687,38 @@ void VW_UpdateScreen()
     prepareForPTC(GL_QUADS);
     if (showDebug)
     {
-        //std::map<int16_t, GLuint> screenRaws;
         float y = -debugOffset;
+        prepareForPC(GL_QUADS);
+        for (int i = 0; i < 256; ++i)
+        {
+            pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, palette[i]);
+        }
+        prepareForPTC(GL_QUADS);
+        y += 5;
         for (auto& kv : fontTextures)
         {
             glBindTexture(GL_TEXTURE_2D, kv.second.tex);
-            ptcCount += drawRect(resources.pPTCVertices, 0, y, (float)screen_w, 10, 0, 0, 1, 1, { 1, 1, 1, 1 });
+            ptcCount += drawRect(resources.pPTCVertices + ptcCount, 0, y, (float)screen_w, 10, 0, 0, 1, 1, { 1, 1, 1, 1 });
             flush();
             y += 12.0f;
         }
         float maxy = 0;
         float x = 0;
+        for (auto& kv : screenRaws)
+        {
+            if (x + 320 + 2 > (float)screen_w)
+            {
+                x = 0.0f;
+                y += maxy + 2;
+                maxy = 0.0f;
+            }
+            glBindTexture(GL_TEXTURE_2D, kv.second);
+            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)320, (float)200, 0, 0, 1, 1, { 1, 1, 1, 1 });
+            flush();
+            drawDebugString((char*)std::to_string(kv.first).c_str(), x, y);
+            x += (float)320 + 2;
+            maxy = std::max(maxy, (float)200);
+        }
         for (auto& kv : pics)
         {
             if (x + (float)kv.second.w + 2 > (float)screen_w)
@@ -705,7 +728,22 @@ void VW_UpdateScreen()
                 maxy = 0.0f;
             }
             glBindTexture(GL_TEXTURE_2D, kv.second.tex);
-            ptcCount += drawRect(resources.pPTCVertices, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, { 1, 1, 1, 1 });
+            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, { 1, 1, 1, 1 });
+            flush();
+            drawDebugString((char*)std::to_string(kv.first).c_str(), x, y);
+            x += (float)kv.second.w + 2;
+            maxy = std::max(maxy, (float)kv.second.h);
+        }
+        for (auto& kv : sprites)
+        {
+            if (x + (float)kv.second.w + 2 > (float)screen_w)
+            {
+                x = 0.0f;
+                y += maxy + 2;
+                maxy = 0.0f;
+            }
+            glBindTexture(GL_TEXTURE_2D, kv.second.tex);
+            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, { 1, 1, 1, 1 });
             flush();
             drawDebugString((char*)std::to_string(kv.first).c_str(), x, y);
             x += (float)kv.second.w + 2;
@@ -714,7 +752,7 @@ void VW_UpdateScreen()
     }
     else
     {
-        ptcCount += drawRect(resources.pPTCVertices, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, { 1, 1, 1, fade_val });
+        ptcCount += drawRect(resources.pPTCVertices + ptcCount, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, { 1, 1, 1, fade_val });
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, resources.mainRT.handle);
         drawPTC(resources.pPTCVertices, ptcCount, GL_QUADS);
@@ -985,7 +1023,7 @@ void ws_draw_screen_from_raw(byte* _data, int16_t chunk)
                 data[k + 0] = (byte)(col.r * 255.0f);
                 data[k + 1] = (byte)(col.g * 255.0f);
                 data[k + 2] = (byte)(col.b * 255.0f);
-                data[k + 3] = 255;
+                data[k + 3] = (byte)(col.a * 255.0f);
                 k += 4;
             }
         }
@@ -1027,7 +1065,7 @@ Pic load_pic(int16_t chunknum)
             data[k + 0] = (byte)(col.r * 255.0f);
             data[k + 1] = (byte)(col.g * 255.0f);
             data[k + 2] = (byte)(col.b * 255.0f);
-            data[k + 3] = 255;
+            data[k + 3] = (byte)(col.a * 255.0f);
             k += 4;
         }
     }
@@ -1108,6 +1146,106 @@ void VL_SetPalette(byte  *pal)
         col.r = (float)pal[i * 3 + 0] * 255.0f;
         col.g = (float)pal[i * 3 + 1] * 255.0f;
         col.b = (float)pal[i * 3 + 2] * 255.0f;
-        col.a = 255.0f;
+        col.a = 1.0f;
     }
+    palette[255].a = 0.0f;
+}
+
+Pic load_sprite(int16_t shapenum)
+{
+    uint16_t width, height;
+    Pic pic;
+
+    width = 64;
+    height = 64;
+
+    auto _data = (byte*)PM_GetSpritePage(shapenum);
+
+    auto first_column = (word)_data[0] | (word)(_data[1]) << 8;
+    auto last_column = (word)_data[2] | (word)(_data[3]) << 8;
+    word *column_offsets = new word[last_column - first_column + 1];
+
+    for (int i = 0; i <= last_column - first_column; ++i)
+    {
+        column_offsets[i] = (word)_data[4 + 2 * i] | (word)(_data[4 + 2 * i + 1]) << 8;
+    }
+
+    auto sprdata = new byte[64 * 64];
+    memset(sprdata, 255, 64 * 64);
+
+    word *column_offset_reader = column_offsets; // read-head that will traverse the column offsets
+    for (word column = first_column; column <= last_column; ++column)
+    {
+        word *drawing_instructions = (word *)(_data + *column_offset_reader);
+        uint32_t idx = 0;
+        while (drawing_instructions[idx] != 0)
+        {
+            for (int row = drawing_instructions[idx + 2] / 2; row < drawing_instructions[idx] / 2; ++row)
+            {
+                sprdata[column + row * 64] = _data[drawing_instructions[idx + 1] + row];
+            }
+            idx += 3;
+        }
+        ++column_offset_reader; // advance the read-head
+    }
+    delete[] column_offsets;
+
+    auto data = new uint8_t[width * height * 4];
+
+    int k = 0;
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            auto col = palette[sprdata[k/4]];
+            data[k + 0] = (byte)(col.r * 255.0f);
+            data[k + 1] = (byte)(col.g * 255.0f);
+            data[k + 2] = (byte)(col.b * 255.0f);
+            data[k + 3] = (byte)(col.a * 255.0f);
+            k += 4;
+        }
+    }
+
+    delete[] sprdata;
+    auto texture = ws_create_texture(data, width, height);
+    delete[] data;
+    pic.w = width;
+    pic.h = height;
+    pic.tex = texture;
+    sprites[shapenum] = pic;
+
+    return pic;
+}
+
+extern word PMSpriteStart, PMSoundStart;
+
+void ws_preload_sprites()
+{
+    static bool loaded = false;
+    if (!loaded)
+    {
+        loaded = true;
+        for (int i = 0; i < PMSoundStart - PMSpriteStart; ++i)
+        {
+            load_sprite(i);
+        }
+    }
+}
+
+void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
+{
+    //ws_preload_sprites();
+
+    auto it = sprites.find(shapenum);
+    Pic pic;
+    if (it == sprites.end()) pic = load_sprite(shapenum);
+    else pic = it->second;
+
+    static const int SCALE = 2;
+
+    flush();
+    prepareForPTC(GL_QUADS);
+    glBindTexture(GL_TEXTURE_2D, pic.tex);
+    ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)(MaxX / 2 + (xcenter - pic.w / 2) * SCALE), (float)(MaxY - height * SCALE + 1 - pic.h * SCALE - STATUSLINES), (float)(pic.w * SCALE), (float)(pic.h * SCALE), 0, 0, 1, 1, { 1, 1, 1, 1 });
+    flush();
 }

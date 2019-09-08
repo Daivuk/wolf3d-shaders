@@ -623,70 +623,70 @@ void ScaleShape (int16_t xcenter, int16_t shapenum, uint16_t height)
 =======================
 */
 
-void SimpleScaleShape (int16_t xcenter, int16_t shapenum, uint16_t height)
-{
-// 	t_compshape	 *shape;
-// 	t_compscale  *comptable;
-// 	uint16_t	scale,srcx,stopx,tempx;
-// 	int16_t			t;
-// 	uint16_t	 *cmdptr;
-// 	_boolean		leftvis,rightvis;
-
-
-// 	shape = PM_GetSpritePage (shapenum);
-
-// 	scale = height>>1;
-// 	comptable = scaledirectory[scale];
-
-// 	*(((uint16_t *)&linescale)+1)=(uint16_t)comptable;	// seg of  call
-// 	*(((uint16_t *)&linecmds)+1)=(uint16_t)shape;		// seg of shape
-
-// //
-// // scale to the left (from pixel 31 to shape->leftpix)
-// //
-// 	srcx = 32;
-// 	slinex = xcenter;
-// 	stopx = shape->leftpix;
-// 	cmdptr = &shape->dataofs[31-stopx];
-
-// 	while ( --srcx >=stopx )
-// 	{
-// 		(uint16_t)linecmds = *cmdptr--;
-// 		if ( !(slinewidth = comptable->width[srcx]) )
-// 			continue;
-
-// 		slinex -= slinewidth;
-// 		ScaleLine ();
-// 	}
-
-
-// //
-// // scale to the right
-// //
-// 	slinex = xcenter;
-// 	stopx = shape->rightpix;
-// 	if (shape->leftpix<31)
-// 	{
-// 		srcx = 31;
-// 		cmdptr = &shape->dataofs[32-shape->leftpix];
-// 	}
-// 	else
-// 	{
-// 		srcx = shape->leftpix-1;
-// 		cmdptr = &shape->dataofs[0];
-// 	}
-// 	slinewidth = 0;
-
-// 	while ( ++srcx <= stopx )
-// 	{
-// 		(uint16_t)linecmds = *cmdptr++;
-// 		if ( !(slinewidth = comptable->width[srcx]) )
-// 			continue;
-
-// 		ScaleLine ();
-// 		slinex+=slinewidth;
-// 	}
-}
+//void SimpleScaleShape (int16_t xcenter, int16_t shapenum, uint16_t height)
+//{
+//// 	t_compshape	 *shape;
+//// 	t_compscale  *comptable;
+//// 	uint16_t	scale,srcx,stopx,tempx;
+//// 	int16_t			t;
+//// 	uint16_t	 *cmdptr;
+//// 	_boolean		leftvis,rightvis;
+//
+//
+//// 	shape = PM_GetSpritePage (shapenum);
+//
+//// 	scale = height>>1;
+//// 	comptable = scaledirectory[scale];
+//
+//// 	*(((uint16_t *)&linescale)+1)=(uint16_t)comptable;	// seg of  call
+//// 	*(((uint16_t *)&linecmds)+1)=(uint16_t)shape;		// seg of shape
+//
+//// //
+//// // scale to the left (from pixel 31 to shape->leftpix)
+//// //
+//// 	srcx = 32;
+//// 	slinex = xcenter;
+//// 	stopx = shape->leftpix;
+//// 	cmdptr = &shape->dataofs[31-stopx];
+//
+//// 	while ( --srcx >=stopx )
+//// 	{
+//// 		(uint16_t)linecmds = *cmdptr--;
+//// 		if ( !(slinewidth = comptable->width[srcx]) )
+//// 			continue;
+//
+//// 		slinex -= slinewidth;
+//// 		ScaleLine ();
+//// 	}
+//
+//
+//// //
+//// // scale to the right
+//// //
+//// 	slinex = xcenter;
+//// 	stopx = shape->rightpix;
+//// 	if (shape->leftpix<31)
+//// 	{
+//// 		srcx = 31;
+//// 		cmdptr = &shape->dataofs[32-shape->leftpix];
+//// 	}
+//// 	else
+//// 	{
+//// 		srcx = shape->leftpix-1;
+//// 		cmdptr = &shape->dataofs[0];
+//// 	}
+//// 	slinewidth = 0;
+//
+//// 	while ( ++srcx <= stopx )
+//// 	{
+//// 		(uint16_t)linecmds = *cmdptr++;
+//// 		if ( !(slinewidth = comptable->width[srcx]) )
+//// 			continue;
+//
+//// 		ScaleLine ();
+//// 		slinex+=slinewidth;
+//// 	}
+//}
 
 
 

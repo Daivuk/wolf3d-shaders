@@ -1207,25 +1207,25 @@ int16_t	weaponscale[NUMWEAPONS] = {SPR_KNIFEREADY,SPR_PISTOLREADY
 
 void DrawPlayerWeapon (void)
 {
-// 	int16_t	shapenum;
+ 	int16_t	shapenum;
 
-// #ifndef SPEAR
-// 	if (gamestate.victoryflag)
-// 	{
-// 		if (player->state == &s_deathcam && (TimeCount&32) )
-// 			SimpleScaleShape(viewwidth/2,SPR_DEATHCAM,viewheight+1);
-// 		return;
-// 	}
-// #endif
+ #ifndef SPEAR
+ 	if (gamestate.victoryflag)
+ 	{
+ 		if (player->state == &s_deathcam && (TimeCount&32) )
+ 			SimpleScaleShape(viewwidth/2,SPR_DEATHCAM,viewheight+1);
+ 		return;
+ 	}
+ #endif
 
-// 	if (gamestate.weapon != -1)
-// 	{
-// 		shapenum = weaponscale[gamestate.weapon]+gamestate.weaponframe;
-// 		SimpleScaleShape(viewwidth/2,shapenum,viewheight+1);
-// 	}
+ 	if (gamestate.weapon != -1)
+ 	{
+ 		shapenum = weaponscale[gamestate.weapon]+gamestate.weaponframe;
+ 		SimpleScaleShape(viewwidth/2,shapenum,viewheight+1);
+ 	}
 
-// 	if (demorecord || demoplayback)
-// 		SimpleScaleShape(viewwidth/2,SPR_DEMO,viewheight+1);
+ 	if (demorecord || demoplayback)
+ 		SimpleScaleShape(viewwidth/2,SPR_DEMO,viewheight+1);
 }
 
 
@@ -1373,20 +1373,20 @@ void	ThreeDRefresh (void)
 DrawScaleds();			// draw scaled stuff
 DrawPlayerWeapon ();	// draw player's hands
 
-// //
-// // show screen and time last cycle
-// //
-// 	if (fizzlein)
-// 	{
-// 		FizzleFade(bufferofs,displayofs+screenofs,viewwidth,viewheight,20,_false);
-// 		fizzlein = _false;
+ //
+ // show screen and time last cycle
+ //
+ 	if (fizzlein)
+ 	{
+ 		FizzleFade(bufferofs,displayofs+screenofs,viewwidth,viewheight,20,_false);
+ 		fizzlein = _false;
 
-// 		lasttimecount = TimeCount = 0;		// don't make a big tic count
+ 		lasttimecount = TimeCount = 0;		// don't make a big tic count
 
-// 	}
+ 	}
 
-// 	bufferofs -= screenofs;
-// 	displayofs = bufferofs;
+ 	bufferofs -= screenofs;
+ 	displayofs = bufferofs;
 
 // 	asm	cli
 // 	asm	mov	cx,[displayofs]
@@ -1398,11 +1398,11 @@ DrawPlayerWeapon ();	// draw player's hands
 // 	asm	out	dx,al   	// set the high byte
 // 	asm	sti
 
-// 	bufferofs += SCREENSIZE;
-// 	if (bufferofs > PAGE3START)
-// 		bufferofs = PAGE1START;
+ 	bufferofs += SCREENSIZE;
+ 	if (bufferofs > PAGE3START)
+ 		bufferofs = PAGE1START;
 
-// 	frameon++;
+ 	frameon++;
 	//PM_NextFrame();
 }
 

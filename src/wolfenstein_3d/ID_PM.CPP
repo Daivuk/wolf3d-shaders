@@ -328,11 +328,11 @@ PML_ShutdownXMS(void)
 void
 PM_SetMainMemPurge(int16_t level)
 {
-	// int16_t	i;
+	 //int16_t	i;
 
-	// for (i = 0;i < PMMaxMainMem;i++)
-	// 	if (MainMemPages[i])
-	// 		MM_SetPurge(&MainMemPages[i],level);
+	 //for (i = 0;i < PMMaxMainMem;i++)
+	 //	if (MainMemPages[i])
+	 //		MM_SetPurge(&MainMemPages[i],level);
 }
 
 //
@@ -408,7 +408,7 @@ PM_CheckMainMem(void)
 	// 	}
 	// }
 	// if (mmerror)
-	// 	mmerror = _false;
+	 	mmerror = _false;
 }
 
 //
@@ -420,26 +420,26 @@ PM_CheckMainMem(void)
 void
 PML_StartupMainMem(void)
 {
-	// int16_t		i,n;
-	// memptr	*p;
+	 //int16_t		i,n;
+	 //memptr	*p;
 
-	// MainPagesAvail = 0;
-	// MM_BombOnError(_false);
-	// for (i = 0,p = MainMemPages;i < PMMaxMainMem;i++,p++)
-	// {
-	// 	MM_GetPtr(p,PMPageSize);
-	// 	if (mmerror)
-	// 		break;
+	 //MainPagesAvail = 0;
+	 //MM_BombOnError(_false);
+	 //for (i = 0,p = MainMemPages;i < PMMaxMainMem;i++,p++)
+	 //{
+	 //	MM_GetPtr(p,PMPageSize);
+	 //	if (mmerror)
+	 //		break;
 
-	// 	MainPagesAvail++;
-	// 	MainMemUsed[i] = pmba_Allocated;
-	// }
-	// MM_BombOnError(_true);
-	// if (mmerror)
-	// 	mmerror = _false;
-	// if (MainPagesAvail < PMMinMainMem)
-	// 	Quit("PM_SetupMainMem: Not enough main memory");
-	// MainPresent = _true;
+	 //	MainPagesAvail++;
+	 //	MainMemUsed[i] = pmba_Allocated;
+	 //}
+	 //MM_BombOnError(_true);
+	 //if (mmerror)
+	 //	mmerror = _false;
+	 //if (MainPagesAvail < PMMinMainMem)
+	 //	Quit("PM_SetupMainMem: Not enough main memory");
+	 MainPresent = _true;
 }
 
 //
@@ -449,13 +449,13 @@ PML_StartupMainMem(void)
 void
 PML_ShutdownMainMem(void)
 {
-// 	int16_t		i;
-// 	memptr	*p;
+ 	//int16_t		i;
+ 	//memptr	*p;
 
-// 	// DEBUG - mark pages as unallocated & decrease page count as appropriate
-// 	for (i = 0,p = MainMemPages;i < PMMaxMainMem;i++,p++)
-// 		if (*p)
-// 			MM_FreePtr(p);
+ 	//// DEBUG - mark pages as unallocated & decrease page count as appropriate
+ 	//for (i = 0,p = MainMemPages;i < PMMaxMainMem;i++,p++)
+ 	//	if (*p)
+ 	//		MM_FreePtr(p);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -470,14 +470,14 @@ PML_ShutdownMainMem(void)
 void
 PML_ReadFromFile(byte *buf,int32_t offset,word length)
 {
-	// if (!buf)
-	// 	Quit("PML_ReadFromFile: Null pointer");
-	// if (!offset)
-	// 	Quit("PML_ReadFromFile: Zero offset");
-	// if (file_seek(PageFile,offset,SEEK_SET) != offset)
-	// 	Quit("PML_ReadFromFile: Seek failed");
-	// if (!CA_FarRead(PageFile,buf,length))
-	// 	Quit("PML_ReadFromFile: Read failed");
+	 //if (!buf)
+	 //	Quit("PML_ReadFromFile: Null pointer");
+	 //if (!offset)
+	 //	Quit("PML_ReadFromFile: Zero offset");
+	 //if (file_seek(PageFile,offset,SEEK_SET) != offset)
+	 //	Quit("PML_ReadFromFile: Seek failed");
+	 //if (!CA_FarRead(PageFile,buf,length))
+	 //	Quit("PML_ReadFromFile: Read failed");
 }
 
 //
@@ -486,48 +486,48 @@ PML_ReadFromFile(byte *buf,int32_t offset,word length)
 void
 PML_OpenPageFile(void)
 {
-	// int16_t				i;
-	// int32_t			size;
-	// void			 *buf;
-	// longword		 *offsetptr;
-	// word			 *lengthptr;
-	// PageListStruct	 *page;
+	 int16_t				i;
+	 int32_t			size;
+	 void			 *buf;
+	 longword		 *offsetptr;
+	 word			 *lengthptr;
+	 PageListStruct	 *page;
 
-	// PageFile = file_open(PageFileName,O_RDONLY + O_BINARY);
-	// if (PageFile == -1)
-	// 	Quit("PML_OpenPageFile: Unable to open page file");
+	 PageFile = file_open(PageFileName,O_RDONLY + O_BINARY);
+	 if (PageFile == -1)
+	 	Quit("PML_OpenPageFile: Unable to open page file");
 
-	// // Read in header variables
-	// file_read(PageFile,&ChunksInFile,sizeof(ChunksInFile));
-	// file_read(PageFile,&PMSpriteStart,sizeof(PMSpriteStart));
-	// file_read(PageFile,&PMSoundStart,sizeof(PMSoundStart));
+	 // Read in header variables
+	 file_read(PageFile,&ChunksInFile,sizeof(ChunksInFile));
+	 file_read(PageFile,&PMSpriteStart,sizeof(PMSpriteStart));
+	 file_read(PageFile,&PMSoundStart,sizeof(PMSoundStart));
 
-	// // Allocate and clear the page list
-	// PMNumBlocks = ChunksInFile;
-	// MM_GetPtr(&(memptr)PMSegPages,sizeof(PageListStruct) * PMNumBlocks);
-	// MM_SetLock(&(memptr)PMSegPages,_true);
-	// PMPages = (PageListStruct  *)PMSegPages;
-	// _fmemset(PMPages,0,sizeof(PageListStruct) * PMNumBlocks);
+	 // Allocate and clear the page list
+	 PMNumBlocks = ChunksInFile;
+	 MM_GetPtr((memptr*)&PMSegPages,sizeof(PageListStruct) * PMNumBlocks);
+	 MM_SetLock((memptr*)&PMSegPages,_true);
+	 PMPages = (PageListStruct  *)PMSegPages;
+	 memset(PMPages,0,sizeof(PageListStruct) * PMNumBlocks);
 
-	// // Read in the chunk offsets
-	// size = sizeof(longword) * ChunksInFile;
-	// MM_GetPtr(&buf,size);
-	// if (!CA_FarRead(PageFile,(byte  *)buf,size))
-	// 	Quit("PML_OpenPageFile: Offset read failed");
-	// offsetptr = (longword  *)buf;
-	// for (i = 0,page = PMPages;i < ChunksInFile;i++,page++)
-	// 	page->offset = *offsetptr++;
-	// MM_FreePtr(&buf);
+	 // Read in the chunk offsets
+	 size = sizeof(longword) * ChunksInFile;
+	 MM_GetPtr(&buf,size);
+	 if (!CA_FarRead(PageFile,(byte  *)buf,size))
+	 	Quit("PML_OpenPageFile: Offset read failed");
+     offsetptr = (longword  *)buf;
+     for (i = 0, page = PMPages; i < ChunksInFile; i++, page++)
+         page->offset = *offsetptr++;
+	 MM_FreePtr(&buf);
 
-	// // Read in the chunk lengths
-	// size = sizeof(word) * ChunksInFile;
-	// MM_GetPtr(&buf,size);
-	// if (!CA_FarRead(PageFile,(byte  *)buf,size))
-	// 	Quit("PML_OpenPageFile: Length read failed");
-	// lengthptr = (word  *)buf;
-	// for (i = 0,page = PMPages;i < ChunksInFile;i++,page++)
-	// 	page->length = *lengthptr++;
-	// MM_FreePtr(&buf);
+	  //Read in the chunk lengths
+	 size = sizeof(word) * ChunksInFile;
+	 MM_GetPtr(&buf,size);
+	 if (!CA_FarRead(PageFile,(byte  *)buf,size))
+	 	Quit("PML_OpenPageFile: Length read failed");
+	 lengthptr = (word  *)buf;
+	 for (i = 0,page = PMPages;i < ChunksInFile;i++,page++)
+	 	page->length = *lengthptr++;
+	 MM_FreePtr(&buf);
 }
 
 //
@@ -536,13 +536,13 @@ PML_OpenPageFile(void)
 void
 PML_ClosePageFile(void)
 {
-	// if (PageFile != -1)
-	// 	file_close(PageFile);
-	// if (PMSegPages)
-	// {
-	// 	MM_SetLock(&(memptr)PMSegPages,_false);
-	// 	MM_FreePtr(&(void  *)PMSegPages);
-	// }
+	 if (PageFile != -1)
+	 	file_close(PageFile);
+	 if (PMSegPages)
+	 {
+	 	MM_SetLock((memptr*)&PMSegPages,_false);
+	 	MM_FreePtr((memptr*)&PMSegPages);
+	 }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -630,14 +630,14 @@ PML_GetEMSAddress(int16_t page,PMLockType lock)
 memptr
 PM_GetPageAddress(int16_t pagenum)
 {
-	// PageListStruct	 *page;
+	 //PageListStruct	 *page;
 
-	// page = &PMPages[pagenum];
-	// if (page->mainPage != -1)
-	// 	return(MainMemPages[page->mainPage]);
-	// else if (page->emsPage != -1)
-	// 	return(PML_GetEMSAddress(page->emsPage,page->locked));
-	// else
+	 //page = &PMPages[pagenum];
+	 //if (page->mainPage != -1)
+	 //	return(MainMemPages[page->mainPage]);
+	 ////else if (page->emsPage != -1)
+	 ////	return(PML_GetEMSAddress(page->emsPage,page->locked));
+	 //else
 		return(nil);
 }
 
@@ -785,44 +785,44 @@ PML_TransferPageSpace(int16_t orig,int16_t _new)
 byte *
 PML_GetAPageBuffer(int16_t pagenum,_boolean mainonly)
 {
-	// byte			 *addr = nil;
-	// int16_t				i,n;
-	// PMBlockAttr		*used;
-	// PageListStruct	 *page;
-
-	// page = &PMPages[pagenum];
-	// if ((EMSPagesUsed < EMSPagesAvail) && !mainonly)
-	// {
-	// 	// There's remaining EMS - use it
-	// 	page->emsPage = EMSPagesUsed++;
-	// 	addr = PML_GetEMSAddress(page->emsPage,page->locked);
-	// }
-	// else if (MainPagesUsed < MainPagesAvail)
-	// {
-	// 	// There's remaining main memory - use it
-	// 	for (i = 0,n = -1,used = MainMemUsed;i < PMMaxMainMem;i++,used++)
-	// 	{
-	// 		if ((*used & pmba_Allocated) && !(*used & pmba_Used))
-	// 		{
-	// 			n = i;
-	// 			*used |= pmba_Used;
-	// 			break;
-	// 		}
-	// 	}
-	// 	if (n == -1)
-	// 		Quit("PML_GetPageBuffer: MainPagesAvail lied");
-	// 	addr = MainMemPages[n];
-	// 	if (!addr)
-	// 		Quit("PML_GetPageBuffer: Purged main block");
-	// 	page->mainPage = n;
-	// 	MainPagesUsed++;
-	// }
-	// else
-	// 	addr = PML_TransferPageSpace(PML_GiveLRUPage(mainonly),pagenum);
-
-	// if (!addr)
-	// 	Quit("PML_GetPageBuffer: Search failed");
-	// return(addr);
+//	 byte			 *addr = nil;
+//	 int16_t				i,n;
+//	 PMBlockAttr		*used;
+//	 PageListStruct	 *page;
+//
+//	 page = &PMPages[pagenum];
+///*	 if ((EMSPagesUsed < EMSPagesAvail) && !mainonly)
+//	 {
+//	 	// There's remaining EMS - use it
+//	 	page->emsPage = EMSPagesUsed++;
+//	 	addr = PML_GetEMSAddress(page->emsPage,page->locked);
+//	 }
+//	 else */if (MainPagesUsed < MainPagesAvail)
+//	 {
+//	 	// There's remaining main memory - use it
+//	 	for (i = 0,n = -1,used = MainMemUsed;i < PMMaxMainMem;i++,used++)
+//	 	{
+//	 		if ((*used & pmba_Allocated) && !(*used & pmba_Used))
+//	 		{
+//	 			n = i;
+//	 			*used = (PMBlockAttr)((int)*used | (int)pmba_Used);
+//	 			break;
+//	 		}
+//	 	}
+//	 	if (n == -1)
+//	 		Quit("PML_GetPageBuffer: MainPagesAvail lied");
+//	 	addr = (byte*)MainMemPages[n];
+//	 	if (!addr)
+//	 		Quit("PML_GetPageBuffer: Purged main block");
+//	 	page->mainPage = n;
+//	 	MainPagesUsed++;
+//	 }
+//	 //else
+//	 //	addr = (byte*)PML_TransferPageSpace(PML_GiveLRUPage(mainonly),pagenum);
+//
+//	 if (!addr)
+//	 	Quit("PML_GetPageBuffer: Search failed");
+//	 return(addr);
     return nil;
 }
 
@@ -866,12 +866,12 @@ PML_GetPageFromXMS(int16_t pagenum,_boolean mainonly)
 void
 PML_LoadPage(int16_t pagenum,_boolean mainonly)
 {
-	// byte			 *addr;
-	// PageListStruct	 *page;
+	 //byte			 *addr;
+	 //PageListStruct	 *page;
 
-	// addr = PML_GetAPageBuffer(pagenum,mainonly);
-	// page = &PMPages[pagenum];
-	// PML_ReadFromFile(addr,page->offset,page->length);
+	 //addr = PML_GetAPageBuffer(pagenum,mainonly);
+	 //page = &PMPages[pagenum];
+	 //PML_ReadFromFile(addr,page->offset,page->length);
 }
 
 //
@@ -884,51 +884,51 @@ PML_LoadPage(int16_t pagenum,_boolean mainonly)
 memptr
 PM_GetPage(int16_t pagenum)
 {
-// 	memptr	result;
+    return MainMemPages[pagenum];
+ //	memptr	result;
 
-// 	if (pagenum >= ChunksInFile)
-// 		Quit("PM_GetPage: Invalid page request");
+ //	if (pagenum >= ChunksInFile)
+ //		Quit("PM_GetPage: Invalid page request");
 
-// #if 0	// for debugging
-// asm	mov	dx,STATUS_REGISTER_1
-// asm	in	al,dx
-// asm	mov	dx,ATR_INDEX
-// asm	mov	al,ATR_OVERSCAN
-// asm	out	dx,al
-// asm	mov	al,10	// bright green
-// asm	out	dx,al
-// #endif
+ //#if 0	// for debugging
+ //asm	mov	dx,STATUS_REGISTER_1
+ //asm	in	al,dx
+ //asm	mov	dx,ATR_INDEX
+ //asm	mov	al,ATR_OVERSCAN
+ //asm	out	dx,al
+ //asm	mov	al,10	// bright green
+ //asm	out	dx,al
+ //#endif
 
-// 	if (!(result = PM_GetPageAddress(pagenum)))
-// 	{
-// 		_boolean mainonly = (pagenum >= PMSoundStart);
-// if (!PMPages[pagenum].offset)	// JDC: sparse page
-// 	Quit ("Tried to load a sparse page!");
-// 		if (!(result = PML_GetPageFromXMS(pagenum,mainonly)))
-// 		{
-// 			if (PMPages[pagenum].lastHit == PMFrameCount)
-// 				PMThrashing++;
+ //	if (!(result = PM_GetPageAddress(pagenum)))
+ //	{
+ //		_boolean mainonly = (pagenum >= PMSoundStart) ? _true : _false;
+ //        if (!PMPages[pagenum].offset)	// JDC: sparse page
+ //	        Quit ("Tried to load a sparse page!");
+ //		if (!(result = PML_GetPageFromXMS(pagenum,mainonly)))
+ //		{
+ //			if (PMPages[pagenum].lastHit == PMFrameCount)
+ //				PMThrashing = (_boolean)((int)PMThrashing + 1);
 
-// 			PML_LoadPage(pagenum,mainonly);
-// 			result = PM_GetPageAddress(pagenum);
-// 		}
-// 	}
-// 	PMPages[pagenum].lastHit = PMFrameCount;
+ //			PML_LoadPage(pagenum,mainonly);
+ //			result = PM_GetPageAddress(pagenum);
+ //		}
+ //	}
+ //	PMPages[pagenum].lastHit = PMFrameCount;
 
-// #if 0	// for debugging
-// asm	mov	dx,STATUS_REGISTER_1
-// asm	in	al,dx
-// asm	mov	dx,ATR_INDEX
-// asm	mov	al,ATR_OVERSCAN
-// asm	out	dx,al
-// asm	mov	al,3	// blue
-// asm	out	dx,al
-// asm	mov	al,0x20	// normal
-// asm	out	dx,al
-// #endif
+ //#if 0	// for debugging
+ //asm	mov	dx,STATUS_REGISTER_1
+ //asm	in	al,dx
+ //asm	mov	dx,ATR_INDEX
+ //asm	mov	al,ATR_OVERSCAN
+ //asm	out	dx,al
+ //asm	mov	al,3	// blue
+ //asm	out	dx,al
+ //asm	mov	al,0x20	// normal
+ //asm	out	dx,al
+ //#endif
 
-// 	return(result);
-    return nil;
+ //	return(result);
 }
 #pragma warn +pia
 
@@ -1122,26 +1122,26 @@ PM_NextFrame(void)
 void
 PM_Reset(void)
 {
-	// int16_t				i;
-	// PageListStruct	 *page;
+	 //int16_t				i;
+	 //PageListStruct	 *page;
 
-	// XMSPagesAvail = XMSAvail / PMPageSizeKB;
+	 //XMSPagesAvail = XMSAvail / PMPageSizeKB;
 
-	// EMSPagesAvail = EMSAvail * (EMSPageSizeKB / PMPageSizeKB);
-	// EMSPhysicalPage = 0;
+	 //EMSPagesAvail = EMSAvail * (EMSPageSizeKB / PMPageSizeKB);
+	 //EMSPhysicalPage = 0;
 
-	// MainPagesUsed = EMSPagesUsed = XMSPagesUsed = 0;
+	 //MainPagesUsed = EMSPagesUsed = XMSPagesUsed = 0;
 
-	// PMPanicMode = _false;
+	 //PMPanicMode = _false;
 
-	// // Initialize page list
-	// for (i = 0,page = PMPages;i < PMNumBlocks;i++,page++)
-	// {
-	// 	page->mainPage = -1;
-	// 	page->emsPage = -1;
-	// 	page->xmsPage = -1;
-	// 	page->locked = _false;
-	// }
+	 //// Initialize page list
+	 //for (i = 0,page = PMPages;i < PMNumBlocks;i++,page++)
+	 //{
+	 //	page->mainPage = -1;
+	 //	page->emsPage = -1;
+	 //	page->xmsPage = -1;
+	 //	page->locked = (PMLockType)_false;
+	 //}
 }
 
 //
@@ -1150,44 +1150,62 @@ PM_Reset(void)
 void
 PM_Startup(void)
 {
-	// _boolean	nomain,noems,noxms;
-	// int16_t		i;
+  //  extern int16_t _argc;
+  //  extern char** _argv;
+	 //_boolean	nomain,noems,noxms;
+	 //int16_t		i;
 
-	// if (PMStarted)
-	// 	return;
+	 //if (PMStarted)
+	 //	return;
 
-	// nomain = noems = noxms = _false;
-	// for (i = 1;i < _argc;i++)
-	// {
-	// 	switch (US_CheckParm(_argv[i],ParmStrings))
-	// 	{
-	// 	case 0:
-	// 		nomain = _true;
-	// 		break;
-	// 	case 1:
-	// 		noems = _true;
-	// 		break;
-	// 	case 2:
-	// 		noxms = _true;
-	// 		break;
-	// 	}
-	// }
+	 //nomain = noems = noxms = _false;
+	 //for (i = 1;i < _argc;i++)
+	 //{
+	 //	switch (US_CheckParm(_argv[i],ParmStrings))
+	 //	{
+	 //	case 0:
+	 //		nomain = _true;
+	 //		break;
+	 //	case 1:
+	 //		noems = _true;
+	 //		break;
+	 //	case 2:
+	 //		noxms = _true;
+	 //		break;
+	 //	}
+	 //}
 
-	// PML_OpenPageFile();
+	 //PML_OpenPageFile();
 
-	// if (!noems)
-	// 	PML_StartupEMS();
-	// if (!noxms)
-	// 	PML_StartupXMS();
+	 //if (!noems)
+	 //	PML_StartupEMS();
+	 //if (!noxms)
+	 //	PML_StartupXMS();
 
-	// if (nomain && !EMSPresent)
-	// 	Quit("PM_Startup: No main or EMS");
-	// else
-	// 	PML_StartupMainMem();
+	 //if (nomain && !EMSPresent)
+	 //	Quit("PM_Startup: No main or EMS");
+	 //else
+	 //	PML_StartupMainMem();
 
-	// PM_Reset();
+	 //PM_Reset();
 
-	// PMStarted = _true;
+	 //PMStarted = _true;
+
+     // Just load all in memory right away
+     PML_OpenPageFile();
+     int i;
+     PageListStruct* page;
+     for (i = 0, page = PMPages; i < ChunksInFile; i++, page++)
+     {
+         page->mainPage = i;
+         memptr buf = (memptr)malloc(page->length);
+         file_seek(PageFile, page->offset, SEEK_SET);
+         file_read(PageFile, buf, page->length);
+         MainMemPages[i] = buf;
+     }
+     PML_ClosePageFile();
+
+     PMStarted = _true;
 }
 
 //
@@ -1196,13 +1214,19 @@ PM_Startup(void)
 void
 PM_Shutdown(void)
 {
-	// PML_ShutdownXMS();
-	// PML_ShutdownEMS();
+     int i;
+     PageListStruct* page;
+     for (i = 0, page = PMPages; i < ChunksInFile; i++, page++)
+     {
+         free(MainMemPages[page->mainPage]);
+     }
+	 //PML_ShutdownXMS();
+	 //PML_ShutdownEMS();
 
-	// if (!PMStarted)
-	// 	return;
+	 //if (!PMStarted)
+	 //	return;
 
-	// PML_ClosePageFile();
+	 //PML_ClosePageFile();
 
-	// PML_ShutdownMainMem();
+	 //PML_ShutdownMainMem();
 }

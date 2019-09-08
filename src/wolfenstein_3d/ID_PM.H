@@ -14,7 +14,7 @@
 #define	PMEMSSubPage	(EMSPageSize / PMPageSize)
 
 #define	PMMinMainMem	10			// Min acceptable # of pages from main
-#define	PMMaxMainMem	100			// Max number of pages in main memory
+#define	PMMaxMainMem	10000			// Max number of pages in main memory
 
 #define	PMThrashThreshold	1	// Number of page thrashes before panic mode
 #define	PMUnThrashThreshold	5	// Number of non-thrashing frames before leaving panic mode
