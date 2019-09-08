@@ -38,6 +38,7 @@ ws_Matrix matrix2D;
 ws_Matrix matrix3D;
 int screen_w = 1024, screen_h = 640;
 SDL_Window* sdlWindow;
+float s_scale = 1.0f;
 
 #define	KeyInt		9	// The keyboard ISR number
 
@@ -130,6 +131,16 @@ struct Position
     float x, y;
 };
 
+struct Position3
+{
+    float x, y, z;
+};
+
+struct Normal
+{
+    float x, y, z;
+};
+
 struct Color
 {
     float r, g, b, a;
@@ -153,15 +164,26 @@ struct VertexPTC
     Color color;
 };
 
+struct VertexPNTC
+{
+    Position3 position;
+    Normal normal;
+    TexCoord texCoord;
+    Color color;
+};
+
 struct Resources
 {
-    GLuint      programPC;      /* Position, Color */
-    GLuint      programPTC;     /* Position, TexCoord, Color */
+    GLuint      programPC;      /* Position2, Color4 */
+    GLuint      programPTC;     /* Position2, TexCoord2, Color4 */
+    GLuint      programPNTC;    /* Position3, Normal3, TexCoord2, Color4 */
     GLuint      vertexBuffer;   /* Dynamic version buffer used by batches */
     VertexPC   *pPCVertices;    /* Used by dynamic rendering of Position/Color */
     VertexPTC  *pPTCVertices;   /* Used by dynamic rendering of Position/TexCoord/Color */
-    GLuint      checkerTexture;
-    RenderTarget mainRT;
+    VertexPNTC *pPNTCVertices;  /* Used by dynamic rendering of Position/TexCoord/Color */
+    GLuint      mapVB;          /* Dynamic part of the map */
+    GLuint      checkerTexture; /* Test texture to replace non-existing or corrupted data */
+    RenderTarget mainRT;        /* Main scree render target (Final image) */
 } resources;
 
 struct Pic
@@ -207,7 +229,7 @@ static void checkShader(GLuint handle)
     {
         GLchar infoLog[1024];
         glGetShaderInfoLog(handle, 1023, NULL, infoLog);
-        Quit((char*)"shader compile failed: %s\n");
+        Quit((char*)(std::string("shader compile failed: ") + infoLog).c_str());
     }
 }
 
@@ -294,21 +316,6 @@ GLuint createVertexBuffer(GLsizeiptr size, const void *data)
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
     return handle;
 }
-
-// void setTransform(Registry &registry, const float *matrix)
-// {
-//     Resources &resources = registry.get<Resources>(registry.attachee<Tag::Resources>());
-//     {
-//         glUseProgram(resources.programPC);
-//         auto uniform = glGetUniformLocation(resources.programPC, "ProjMtx");
-//         glUniformMatrix4fv(uniform, 1, GL_FALSE, matrix);
-//     }
-//     {
-//         glUseProgram(resources.programPTC);
-//         auto uniform = glGetUniformLocation(resources.programPTC, "ProjMtx");
-//         glUniformMatrix4fv(uniform, 1, GL_FALSE, matrix);
-//     }
-// }
 
 static void drawPC(const VertexPC *pVertices, int count, GLenum mode)
 {
@@ -549,11 +556,13 @@ int main(int argc, char** argv)
 
     // Init main resources
     resources.programPC = createProgram(PC_VERT, PC_FRAG, {"Position", "Color"});
-    resources.programPTC = createProgram(PTC_VERT, PTC_FRAG, {"Position", "TexCoord", "Color"});
+    resources.programPTC = createProgram(PTC_VERT, PTC_FRAG, { "Position", "TexCoord", "Color" });
+    resources.programPNTC = createProgram(PNTC_VERT, PNTC_FRAG, { "Position", "Normal", "TexCoord", "Color" });
     resources.vertexBuffer = createVertexBuffer();
     resources.pPCVertices = new VertexPC[MAX_VERTICES];
     resources.pPTCVertices = new VertexPTC[MAX_VERTICES];
-    resources.mainRT = createRT(MaxX, MaxY);
+    resources.pPNTCVertices = new VertexPNTC[MAX_VERTICES];
+    resources.mainRT = createRT(screen_w, screen_h);
 
     srand(0);
     uint32_t checkerBytes[] = { 0xFF880088, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF880088 };
@@ -635,6 +644,8 @@ void ws_update_sdl()
             break;
         }
     }
+
+    s_scale = (float)screen_h / (float)MaxY;
 
     SDL_UnlockAudio();
 
@@ -765,9 +776,9 @@ void VW_UpdateScreen()
     glBindFramebuffer(GL_FRAMEBUFFER, resources.mainRT.frameBuffer);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glViewport(0, 0, MaxX, MaxY);
+    glViewport(0, 0, screen_w, screen_h);
 
-    matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)MaxX, (float)MaxY, 0, -999, 999);
+    matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)screen_w, (float)screen_h, 0, -999, 999);
     //matrix2D = matrix2D.Transpose();
     {
         glUseProgram(resources.programPC);
@@ -789,9 +800,9 @@ void VW_UpdateScreen()
 void VGAClearScreen(void)
 {
     glEnable(GL_SCISSOR_TEST);
-    glScissor(0, STATUSLINES, MaxX, MaxY - STATUSLINES);
+    glScissor(0, (int)(float)(STATUSLINES * s_scale), screen_w, screen_h - (int)(float)(STATUSLINES * s_scale));
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glScissor(0, 0, MaxX, MaxY);
+    glScissor(0, 0, screen_w, screen_h);
     glDisable(GL_SCISSOR_TEST);
 }
 
@@ -878,19 +889,34 @@ static void flush()
 void VL_Bar(int16_t x, int16_t y, int16_t width, int16_t height, int16_t color)
 {
     prepareForPC(GL_QUADS);
-    pcCount += drawRect(resources.pPCVertices + pcCount, (float)x, (float)y, (float)width, (float)height, palette[color]);
+    pcCount += drawRect(resources.pPCVertices + pcCount, 
+        (float)x * s_scale, 
+        (float)y * s_scale,
+        (float)width * s_scale,
+        (float)height * s_scale,
+        palette[color]);
 }
 
 void VL_Hlin(uint16_t x, uint16_t y, uint16_t width, uint16_t color)
 {
     prepareForPC(GL_QUADS);
-    pcCount += drawRect(resources.pPCVertices + pcCount, (float)x, (float)y, (float)width, 1, palette[color]);
+    pcCount += drawRect(resources.pPCVertices + pcCount,
+        (float)x * s_scale,
+        (float)y * s_scale,
+        (float)width * s_scale,
+        1 * s_scale,
+        palette[color]);
 }
 
 void VL_Vlin(int16_t x, int16_t y, int16_t height, int16_t color)
 {
     prepareForPC(GL_QUADS);
-    pcCount += drawRect(resources.pPCVertices + pcCount, (float)x, (float)y, 1, (float)height, palette[color]);
+    pcCount += drawRect(resources.pPCVertices + pcCount,
+        (float)x * s_scale,
+        (float)y * s_scale,
+        1 * s_scale,
+        (float)height * s_scale,
+        palette[color]);
 }
 
 BakedFont& getBakedFont(int id)
@@ -969,7 +995,9 @@ void drawDebugString(char* string, float x, float y)
     {
         width = font->width[ch];
         auto os = bakedFont.os[ch];
-        ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)width, (float)height,
+        ptcCount += drawRect(resources.pPTCVertices + ptcCount, 
+            x * s_scale, y * s_scale,
+            (float)width * s_scale, (float)height * s_scale,
             os, 0, os + bakedFont.ws[ch], 1,
             { 1, 1, 1, 1 });
         x += (float)width;
@@ -997,7 +1025,9 @@ void VW_DrawPropString(char  *string)
     {
         width = font->width[ch];
         auto os = bakedFont.os[ch];
-        ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)px, (float)py, (float)width, (float)height,
+        ptcCount += drawRect(resources.pPTCVertices + ptcCount, 
+            (float)px * s_scale, (float)py * s_scale,
+            (float)width * s_scale, (float)height * s_scale,
             os, 0, os + bakedFont.ws[ch], 1,
             { 1, 1, 1, 1 });
         px += width;
@@ -1039,7 +1069,7 @@ void ws_draw_screen_from_raw(byte* _data, int16_t chunk)
     flush();
     prepareForPTC(GL_QUADS);
     glBindTexture(GL_TEXTURE_2D, texture);
-    ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)0, (float)0, (float)MaxX, (float)MaxY, 0, 0, 1, 1, { 1, 1, 1, 1 });
+    ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)0, (float)0, (float)screen_w, (float)screen_h, 0, 0, 1, 1, { 1, 1, 1, 1 });
     flush();
 }
 
@@ -1134,7 +1164,10 @@ void VWB_DrawPic (int16_t x, int16_t y, int16_t chunknum, int16_t w, int16_t h)
     flush();
     prepareForPTC(GL_QUADS);
     glBindTexture(GL_TEXTURE_2D, pic.tex);
-    ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)x, (float)y, (float)pic.w, (float)pic.h, 0, 0, 1, 1, { 1, 1, 1, 1 });
+    ptcCount += drawRect(resources.pPTCVertices + ptcCount, 
+        (float)x * s_scale, (float)y * s_scale,
+        (float)pic.w * s_scale, (float)pic.h * s_scale,
+        0, 0, 1, 1, { 1, 1, 1, 1 });
     flush();
 }
 
@@ -1246,6 +1279,12 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     flush();
     prepareForPTC(GL_QUADS);
     glBindTexture(GL_TEXTURE_2D, pic.tex);
-    ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)(MaxX / 2 + (xcenter - pic.w / 2) * SCALE), (float)(MaxY - height * SCALE + 1 - pic.h * SCALE - STATUSLINES), (float)(pic.w * SCALE), (float)(pic.h * SCALE), 0, 0, 1, 1, { 1, 1, 1, 1 });
+    ptcCount += drawRect(
+        resources.pPTCVertices + ptcCount, 
+        (float)(MaxX / 2 + (xcenter - pic.w / 2) * SCALE) * s_scale,
+        (float)(MaxY - height * SCALE + 1 - STATUSLINES - pic.h * SCALE) * s_scale,
+        (float)(pic.w * SCALE) * s_scale,
+        (float)(pic.h * SCALE) * s_scale, 
+        0, 0, 1, 1, { 1, 1, 1, 1 });
     flush();
 }
