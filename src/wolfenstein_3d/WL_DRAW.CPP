@@ -141,7 +141,8 @@ int16_t		horizwall[MAXWALLTILES],vertwall[MAXWALLTILES];
 
 fixed FixedByFrac (fixed a, fixed b)
 {
-    return (fixed)(((int64_t)a * b + 0x8000) >> 16);
+    return (fixed)(((int16_t)a * (int16_t)b) / 65536);
+    //return (fixed)(((int64_t)a * b + 0x8000) >> 16);
 //
 // setup
 //

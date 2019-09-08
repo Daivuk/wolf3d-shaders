@@ -1039,21 +1039,36 @@ void ws_preload_pics()
         loaded = true;
         for (int i = 0; i < NUMPICS; ++i)
         {
-            CA_CacheGrChunk(i);
-            load_pic(i);
+            CA_CacheGrChunk(i + STARTPICS);
+            load_pic(i + STARTPICS);
         }
     }
 }
 
-void VWB_DrawPic (int16_t x, int16_t y, int16_t chunknum)
+void LatchDrawPic(uint16_t x, uint16_t y, uint16_t picnum)
+{
+    uint16_t wide, height, source;
+
+    wide = pictable[picnum-STARTPICS].width;
+    height = pictable[picnum-STARTPICS].height;
+    source = latchpics[2+picnum-LATCHPICS_LUMP_START];
+
+    //VL_LatchToScreen (source,wide/4,height,x*8,y);
+
+    VWB_DrawPic(x * 8, y, (int16_t)picnum, (int16_t)wide / 4, (int16_t)height);
+}
+
+void VWB_DrawPic (int16_t x, int16_t y, int16_t chunknum, int16_t w, int16_t h)
 {
     // Load them into textures instead of doing them lazy
-    // ws_preload_pics();
+    ws_preload_pics();
 
     int16_t	picnum = chunknum - STARTPICS;
     uint16_t width, height;
     width = pictable[picnum].width;
     height = pictable[picnum].height;
+    if (w != -1) width = w;
+    if (h != -1) height = h;
     x &= ~7;
 
     Pic pic;

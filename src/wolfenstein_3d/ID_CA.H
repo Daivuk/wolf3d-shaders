@@ -20,7 +20,7 @@ typedef	struct
 
 extern	char		audioname[13];
 
-extern	byte 		*tinf;
+//extern	byte 		*tinf;
 extern	int16_t			mapon;
 
 extern	uint16_t	*mapsegs[MAPPLANES];

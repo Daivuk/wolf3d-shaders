@@ -40,8 +40,7 @@ typedef struct
 typedef struct
 {
 	uint16_t	RLEWtag;
-	int16_t		headeroffsets[100];
-	byte*		tileinfo;
+	int32_t		headeroffsets[100];
 } mapfiletype;
 
 
@@ -53,7 +52,7 @@ typedef struct
 =============================================================================
 */
 
-byte 	    *tinf=nullptr;
+mapfiletype 	    *tinf=nullptr;
 int16_t			mapon=0;
 
 uint16_t		*mapsegs[MAPPLANES]={0};
@@ -1130,7 +1129,11 @@ void CAL_SetupMapFile (void)
 
     length = filelength(handle);
     MM_GetPtr((memptr*)&tinf, length);
-    CA_FarRead(handle, tinf, length);
+    CA_FarRead(handle, (byte*)&(tinf->RLEWtag), 2);
+    for (int i = 0; i < NUMMAPS; ++i)
+    {
+        CA_FarRead(handle, (byte*)&(tinf->headeroffsets[i]), 4);
+    }
     file_close(handle);
 #else
 
@@ -1162,14 +1165,14 @@ void CAL_SetupMapFile (void)
     //
     for (i = 0; i < NUMMAPS; i++)
     {
-        pos = ((mapfiletype*)tinf)->headeroffsets[i];
+        pos = tinf->headeroffsets[i];
         if (pos < 0)						// $FFFFFFFF start is a sparse map
             continue;
 
         MM_GetPtr((memptr*)&mapheaderseg[i], sizeof(maptype));
         MM_SetLock((memptr*)&mapheaderseg[i], _true);
         file_seek(maphandle, pos, SEEK_SET);
-        CA_FarRead(maphandle, (byte*)mapheaderseg[i], sizeof(maptype));
+        CA_FarRead(maphandle, (byte*)(mapheaderseg[i]), sizeof(maptype));
     }
 
     //

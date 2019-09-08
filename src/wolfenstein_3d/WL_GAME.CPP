@@ -626,7 +626,7 @@ void ScanInfoPlane (void)
 void SetupGameLevel (void)
 {
 	int16_t	x,y,i;
-	uintptr_t	 *map,tile,spot;
+	uint16_t	 *map,tile,spot;
 
 
 	if (!loadedgame)
@@ -663,7 +663,7 @@ void SetupGameLevel (void)
 //
 	memset (tilemap,0,sizeof(tilemap));
 	memset (actorat,0,sizeof(actorat));
-	map = (uintptr_t*)mapsegs[0];
+	map = mapsegs[0];
 	for (y=0;y<mapheight;y++)
 		for (x=0;x<mapwidth;x++)
 		{
@@ -689,7 +689,7 @@ void SetupGameLevel (void)
 	InitDoorList ();
 	InitStaticList ();
 
-	map = (uintptr_t*)mapsegs[0];
+	map = mapsegs[0];
 	for (y=0;y<mapheight;y++)
 		for (x=0;x<mapwidth;x++)
 		{
@@ -727,7 +727,7 @@ void SetupGameLevel (void)
 //
 // take out the ambush markers
 //
-	map = (uintptr_t*)mapsegs[0];
+	map = mapsegs[0];
 	for (y=0;y<mapheight;y++)
 		for (x=0;x<mapwidth;x++)
 		{

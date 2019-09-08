@@ -923,7 +923,7 @@ void GetNewActor (void)
 
 	_new = objfreelist;
 	objfreelist = _new->prev;
-	memset (_new,0,sizeof(*_new));
+	memset (_new,0,sizeof(objtype));
 
 	if (lastobj)
 		lastobj->next = _new;

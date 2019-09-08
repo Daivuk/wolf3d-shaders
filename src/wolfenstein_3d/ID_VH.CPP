@@ -376,16 +376,16 @@ void VWB_Vlin (int16_t y1, int16_t y2, int16_t x, int16_t color)
 =====================
 */
 
-void LatchDrawPic (uint16_t x, uint16_t y, uint16_t picnum)
-{
-	// uint16_t wide, height, source;
-
-	// wide = pictable[picnum-STARTPICS].width;
-	// height = pictable[picnum-STARTPICS].height;
-	// source = latchpics[2+picnum-LATCHPICS_LUMP_START];
-
-	// VL_LatchToScreen (source,wide/4,height,x*8,y);
-}
+//void LatchDrawPic (uint16_t x, uint16_t y, uint16_t picnum)
+//{
+//	// uint16_t wide, height, source;
+//
+//	// wide = pictable[picnum-STARTPICS].width;
+//	// height = pictable[picnum-STARTPICS].height;
+//	// source = latchpics[2+picnum-LATCHPICS_LUMP_START];
+//
+//	// VL_LatchToScreen (source,wide/4,height,x*8,y);
+//}
 
 
 //==========================================================================

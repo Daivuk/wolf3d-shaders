@@ -243,19 +243,19 @@ void ControlMovement (objtype *ob)
 
 void StatusDrawPic (uint16_t x, uint16_t y, uint16_t picnum)
 {
-	uint16_t	temp;
+	//uint16_t	temp;
 
-	temp = bufferofs;
-	bufferofs = 0;
+	//temp = bufferofs;
+	//bufferofs = 0;
 
-	bufferofs = PAGE1START+(200-STATUSLINES)*SCREENWIDTH;
-	LatchDrawPic (x,y,picnum);
-	bufferofs = PAGE2START+(200-STATUSLINES)*SCREENWIDTH;
-	LatchDrawPic (x,y,picnum);
-	bufferofs = PAGE3START+(200-STATUSLINES)*SCREENWIDTH;
+	//bufferofs = PAGE1START+(200-STATUSLINES)*SCREENWIDTH;
+	//LatchDrawPic (x,y,picnum);
+	//bufferofs = PAGE2START+(200-STATUSLINES)*SCREENWIDTH;
+	//LatchDrawPic (x,y,picnum);
+	//bufferofs = PAGE3START+(200-STATUSLINES)*SCREENWIDTH;
 	LatchDrawPic (x,y,picnum);
 
-	bufferofs = temp;
+	//bufferofs = temp;
 }
 
 
