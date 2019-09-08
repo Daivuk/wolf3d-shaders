@@ -1,4 +1,4 @@
-//#define SPEAR
+// #define SPEAR
 //#define JAPAN
 #define GOODTIMES
 #define ARTSEXTERN
@@ -6,4 +6,4 @@
 //#define MYPROFILE
 //#define DEBCHECK
 #define CARMACIZED
-//#define UPLOAD
+// #define UPLOAD

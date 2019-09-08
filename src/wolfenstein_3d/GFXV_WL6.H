@@ -5,7 +5,7 @@
 //
 //////////////////////////////////////
 
-typedef enum {
+enum graphicnums {
 		// Lump Start
 		H_BJPIC=3,
 		H_CASTLEPIC,                         // 4
@@ -159,7 +159,7 @@ typedef enum {
 		T_ENDART5,                           // 147
 		T_ENDART6,                           // 148
 		ENUMEND
-	     } graphicnums;
+	     };
 
 //
 // Data LUMPs

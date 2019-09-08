@@ -170,38 +170,38 @@ void VW_DrawColorPropString (char  *string)
 
 void VL_MungePic (byte  *source, uint16_t width, uint16_t height)
 {
-// 	uint16_t	x,y,plane,size,pwidth;
-// 	byte		 *temp,  *dest,  *srcline;
+	uint16_t	x,y,plane,size,pwidth;
+	byte		 *temp,  *dest,  *srcline;
 
-// 	size = width*height;
+	size = width*height;
 
-// 	if (width&3)
-// 		MS_Quit ((char*)"VL_MungePic: Not divisable by 4!");
+	if (width&3)
+		MS_Quit ((char*)"VL_MungePic: Not divisable by 4!");
 
-// //
-// // copy the pic to a temp buffer
-// //
-// 	MM_GetPtr (&(memptr)temp,size);
-// 	_fmemcpy (temp,source,size);
+//
+// copy the pic to a temp buffer
+//
+	MM_GetPtr ((memptr*)&temp,size);
+	memcpy (temp,source,size);
 
-// //
-// // munge it back into the original buffer
-// //
-// 	dest = source;
-// 	pwidth = width/4;
+//
+// munge it back into the original buffer
+//
+	dest = source;
+	pwidth = width/4;
 
-// 	for (plane=0;plane<4;plane++)
-// 	{
-// 		srcline = temp;
-// 		for (y=0;y<height;y++)
-// 		{
-// 			for (x=0;x<pwidth;x++)
-// 				*dest++ = *(srcline+x*4+plane);
-// 			srcline+=width;
-// 		}
-// 	}
+	for (plane=0;plane<4;plane++)
+	{
+		srcline = temp;
+		for (y=0;y<height;y++)
+		{
+			for (x=0;x<pwidth;x++)
+				*dest++ = *(srcline+x*4+plane);
+			srcline+=width;
+		}
+	}
 
-// 	MM_FreePtr (&(memptr)temp);
+	MM_FreePtr ((memptr*)&temp);
 }
 
 void VWL_MeasureString (char  *string, word *width, word *height
@@ -336,6 +336,7 @@ void VWB_Bar (int16_t x, int16_t y, int16_t width, int16_t height, int16_t color
 
 void VWB_Plot (int16_t x, int16_t y, int16_t color)
 {
+    VL_Bar(x, y, 1, 1, color);
 	// if (VW_MarkUpdateBlock (x,y,x,y))
 	// 	VW_Plot(x,y,color);
 }

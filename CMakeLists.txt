@@ -67,7 +67,9 @@ list(APPEND includes PUBLIC ./thirdparty/tinyfiledialogs/)
 list(APPEND src_thirdparty ./thirdparty/tinyfiledialogs/tinyfiledialogs.c)
 
 # dirent
-list(APPEND includes PUBLIC ./thirdparty/dirent/)
+if (WIN32)
+    list(APPEND includes PUBLIC ./thirdparty/dirent/)
+endif()
 
 #------------------------------------------------------------------------------
 # Exe

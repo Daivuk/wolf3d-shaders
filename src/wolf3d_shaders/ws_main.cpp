@@ -26,7 +26,8 @@ void wolf3d_init();
 void wolf3d_update();
 void wolf3d_shutdown();
 void audioCallback(void *userdata, Uint8 *stream, int len);
-void flush();
+static void flush();
+void drawDebugString(char* string, float x, float y);
 
 int16_t _argc; // global arguments. this is referenced a bit everywhere
 char** _argv;
@@ -185,6 +186,7 @@ int drawMode = -1;
 GLenum drawModePrim = 0;
 float fade_val = 1.0f;
 bool showDebug = false;
+float debugOffset = 0.0f;
 
 #define wolf_RGB(r, g, b) {(float)((r)*255/63)/255.0f, (float)((g)*255/63)/255.0f, (float)((b)*255/63)/255.0f, 1.0f}
 Color palette[] = {
@@ -591,7 +593,21 @@ void ws_update_sdl()
             exit(0);
             break;
         case SDL_KEYDOWN:
-            if (event.key.keysym.scancode == SDL_SCANCODE_F1) showDebug = true;
+            if (showDebug)
+            {
+                if (event.key.keysym.scancode == SDL_SCANCODE_F1)
+                    showDebug = false;
+                else if (event.key.keysym.scancode == SDL_SCANCODE_DOWN)
+                    debugOffset += 120;
+                else if (event.key.keysym.scancode == SDL_SCANCODE_UP)
+                    debugOffset -= 120;
+                VW_UpdateScreen();
+            }
+            else if (event.key.keysym.scancode == SDL_SCANCODE_F1)
+            {
+                showDebug = true;
+                VW_UpdateScreen();
+            }
             else
             {
                 scancode = getDosScanCode(event.key.keysym.scancode);
@@ -599,8 +615,7 @@ void ws_update_sdl()
             }
             break;
         case SDL_KEYUP:
-            if (event.key.keysym.scancode == SDL_SCANCODE_F1) showDebug = false;
-            else
+            if (!showDebug)
             {
                 scancode = getDosScanCode(event.key.keysym.scancode) | 0x80;
                 if (KeyInt_in) KeyInt_in();
@@ -669,10 +684,8 @@ void VW_UpdateScreen()
     prepareForPTC(GL_QUADS);
     if (showDebug)
     {
-        //std::map<int16_t, Pic> pics;
-        //std::map<int, BakedFont> fontTextures;
         //std::map<int16_t, GLuint> screenRaws;
-        float y = 0;
+        float y = -debugOffset;
         for (auto& kv : fontTextures)
         {
             glBindTexture(GL_TEXTURE_2D, kv.second.tex);
@@ -693,6 +706,7 @@ void VW_UpdateScreen()
             glBindTexture(GL_TEXTURE_2D, kv.second.tex);
             ptcCount += drawRect(resources.pPTCVertices, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, { 1, 1, 1, 1 });
             flush();
+            drawDebugString((char*)std::to_string(kv.first).c_str(), x, y);
             x += (float)kv.second.w + 2;
             maxy = std::max(maxy, (float)kv.second.h);
         }
@@ -885,6 +899,37 @@ BakedFont& getBakedFont(int id)
     return it->second;
 }
 
+void drawDebugString(char* string, float x, float y)
+{
+    // backcolor = 0;
+    // fontcolor = 128;
+    
+    fontstruct		*font;
+    int16_t		width, height, i;
+    byte	 *source, *dest, *origdest;
+    byte	ch, mask;
+
+    font = (fontstruct  *)grsegs[STARTFONT + 0];
+    auto& bakedFont = getBakedFont(STARTFONT + 0);
+    height = font->height;
+
+    flush();
+    prepareForPTC(GL_QUADS);
+    glBindTexture(GL_TEXTURE_2D, bakedFont.tex);
+
+    while ((ch = *string++) != 0)
+    {
+        width = font->width[ch];
+        auto os = bakedFont.os[ch];
+        ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)width, (float)height,
+            os, 0, os + bakedFont.ws[ch], 1,
+            { 1, 1, 1, 1 });
+        x += (float)width;
+    }
+
+    flush();
+}
+
 void VW_DrawPropString(char  *string)
 {
     fontstruct		*font;
@@ -950,42 +995,73 @@ void ws_draw_screen_from_raw(byte* _data, int16_t chunk)
     flush();
 }
 
+Pic load_pic(int16_t chunknum)
+{
+    int16_t	picnum = chunknum - STARTPICS;
+
+    uint16_t width, height;
+    Pic pic;
+
+    width = pictable[picnum].width;
+    height = pictable[picnum].height;
+    auto _data = (byte*)grsegs[chunknum];
+
+    auto data = new uint8_t[width * height * 4];
+
+    int k = 0;
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            auto col = palette[_data[(y*(width >> 2) + (x >> 2)) + (x & 3)*(width >> 2)*height]];
+            data[k + 0] = (byte)(col.r * 255.0f);
+            data[k + 1] = (byte)(col.g * 255.0f);
+            data[k + 2] = (byte)(col.b * 255.0f);
+            data[k + 3] = 255;
+            k += 4;
+        }
+    }
+    auto texture = ws_create_texture(data, width, height);
+    delete[] data;
+    pic.w = width;
+    pic.h = height;
+    pic.tex = texture;
+    pics[chunknum] = pic;
+
+    return pic;
+}
+
+void ws_preload_pics()
+{
+    static bool loaded = false;
+    if (!loaded)
+    {
+        loaded = true;
+        for (int i = 0; i < NUMPICS; ++i)
+        {
+            CA_CacheGrChunk(i);
+            load_pic(i);
+        }
+    }
+}
+
 void VWB_DrawPic (int16_t x, int16_t y, int16_t chunknum)
 {
+    // Load them into textures instead of doing them lazy
+    // ws_preload_pics();
+
     int16_t	picnum = chunknum - STARTPICS;
     uint16_t width, height;
     width = pictable[picnum].width;
     height = pictable[picnum].height;
     x &= ~7;
 
-    auto _data = (byte*)grsegs[chunknum];
-    GLuint texture = 0;
     Pic pic;
-    auto it = pics.find(picnum);
+    auto it = pics.find(chunknum);
     auto lw = 40;
     if (it == pics.end())
     {
-        auto data = new uint8_t[width * height * 4];
-
-        int k = 0;
-        for (int y = 0; y < height; ++y)
-        {
-            for (int x = 0; x < width; ++x)
-            {
-                auto col = palette[_data[(y*(width >> 2) + (x >> 2)) + (x & 3)*(width >> 2)*height]];
-                data[k + 0] = (byte)(col.r * 255.0f);
-                data[k + 1] = (byte)(col.g * 255.0f);
-                data[k + 2] = (byte)(col.b * 255.0f);
-                data[k + 3] = 255;
-                k += 4;
-            }
-        }
-        texture = ws_create_texture(data, width, height);
-        delete[] data;
-        pic.w = width;
-        pic.h = height;
-        pic.tex = texture;
-        pics[picnum] = pic;
+        pic = load_pic(chunknum);
     }
     else
     {

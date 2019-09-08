@@ -3798,7 +3798,7 @@ void	A_StartDeathCam (objtype *ob)
 	CA_CacheScreen(C_LETSSEEPIC);
 	#endif
 	#else
-	Write(0,7,STR_SEEAGAIN);
+	Write(0,7,(char*)STR_SEEAGAIN);
 	#endif
 	CA_DownLevel ();
 	PM_CheckMainMem ();
@@ -3857,6 +3857,7 @@ void	A_StartDeathCam (objtype *ob)
 	fizzlein = _true;
 	switch (ob->obclass)
 	{
+        default:break;
 #ifndef SPEAR
 	case schabbobj:
 		NewState (ob,&s_schabbdeathcam);

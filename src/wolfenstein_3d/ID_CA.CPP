@@ -1166,8 +1166,8 @@ void CAL_SetupMapFile (void)
         if (pos < 0)						// $FFFFFFFF start is a sparse map
             continue;
 
-        MM_GetPtr(&(memptr)mapheaderseg[i], sizeof(maptype));
-        MM_SetLock(&(memptr)mapheaderseg[i], _true);
+        MM_GetPtr((memptr*)&mapheaderseg[i], sizeof(maptype));
+        MM_SetLock((memptr*)&mapheaderseg[i], _true);
         file_seek(maphandle, pos, SEEK_SET);
         CA_FarRead(maphandle, (byte*)mapheaderseg[i], sizeof(maptype));
     }
@@ -1177,8 +1177,8 @@ void CAL_SetupMapFile (void)
     //
     for (i = 0; i < MAPPLANES; i++)
     {
-        MM_GetPtr(&(memptr)mapsegs[i], 64 * 64 * 2);
-        MM_SetLock(&(memptr)mapsegs[i], _true);
+        MM_GetPtr((memptr*)&mapsegs[i], 64 * 64 * 2);
+        MM_SetLock((memptr*)&mapsegs[i], _true);
     }
 }
 
