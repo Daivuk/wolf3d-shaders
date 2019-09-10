@@ -28,5 +28,7 @@ void ws_play_sound(byte* data, int len);
 void ws_draw_wall(float x, float y, int dir, int texture);
 void ws_finish_draw_3d();
 void ws_update_camera();
+void ws_draw_ceiling(int color);
+void ws_draw_floor(int color);
 
 #endif

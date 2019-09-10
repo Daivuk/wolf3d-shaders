@@ -23,27 +23,27 @@
 // That's for 2D
 static const int MAX_VERTICES = 100000;
 
-void	Quit (char *error);
+void Quit(char *error);
 
 void wolf3d_init();
 void wolf3d_update();
 void wolf3d_shutdown();
 void audioCallback(void *userdata, Uint8 *stream, int len);
 static void flush();
-void drawDebugString(char* string, float x, float y);
+void drawDebugString(char *string, float x, float y);
 
 int16_t _argc; // global arguments. this is referenced a bit everywhere
-char** _argv;
+char **_argv;
 int pcCount = 0;
 int ptcCount = 0;
 int pntcCount = 0;
 ws_Matrix matrix2D;
 ws_Matrix matrix3D;
 int screen_w = 1024, screen_h = 640;
-SDL_Window* sdlWindow;
+SDL_Window *sdlWindow;
 float s_scale = 1.0f;
 
-#define	KeyInt		9	// The keyboard ISR number
+#define KeyInt 9 // The keyboard ISR number
 
 static byte scancode = 0;
 static Interrupt KeyInt_in = nullptr;
@@ -177,16 +177,17 @@ struct VertexPNTC
 
 struct Resources
 {
-    GLuint      programPC;      /* Position2, Color4 */
-    GLuint      programPTC;     /* Position2, TexCoord2, Color4 */
-    GLuint      programPNTC;    /* Position3, Normal3, TexCoord2, Color4 */
-    GLuint      vertexBuffer;   /* Dynamic version buffer used by batches */
-    VertexPC   *pPCVertices;    /* Used by dynamic rendering of Position/Color */
-    VertexPTC  *pPTCVertices;   /* Used by dynamic rendering of Position/TexCoord/Color */
-    VertexPNTC *pPNTCVertices;  /* Used by dynamic rendering of Position/TexCoord/Color */
-    GLuint      mapVB;          /* Dynamic part of the map */
-    GLuint      checkerTexture; /* Test texture to replace non-existing or corrupted data */
-    RenderTarget mainRT;        /* Main scree render target (Final image) */
+    GLuint programPC;          /* Position2, Color4 */
+    GLuint programPTC;         /* Position2, TexCoord2, Color4 */
+    GLuint programPNTC;        /* Position3, Normal3, TexCoord2, Color4 */
+    GLuint vertexBuffer;       /* Dynamic version buffer used by batches */
+    VertexPC *pPCVertices;     /* Used by dynamic rendering of Position/Color */
+    VertexPTC *pPTCVertices;   /* Used by dynamic rendering of Position/TexCoord/Color */
+    VertexPNTC *pPNTCVertices; /* Used by dynamic rendering of Position/TexCoord/Color */
+    GLuint mapVB;              /* Dynamic part of the map */
+    GLuint checkerTexture;     /* Test texture to replace non-existing or corrupted data */
+    GLuint whiteTexture;       /* ... */
+    RenderTarget mainRT;       /* Main scree render target (Final image) */
 } resources;
 
 struct Pic
@@ -216,12 +217,15 @@ float fade_val = 1.0f;
 bool showDebug = false;
 float debugOffset = 0.0f;
 
-#define wolf_RGB(r, g, b) {(float)((r)*255/63)/255.0f, (float)((g)*255/63)/255.0f, (float)((b)*255/63)/255.0f, 1.0f}
+#define wolf_RGB(r, g, b)                                                                                    \
+    {                                                                                                        \
+        (float)((r)*255 / 63) / 255.0f, (float)((g)*255 / 63) / 255.0f, (float)((b)*255 / 63) / 255.0f, 1.0f \
+    }
 Color palette[] = {
 #ifdef SPEAR
-    #include "sodpal.inc"
+#include "sodpal.inc"
 #else
-    #include "wolfpal.inc"
+#include "wolfpal.inc"
 #endif
 };
 
@@ -233,14 +237,14 @@ static void checkShader(GLuint handle)
     {
         GLchar infoLog[1024];
         glGetShaderInfoLog(handle, 1023, NULL, infoLog);
-        Quit((char*)(std::string("shader compile failed: ") + infoLog).c_str());
+        Quit((char *)(std::string("shader compile failed: ") + infoLog).c_str());
     }
 }
 
 GLuint createProgram(const GLchar *vs, const GLchar *ps, const std::vector<const char *> &attribs)
 {
-    const GLchar *vertex_shader_with_version[2]     = {"#version 120\n", vs};
-    const GLchar *fragment_shader_with_version[2]   = {"#version 120\n", ps};
+    const GLchar *vertex_shader_with_version[2] = {"#version 120\n", vs};
+    const GLchar *fragment_shader_with_version[2] = {"#version 120\n", ps};
 
     auto vertHandle = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertHandle, 2, vertex_shader_with_version, NULL);
@@ -325,8 +329,8 @@ static void drawPC(const VertexPC *pVertices, int count, GLenum mode)
 {
     glBindBuffer(GL_ARRAY_BUFFER, resources.vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPC) * count, pVertices, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPC), (float*)(uintptr_t)(0));
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPC), (float*)(uintptr_t)(8));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPC), (float *)(uintptr_t)(0));
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPC), (float *)(uintptr_t)(8));
     glDrawArrays(mode, 0, count);
 }
 
@@ -334,9 +338,9 @@ static void drawPTC(const VertexPTC *pVertices, int count, GLenum mode)
 {
     glBindBuffer(GL_ARRAY_BUFFER, resources.vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPTC) * count, pVertices, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(0));
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(8));
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(16));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float *)(uintptr_t)(0));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float *)(uintptr_t)(8));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float *)(uintptr_t)(16));
     glDrawArrays(mode, 0, count);
 }
 
@@ -344,10 +348,10 @@ static void drawPNTC(const VertexPNTC *pVertices, int count, GLenum mode)
 {
     glBindBuffer(GL_ARRAY_BUFFER, resources.vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPNTC) * count, pVertices, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float*)(uintptr_t)(0));
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float*)(uintptr_t)(12));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float*)(uintptr_t)(24));
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float*)(uintptr_t)(30));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float *)(uintptr_t)(0));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float *)(uintptr_t)(12));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float *)(uintptr_t)(24));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float *)(uintptr_t)(32));
     glDrawArrays(mode, 0, count);
 }
 
@@ -368,7 +372,8 @@ void drawQuads(const VertexPC *pVertices, int count)
 
 void prepareForPC(int prim)
 {
-    if (drawMode == DRAW_MODE_PC && prim == drawModePrim) return;
+    if (drawMode == DRAW_MODE_PC && prim == drawModePrim)
+        return;
     flush();
     drawModePrim = prim;
     if (drawMode != DRAW_MODE_PC)
@@ -386,7 +391,8 @@ void prepareForPC(int prim)
 
 void prepareForPTC(int prim)
 {
-    if (drawMode == DRAW_MODE_PTC && prim == drawModePrim) return;
+    if (drawMode == DRAW_MODE_PTC && prim == drawModePrim)
+        return;
     flush();
     drawModePrim = prim;
     if (drawMode != DRAW_MODE_PTC)
@@ -406,23 +412,24 @@ void prepareForPTC(int prim)
 GLuint current3DTexture = 0;
 void prepareForPNTC(int prim, GLuint texture)
 {
-    if (drawMode == DRAW_MODE_PNTC && prim == drawModePrim && current3DTexture == texture) return;
+    if (drawMode == DRAW_MODE_PNTC && prim == drawModePrim && current3DTexture == texture)
+        return;
     flush();
     drawModePrim = prim;
     current3DTexture = texture;
+    glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, current3DTexture);
     if (drawMode != DRAW_MODE_PNTC)
     {
         drawMode = DRAW_MODE_PNTC;
-        glEnable(GL_TEXTURE_2D);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, current3DTexture);
         glUseProgram(resources.programPNTC);
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
         glEnableVertexAttribArray(0); // pos
         glEnableVertexAttribArray(1); // normal
-        glEnableVertexAttribArray(1); // texcoord
-        glEnableVertexAttribArray(2); // color
+        glEnableVertexAttribArray(2); // texcoord
+        glEnableVertexAttribArray(3); // color
     }
 }
 
@@ -546,7 +553,7 @@ int CALLBACK WinMain(HINSTANCE appInstance, HINSTANCE prevInstance, LPSTR cmdLin
         cmdLineW[i] = (wchar_t)cmdLineA[i];
     }
     auto argvW = CommandLineToArgvW(cmdLineW, &argc);
-    auto argv = new char*[argc];
+    auto argv = new char *[argc];
     for (int j = 0; j < argc; ++j)
     {
         auto argW = argvW[j];
@@ -560,7 +567,7 @@ int CALLBACK WinMain(HINSTANCE appInstance, HINSTANCE prevInstance, LPSTR cmdLin
     }
     delete[] cmdLineW;
 #else
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 #endif
     _argc = argc;
@@ -597,8 +604,8 @@ int main(int argc, char** argv)
 
     // Init main resources
     resources.programPC = createProgram(PC_VERT, PC_FRAG, {"Position", "Color"});
-    resources.programPTC = createProgram(PTC_VERT, PTC_FRAG, { "Position", "TexCoord", "Color" });
-    resources.programPNTC = createProgram(PNTC_VERT, PNTC_FRAG, { "Position", "Normal", "TexCoord", "Color" });
+    resources.programPTC = createProgram(PTC_VERT, PTC_FRAG, {"Position", "TexCoord", "Color"});
+    resources.programPNTC = createProgram(PNTC_VERT, PNTC_FRAG, {"Position", "Normal", "TexCoord", "Color"});
     resources.vertexBuffer = createVertexBuffer();
     resources.pPCVertices = new VertexPC[MAX_VERTICES];
     resources.pPTCVertices = new VertexPTC[MAX_VERTICES];
@@ -606,8 +613,9 @@ int main(int argc, char** argv)
     resources.mainRT = createRT(screen_w, screen_h);
 
     srand(0);
-    uint32_t checkerBytes[] = { 0xFF880088, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF880088 };
-    resources.checkerTexture = ws_create_texture((uint8_t*)&checkerBytes, 2, 2);
+    uint32_t checkerBytes[] = {0xFF880088, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF880088};
+    resources.checkerTexture = ws_create_texture((uint8_t *)checkerBytes, 2, 2);
+    resources.whiteTexture = ws_create_texture((uint8_t*)&checkerBytes[1], 1, 1);
 
     ws_update_sdl();
     VW_UpdateScreen();
@@ -624,7 +632,8 @@ int main(int argc, char** argv)
 int getDosScanCode(int sdlScanCode)
 {
     auto it = SDL2DosKeymap.find(sdlScanCode);
-    if (it == SDL2DosKeymap.end()) return 0;
+    if (it == SDL2DosKeymap.end())
+        return 0;
     return it->second;
 }
 
@@ -659,14 +668,16 @@ void ws_update_sdl()
             else
             {
                 scancode = getDosScanCode(event.key.keysym.scancode);
-                if (KeyInt_in) KeyInt_in();
+                if (KeyInt_in)
+                    KeyInt_in();
             }
             break;
         case SDL_KEYUP:
             if (!showDebug)
             {
                 scancode = getDosScanCode(event.key.keysym.scancode) | 0x80;
-                if (KeyInt_in) KeyInt_in();
+                if (KeyInt_in)
+                    KeyInt_in();
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
@@ -743,16 +754,16 @@ void VW_UpdateScreen()
         }
         prepareForPTC(GL_QUADS);
         y += 5;
-        for (auto& kv : fontTextures)
+        for (auto &kv : fontTextures)
         {
             glBindTexture(GL_TEXTURE_2D, kv.second.tex);
-            ptcCount += drawRect(resources.pPTCVertices + ptcCount, 0, y, (float)screen_w, 10, 0, 0, 1, 1, { 1, 1, 1, 1 });
+            ptcCount += drawRect(resources.pPTCVertices + ptcCount, 0, y, (float)screen_w, 10, 0, 0, 1, 1, {1, 1, 1, 1});
             flush();
             y += 12.0f;
         }
         float maxy = 0;
         float x = 0;
-        for (auto& kv : screenRaws)
+        for (auto &kv : screenRaws)
         {
             if (x + 320 + 2 > (float)screen_w)
             {
@@ -761,13 +772,13 @@ void VW_UpdateScreen()
                 maxy = 0.0f;
             }
             glBindTexture(GL_TEXTURE_2D, kv.second);
-            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)320, (float)200, 0, 0, 1, 1, { 1, 1, 1, 1 });
+            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)320, (float)200, 0, 0, 1, 1, {1, 1, 1, 1});
             flush();
-            drawDebugString((char*)std::to_string(kv.first).c_str(), x, y);
+            drawDebugString((char *)std::to_string(kv.first).c_str(), x, y);
             x += (float)320 + 2;
             maxy = std::max(maxy, (float)200);
         }
-        for (auto& kv : pics)
+        for (auto &kv : pics)
         {
             if (x + (float)kv.second.w + 2 > (float)screen_w)
             {
@@ -776,13 +787,13 @@ void VW_UpdateScreen()
                 maxy = 0.0f;
             }
             glBindTexture(GL_TEXTURE_2D, kv.second.tex);
-            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, { 1, 1, 1, 1 });
+            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, {1, 1, 1, 1});
             flush();
-            drawDebugString((char*)std::to_string(kv.first).c_str(), x, y);
+            drawDebugString((char *)std::to_string(kv.first).c_str(), x, y);
             x += (float)kv.second.w + 2;
             maxy = std::max(maxy, (float)kv.second.h);
         }
-        for (auto& kv : sprites)
+        for (auto &kv : sprites)
         {
             if (x + (float)kv.second.w + 2 > (float)screen_w)
             {
@@ -791,16 +802,16 @@ void VW_UpdateScreen()
                 maxy = 0.0f;
             }
             glBindTexture(GL_TEXTURE_2D, kv.second.tex);
-            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, { 1, 1, 1, 1 });
+            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, {1, 1, 1, 1});
             flush();
-            drawDebugString((char*)std::to_string(kv.first).c_str(), x, y);
+            drawDebugString((char *)std::to_string(kv.first).c_str(), x, y);
             x += (float)kv.second.w + 2;
             maxy = std::max(maxy, (float)kv.second.h);
         }
     }
     else
     {
-        ptcCount += drawRect(resources.pPTCVertices + ptcCount, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, { 1, 1, 1, fade_val });
+        ptcCount += drawRect(resources.pPTCVertices + ptcCount, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, {1, 1, 1, fade_val});
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, resources.mainRT.handle);
         drawPTC(resources.pPTCVertices, ptcCount, GL_QUADS);
@@ -851,23 +862,29 @@ int16_t inportb(int16_t addr)
 {
     switch (addr)
     {
-        case 0x60:
+    case 0x60:
+    {
+        return scancode;
+    }
+    case PEL_DATA:
+    {
+        auto &col = palette[palidx / 3];
+        int16_t ret = 0;
+        switch (palidx % 3)
         {
-            return scancode;
+        case 0:
+            ret = (int16_t)(byte)(col.r * 255.0f);
+            break;
+        case 1:
+            ret = (int16_t)(byte)(col.g * 255.0f);
+            break;
+        case 2:
+            ret = (int16_t)(byte)(col.b * 255.0f);
+            break;
         }
-        case PEL_DATA:
-        {
-            auto &col = palette[palidx / 3];
-            int16_t ret = 0;
-            switch (palidx % 3)
-            {
-                case 0: ret = (int16_t)(byte)(col.r * 255.0f); break;
-                case 1: ret = (int16_t)(byte)(col.g * 255.0f); break;
-                case 2: ret = (int16_t)(byte)(col.b * 255.0f); break;
-            }
-            palidx++;
-            return ret;
-        }
+        palidx++;
+        return ret;
+    }
     }
     return 0;
 }
@@ -876,11 +893,11 @@ void outportb(int16_t addr, char val)
 {
     switch (addr)
     {
-        case PEL_READ_ADR:
-        {
-            palidx = 0;
-            break;
-        }
+    case PEL_READ_ADR:
+    {
+        palidx = 0;
+        break;
+    }
     }
 }
 
@@ -898,9 +915,9 @@ void setvect(int16_t r_num, Interrupt interrupt)
 {
     switch (r_num)
     {
-        case KeyInt:
-            KeyInt_in = interrupt;
-            break;
+    case KeyInt:
+        KeyInt_in = interrupt;
+        break;
     }
 }
 
@@ -908,74 +925,74 @@ static void flush()
 {
     switch (drawMode)
     {
-        case DRAW_MODE_PC:
-            if (pcCount)
-            {
-                drawPC(resources.pPCVertices, pcCount, drawModePrim);
-                pcCount = 0;
-            }
-            break;
-        case DRAW_MODE_PTC:
-            if (ptcCount)
-            {
-                drawPTC(resources.pPTCVertices, ptcCount, drawModePrim);
-                ptcCount = 0;
-            }
-            break;
-        case DRAW_MODE_PNTC:
-            if (pntcCount)
-            {
-                drawPNTC(resources.pPNTCVertices, pntcCount, drawModePrim);
-                pntcCount = 0;
-            }
-            break;
+    case DRAW_MODE_PC:
+        if (pcCount)
+        {
+            drawPC(resources.pPCVertices, pcCount, drawModePrim);
+            pcCount = 0;
+        }
+        break;
+    case DRAW_MODE_PTC:
+        if (ptcCount)
+        {
+            drawPTC(resources.pPTCVertices, ptcCount, drawModePrim);
+            ptcCount = 0;
+        }
+        break;
+    case DRAW_MODE_PNTC:
+        if (pntcCount)
+        {
+            drawPNTC(resources.pPNTCVertices, pntcCount, drawModePrim);
+            pntcCount = 0;
+        }
+        break;
     }
 }
 
 void VL_Bar(int16_t x, int16_t y, int16_t width, int16_t height, int16_t color)
 {
     prepareForPC(GL_QUADS);
-    pcCount += drawRect(resources.pPCVertices + pcCount, 
-        (float)x * s_scale, 
-        (float)y * s_scale,
-        (float)width * s_scale,
-        (float)height * s_scale,
-        palette[color]);
+    pcCount += drawRect(resources.pPCVertices + pcCount,
+                        (float)x * s_scale,
+                        (float)y * s_scale,
+                        (float)width * s_scale,
+                        (float)height * s_scale,
+                        palette[color]);
 }
 
 void VL_Hlin(uint16_t x, uint16_t y, uint16_t width, uint16_t color)
 {
     prepareForPC(GL_QUADS);
     pcCount += drawRect(resources.pPCVertices + pcCount,
-        (float)x * s_scale,
-        (float)y * s_scale,
-        (float)width * s_scale,
-        1 * s_scale,
-        palette[color]);
+                        (float)x * s_scale,
+                        (float)y * s_scale,
+                        (float)width * s_scale,
+                        1 * s_scale,
+                        palette[color]);
 }
 
 void VL_Vlin(int16_t x, int16_t y, int16_t height, int16_t color)
 {
     prepareForPC(GL_QUADS);
     pcCount += drawRect(resources.pPCVertices + pcCount,
-        (float)x * s_scale,
-        (float)y * s_scale,
-        1 * s_scale,
-        (float)height * s_scale,
-        palette[color]);
+                        (float)x * s_scale,
+                        (float)y * s_scale,
+                        1 * s_scale,
+                        (float)height * s_scale,
+                        palette[color]);
 }
 
-BakedFont& getBakedFont(int id)
+BakedFont &getBakedFont(int id)
 {
     //fontcolor = f; backcolor
     auto kid = id | (backcolor << 16) | (fontcolor << 24); // Generate a unique id by font color. A bit overkill, but meh...
     auto it = fontTextures.find(kid);
     if (it == fontTextures.end())
     {
-        auto& bakedFont = fontTextures[kid];
+        auto &bakedFont = fontTextures[kid];
 
         // Load it
-        auto font = (fontstruct*)grsegs[id];
+        auto font = (fontstruct *)grsegs[id];
         int w, h;
         w = 0;
         h = font->height;
@@ -994,15 +1011,17 @@ BakedFont& getBakedFont(int id)
             auto cw = font->width[i];
             bakedFont.os[i] = (float)lx / (float)w;
             bakedFont.ws[i] = (float)cw / (float)w;
-            if (cw == 0) continue;
-            auto src = ((byte*)font) + font->location[i];
+            if (cw == 0)
+                continue;
+            auto src = ((byte *)font) + font->location[i];
             for (int y = 0; y < h; ++y)
             {
                 for (int x = lx; x < lx + cw; ++x)
                 {
                     auto k = (y * w + x) * 4;
                     Color col = bg;
-                    if (*src++) col = fg;
+                    if (*src++)
+                        col = fg;
                     data[k + 0] = (byte)(col.r * 255.0f);
                     data[k + 1] = (byte)(col.g * 255.0f);
                     data[k + 2] = (byte)(col.b * 255.0f);
@@ -1019,18 +1038,18 @@ BakedFont& getBakedFont(int id)
     return it->second;
 }
 
-void drawDebugString(char* string, float x, float y)
+void drawDebugString(char *string, float x, float y)
 {
     // backcolor = 0;
     // fontcolor = 128;
-    
-    fontstruct		*font;
-    int16_t		width, height, i;
-    byte	 *source, *dest, *origdest;
-    byte	ch, mask;
 
-    font = (fontstruct  *)grsegs[STARTFONT + 0];
-    auto& bakedFont = getBakedFont(STARTFONT + 0);
+    fontstruct *font;
+    int16_t width, height, i;
+    byte *source, *dest, *origdest;
+    byte ch, mask;
+
+    font = (fontstruct *)grsegs[STARTFONT + 0];
+    auto &bakedFont = getBakedFont(STARTFONT + 0);
     height = font->height;
 
     flush();
@@ -1041,26 +1060,26 @@ void drawDebugString(char* string, float x, float y)
     {
         width = font->width[ch];
         auto os = bakedFont.os[ch];
-        ptcCount += drawRect(resources.pPTCVertices + ptcCount, 
-            x * s_scale, y * s_scale,
-            (float)width * s_scale, (float)height * s_scale,
-            os, 0, os + bakedFont.ws[ch], 1,
-            { 1, 1, 1, 1 });
+        ptcCount += drawRect(resources.pPTCVertices + ptcCount,
+                             x * s_scale, y * s_scale,
+                             (float)width * s_scale, (float)height * s_scale,
+                             os, 0, os + bakedFont.ws[ch], 1,
+                             {1, 1, 1, 1});
         x += (float)width;
     }
 
     flush();
 }
 
-void VW_DrawPropString(char  *string)
+void VW_DrawPropString(char *string)
 {
-    fontstruct		*font;
-    int16_t		width, height, i;
-    byte	 *source, *dest, *origdest;
-    byte	ch, mask;
+    fontstruct *font;
+    int16_t width, height, i;
+    byte *source, *dest, *origdest;
+    byte ch, mask;
 
-    font = (fontstruct  *)grsegs[STARTFONT + fontnumber];
-    auto& bakedFont = getBakedFont(STARTFONT + fontnumber);
+    font = (fontstruct *)grsegs[STARTFONT + fontnumber];
+    auto &bakedFont = getBakedFont(STARTFONT + fontnumber);
     height = font->height;
 
     flush();
@@ -1071,25 +1090,25 @@ void VW_DrawPropString(char  *string)
     {
         width = font->width[ch];
         auto os = bakedFont.os[ch];
-        ptcCount += drawRect(resources.pPTCVertices + ptcCount, 
-            (float)px * s_scale, (float)py * s_scale,
-            (float)width * s_scale, (float)height * s_scale,
-            os, 0, os + bakedFont.ws[ch], 1,
-            { 1, 1, 1, 1 });
+        ptcCount += drawRect(resources.pPTCVertices + ptcCount,
+                             (float)px * s_scale, (float)py * s_scale,
+                             (float)width * s_scale, (float)height * s_scale,
+                             os, 0, os + bakedFont.ws[ch], 1,
+                             {1, 1, 1, 1});
         px += width;
     }
 
     flush();
 }
 
-void ws_draw_screen_from_raw(byte* _data, int16_t chunk)
+void ws_draw_screen_from_raw(byte *_data, int16_t chunk)
 {
     GLuint texture = 0;
     auto it = screenRaws.find(chunk);
     if (it == screenRaws.end())
     {
         auto data = new uint8_t[MaxX * MaxY * 4];
-        
+
         int k = 0;
         for (int y = 0; y < MaxY; ++y)
         {
@@ -1115,20 +1134,20 @@ void ws_draw_screen_from_raw(byte* _data, int16_t chunk)
     flush();
     prepareForPTC(GL_QUADS);
     glBindTexture(GL_TEXTURE_2D, texture);
-    ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)0, (float)0, (float)screen_w, (float)screen_h, 0, 0, 1, 1, { 1, 1, 1, 1 });
+    ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)0, (float)0, (float)screen_w, (float)screen_h, 0, 0, 1, 1, {1, 1, 1, 1});
     flush();
 }
 
 Pic load_pic(int16_t chunknum)
 {
-    int16_t	picnum = chunknum - STARTPICS;
+    int16_t picnum = chunknum - STARTPICS;
 
     uint16_t width, height;
     Pic pic;
 
     width = pictable[picnum].width;
     height = pictable[picnum].height;
-    auto _data = (byte*)grsegs[chunknum];
+    auto _data = (byte *)grsegs[chunknum];
 
     auto data = new uint8_t[width * height * 4];
 
@@ -1137,7 +1156,7 @@ Pic load_pic(int16_t chunknum)
     {
         for (int x = 0; x < width; ++x)
         {
-            auto col = palette[_data[(y*(width >> 2) + (x >> 2)) + (x & 3)*(width >> 2)*height]];
+            auto col = palette[_data[(y * (width >> 2) + (x >> 2)) + (x & 3) * (width >> 2) * height]];
             data[k + 0] = (byte)(col.r * 255.0f);
             data[k + 1] = (byte)(col.g * 255.0f);
             data[k + 2] = (byte)(col.b * 255.0f);
@@ -1173,26 +1192,28 @@ void LatchDrawPic(uint16_t x, uint16_t y, uint16_t picnum)
 {
     uint16_t wide, height, source;
 
-    wide = pictable[picnum-STARTPICS].width;
-    height = pictable[picnum-STARTPICS].height;
-    source = latchpics[2+picnum-LATCHPICS_LUMP_START];
+    wide = pictable[picnum - STARTPICS].width;
+    height = pictable[picnum - STARTPICS].height;
+    source = latchpics[2 + picnum - LATCHPICS_LUMP_START];
 
     //VL_LatchToScreen (source,wide/4,height,x*8,y);
 
     VWB_DrawPic(x * 8, y, (int16_t)picnum, (int16_t)wide / 4, (int16_t)height);
 }
 
-void VWB_DrawPic (int16_t x, int16_t y, int16_t chunknum, int16_t w, int16_t h)
+void VWB_DrawPic(int16_t x, int16_t y, int16_t chunknum, int16_t w, int16_t h)
 {
     // Load them into textures instead of doing them lazy
     ws_preload_pics();
 
-    int16_t	picnum = chunknum - STARTPICS;
+    int16_t picnum = chunknum - STARTPICS;
     uint16_t width, height;
     width = pictable[picnum].width;
     height = pictable[picnum].height;
-    if (w != -1) width = w;
-    if (h != -1) height = h;
+    if (w != -1)
+        width = w;
+    if (h != -1)
+        height = h;
     x &= ~7;
 
     Pic pic;
@@ -1210,18 +1231,18 @@ void VWB_DrawPic (int16_t x, int16_t y, int16_t chunknum, int16_t w, int16_t h)
     flush();
     prepareForPTC(GL_QUADS);
     glBindTexture(GL_TEXTURE_2D, pic.tex);
-    ptcCount += drawRect(resources.pPTCVertices + ptcCount, 
-        (float)x * s_scale, (float)y * s_scale,
-        (float)pic.w * s_scale, (float)pic.h * s_scale,
-        0, 0, 1, 1, { 1, 1, 1, 1 });
+    ptcCount += drawRect(resources.pPTCVertices + ptcCount,
+                         (float)x * s_scale, (float)y * s_scale,
+                         (float)pic.w * s_scale, (float)pic.h * s_scale,
+                         0, 0, 1, 1, {1, 1, 1, 1});
     flush();
 }
 
-void VL_SetPalette(byte  *pal)
+void VL_SetPalette(byte *pal)
 {
     for (int i = 0; i < 256; ++i)
     {
-        auto& col = palette[i];
+        auto &col = palette[i];
         col.r = (float)pal[i * 3 + 0] * 255.0f;
         col.g = (float)pal[i * 3 + 1] * 255.0f;
         col.b = (float)pal[i * 3 + 2] * 255.0f;
@@ -1238,7 +1259,7 @@ Pic load_sprite(int16_t shapenum)
     width = 64;
     height = 64;
 
-    auto _data = (byte*)PM_GetSpritePage(shapenum);
+    auto _data = (byte *)PM_GetSpritePage(shapenum);
 
     auto first_column = (word)_data[0] | (word)(_data[1]) << 8;
     auto last_column = (word)_data[2] | (word)(_data[3]) << 8;
@@ -1276,7 +1297,7 @@ Pic load_sprite(int16_t shapenum)
     {
         for (int x = 0; x < width; ++x)
         {
-            auto col = palette[sprdata[k/4]];
+            auto col = palette[sprdata[k / 4]];
             data[k + 0] = (byte)(col.r * 255.0f);
             data[k + 1] = (byte)(col.g * 255.0f);
             data[k + 2] = (byte)(col.b * 255.0f);
@@ -1317,8 +1338,10 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
 
     auto it = sprites.find(shapenum);
     Pic pic;
-    if (it == sprites.end()) pic = load_sprite(shapenum);
-    else pic = it->second;
+    if (it == sprites.end())
+        pic = load_sprite(shapenum);
+    else
+        pic = it->second;
 
     static const int SCALE = 2;
 
@@ -1326,12 +1349,12 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     prepareForPTC(GL_QUADS);
     glBindTexture(GL_TEXTURE_2D, pic.tex);
     ptcCount += drawRect(
-        resources.pPTCVertices + ptcCount, 
+        resources.pPTCVertices + ptcCount,
         (float)(MaxX / 2 + (xcenter - pic.w / 2) * SCALE) * s_scale,
         (float)(MaxY - height * SCALE + 1 - STATUSLINES - pic.h * SCALE) * s_scale,
         (float)(pic.w * SCALE) * s_scale,
-        (float)(pic.h * SCALE) * s_scale, 
-        0, 0, 1, 1, { 1, 1, 1, 1 });
+        (float)(pic.h * SCALE) * s_scale,
+        0, 0, 1, 1, {1, 1, 1, 1});
     flush();
 }
 
@@ -1365,7 +1388,7 @@ void ws_update_camera()
     auto proj = ws_Matrix::CreatePerspectiveFieldOfView(90.0f * (float)M_PI / 180.0f, (float)screen_w / (float)screen_h, 0.01f, 1000.0f);
     //auto view = ws_Matrix::CreateLookAt(ws_Vector3(32.0f, 70.0f, 16.0f), ws_Vector3(32.0f, 32.0f, 0.5f), ws_Vector3(0.0f, 0.0f, 1.0f));
     auto view = ws_Matrix::CreateLookAt(
-        ws_Vector3(px, py, 0.5f), 
+        ws_Vector3(px, py, 0.5f),
         ws_Vector3(px + cosf(pangle), py + sinf(pangle), 0.5f),
         ws_Vector3(0.0f, 0.0f, 1.0f));
     matrix3D = view * proj;
@@ -1375,6 +1398,100 @@ void ws_update_camera()
         glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix3D._11);
     }
     glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(0, (int)(float)(STATUSLINES * s_scale), screen_w, screen_h - (int)(float)(STATUSLINES * s_scale));
+}
+
+void ws_draw_ceiling(int color)
+{
+    auto& col = palette[color];
+
+    prepareForPNTC(GL_QUADS, resources.whiteTexture);
+    auto pVertices = resources.pPNTCVertices + pntcCount;
+
+    pVertices[0].position.x = 1.0f;
+    pVertices[0].position.y = 63.0f;
+    pVertices[0].position.z = 1.0f;
+    pVertices[0].normal.x = 0;
+    pVertices[0].normal.y = 0;
+    pVertices[0].normal.z = -1;
+    pVertices[0].texCoord = {0, 0};
+    pVertices[0].color = col;
+
+    pVertices[1].position.x = 1.0f;
+    pVertices[1].position.y = 1.0f;
+    pVertices[1].position.z = 0.0f;
+    pVertices[1].normal.x = 0;
+    pVertices[1].normal.y = 0;
+    pVertices[1].normal.z = -1;
+    pVertices[1].texCoord = {0, 1};
+    pVertices[1].color = col;
+
+    pVertices[2].position.x = 63.0f;
+    pVertices[2].position.y = 1.0f;
+    pVertices[2].position.z = 0.0f;
+    pVertices[2].normal.x = 0;
+    pVertices[2].normal.y = 0;
+    pVertices[2].normal.z = -1;
+    pVertices[2].texCoord = {1, 1};
+    pVertices[2].color = col;
+
+    pVertices[3].position.x = 63.0f;
+    pVertices[3].position.y = 63.0f;;
+    pVertices[3].position.z = 1.0f;
+    pVertices[3].normal.x = 0;
+    pVertices[3].normal.y = 0;
+    pVertices[3].normal.z = -1;
+    pVertices[3].texCoord = {1, 0};
+    pVertices[3].color = col;
+
+    pntcCount += 4;
+}
+
+void ws_draw_floor(int color)
+{
+    auto& col = palette[color];
+
+    prepareForPNTC(GL_QUADS, resources.whiteTexture);
+    auto pVertices = resources.pPNTCVertices + pntcCount;
+
+    pVertices[0].position.x = 1.0f;
+    pVertices[0].position.y = 1.0f;
+    pVertices[0].position.z = 1.0f;
+    pVertices[0].normal.x = 0;
+    pVertices[0].normal.y = 0;
+    pVertices[0].normal.z = 1;
+    pVertices[0].texCoord = {0, 0};
+    pVertices[0].color = col;
+
+    pVertices[1].position.x = 1.0f;
+    pVertices[1].position.y = 63.0f;
+    pVertices[1].position.z = 0.0f;
+    pVertices[1].normal.x = 0;
+    pVertices[1].normal.y = 0;
+    pVertices[1].normal.z = 1;
+    pVertices[1].texCoord = {0, 1};
+    pVertices[1].color = col;
+
+    pVertices[2].position.x = 63.0f;
+    pVertices[2].position.y = 63.0f;
+    pVertices[2].position.z = 0.0f;
+    pVertices[2].normal.x = 0;
+    pVertices[2].normal.y = 0;
+    pVertices[2].normal.z = 1;
+    pVertices[2].texCoord = {1, 1};
+    pVertices[2].color = col;
+
+    pVertices[3].position.x = 63.0f;
+    pVertices[3].position.y = 1.0f;;
+    pVertices[3].position.z = 1.0f;
+    pVertices[3].normal.x = 0;
+    pVertices[3].normal.y = 0;
+    pVertices[3].normal.z = 1;
+    pVertices[3].texCoord = {1, 0};
+    pVertices[3].color = col;
+
+    pntcCount += 4;
 }
 
 void ws_draw_wall(float x, float y, int dir, int texture)
@@ -1386,14 +1503,12 @@ void ws_draw_wall(float x, float y, int dir, int texture)
         {-1.0f, 0.0f},
         {0.0f, -1.0f},
         {1.0f, 0.0f},
-        {0.0f, 1.0f}
-    };
+        {0.0f, 1.0f}};
     const Position DIRNS[4] = {
         {0.0f, -1.0f},
         {1.0f, 0.0f},
         {0.0f, 1.0f},
-        {-1.0f, 0.0f}
-    };
+        {-1.0f, 0.0f}};
 
     auto pVertices = resources.pPNTCVertices + pntcCount;
 
@@ -1406,8 +1521,8 @@ void ws_draw_wall(float x, float y, int dir, int texture)
     pVertices[0].normal.x = n.x;
     pVertices[0].normal.y = n.y;
     pVertices[0].normal.z = 0.0f;
-    pVertices[0].texCoord = { 0, 0 };
-    pVertices[0].color = { 1, 1, 1, 1 };
+    pVertices[0].texCoord = {0, 0};
+    pVertices[0].color = {1, 1, 1, 1};
 
     pVertices[1].position.x = x;
     pVertices[1].position.y = y;
@@ -1415,8 +1530,8 @@ void ws_draw_wall(float x, float y, int dir, int texture)
     pVertices[1].normal.x = n.x;
     pVertices[1].normal.y = n.y;
     pVertices[1].normal.z = 0.0f;
-    pVertices[1].texCoord = { 0, 1 };
-    pVertices[1].color = { 1, 1, 1, 1 };
+    pVertices[1].texCoord = {0, 1};
+    pVertices[1].color = {1, 1, 1, 1};
 
     pVertices[2].position.x = x + ofs.x;
     pVertices[2].position.y = y + ofs.y;
@@ -1424,8 +1539,8 @@ void ws_draw_wall(float x, float y, int dir, int texture)
     pVertices[2].normal.x = n.x;
     pVertices[2].normal.y = n.y;
     pVertices[2].normal.z = 0.0f;
-    pVertices[2].texCoord = { 1, 1 };
-    pVertices[2].color = { 1, 1, 1, 1 };
+    pVertices[2].texCoord = {1, 1};
+    pVertices[2].color = {1, 1, 1, 1};
 
     pVertices[3].position.x = x + ofs.x;
     pVertices[3].position.y = y + ofs.y;
@@ -1433,8 +1548,8 @@ void ws_draw_wall(float x, float y, int dir, int texture)
     pVertices[3].normal.x = n.x;
     pVertices[3].normal.y = n.y;
     pVertices[3].normal.z = 0.0f;
-    pVertices[3].texCoord = { 1, 0 };
-    pVertices[3].color = { 1, 1, 1, 1 };
+    pVertices[3].texCoord = {1, 0};
+    pVertices[3].color = {1, 1, 1, 1};
 
     pntcCount += 4;
 }
@@ -1442,9 +1557,11 @@ void ws_draw_wall(float x, float y, int dir, int texture)
 void ws_finish_draw_3d()
 {
     flush();
+    glScissor(0, 0, screen_w, screen_h);
+    glDisable(GL_SCISSOR_TEST);
 }
 
-static byte* current_sound_data = nullptr;
+static byte *current_sound_data = nullptr;
 static int current_sound_len = 0;
 
 void audioCallback(void *userdata, Uint8 *stream, int len)
@@ -1468,7 +1585,7 @@ void audioCallback(void *userdata, Uint8 *stream, int len)
     current_sound_len -= len;
 }
 
-void ws_play_sound(byte* data, int len)
+void ws_play_sound(byte *data, int len)
 {
     printf("snd len: %i\n", len);
     current_sound_data = data;

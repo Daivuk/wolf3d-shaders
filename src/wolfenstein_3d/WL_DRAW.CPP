@@ -1218,7 +1218,7 @@ void DrawPlayerWeapon (void)
  	}
  #endif
 
- 	if (gamestate.weapon != -1)
+ 	if (gamestate.weapon != (weapontype)-1)
  	{
  		shapenum = weaponscale[gamestate.weapon]+gamestate.weaponframe;
  		SimpleScaleShape(viewwidth/2,shapenum,viewheight+1);
@@ -1364,6 +1364,15 @@ void WallRefresh (void)
             }
         }
     }
+
+    // Draw ceilling
+    // extern uint16_t vgaCeiling[];
+    // uint16_t ceiling=vgaCeiling[gamestate.episode*10+mapon];
+    // shadetable[GetShade((viewheight / 2 - y) << 3)][ceiling]
+    ws_draw_ceiling(4);
+
+    // Draw floor
+    ws_draw_floor(7);
 }
 
 //==========================================================================
