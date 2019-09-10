@@ -464,15 +464,15 @@ void US_ControlPanel(byte scancode)
 					//
 					// DEALLOCATE ALL SOUNDS!
 					//
-					switch (SoundMode)
-					{
-						case sdm_PC:
-							start = STARTPCSOUNDS;
-							break;
-						case sdm_AdLib:
+					// switch (SoundMode)
+					// {
+					// 	case sdm_PC:
+					// 		start = STARTPCSOUNDS;
+					// 		break;
+					// 	case sdm_AdLib:
 							start = STARTADLIBSOUNDS;
-							break;
-					}
+					// 		break;
+					// }
 
 					if (SoundMode != sdm_Off)
 						for (i=0;i<NUMSOUNDS;i++,start++)

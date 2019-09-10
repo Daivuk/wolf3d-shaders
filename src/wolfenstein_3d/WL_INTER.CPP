@@ -1723,12 +1723,14 @@ void CopyProtection(void)
 			UNCACHEGRCHUNK (C_BACKDROPPIC);
 			UnCacheLump (COPYPROT_LUMP_START,COPYPROT_LUMP_END);
 
-			switch(SoundMode)
-			{
-				case sdm_Off: return;
-				case sdm_PC: start = STARTPCSOUNDS; break;
-				case sdm_AdLib: start = STARTADLIBSOUNDS;
-			}
+			// switch(SoundMode)
+			// {
+			// 	case sdm_Off: return;
+			// 	case sdm_PC: start = STARTPCSOUNDS; break;
+			// 	case sdm_AdLib: start = STARTADLIBSOUNDS;
+			// }
+
+            start = STARTADLIBSOUNDS;
 
 			for (i=0;i<NUMSOUNDS;i++,start++)
 				MM_FreePtr ((memptr *)&audiosegs[start]);

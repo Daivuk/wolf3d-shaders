@@ -1382,17 +1382,17 @@ void CA_LoadAllSounds (void)
 {
 	uint16_t	start,i;
 
-	switch (oldsoundmode)
-	{
-	case sdm_Off:
-		goto cachein;
-	case sdm_PC:
-		start = STARTPCSOUNDS;
-		break;
-	case sdm_AdLib:
+	// switch (oldsoundmode)
+	// {
+	// case sdm_Off:
+	// 	goto cachein;
+	// case sdm_PC:
+	// 	start = STARTPCSOUNDS;
+	// 	break;
+	// case sdm_AdLib:
 		start = STARTADLIBSOUNDS;
-		break;
-	}
+	// 	break;
+	// }
 
 	for (i=0;i<NUMSOUNDS;i++,start++)
 		if (audiosegs[start])
@@ -1400,17 +1400,17 @@ void CA_LoadAllSounds (void)
 
 cachein:
 
-	switch (SoundMode)
-	{
-	case sdm_Off:
-		return;
-	case sdm_PC:
-		start = STARTPCSOUNDS;
-		break;
-	case sdm_AdLib:
+	// switch (SoundMode)
+	// {
+	// case sdm_Off:
+	// 	return;
+	// case sdm_PC:
+	// 	start = STARTPCSOUNDS;
+	// 	break;
+	// case sdm_AdLib:
 		start = STARTADLIBSOUNDS;
-		break;
-	}
+	// 	break;
+	// }
 
 	for (i=0;i<NUMSOUNDS;i++,start++)
 		CA_CacheAudioChunk (start);

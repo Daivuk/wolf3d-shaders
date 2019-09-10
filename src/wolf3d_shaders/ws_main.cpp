@@ -542,11 +542,11 @@ int main(int argc, char** argv)
     // Init audio
     SDL_AudioSpec audioSpec;
     memset(&audioSpec, 0, sizeof(SDL_AudioSpec));
-    audioSpec.freq = 44100;
-    audioSpec.format = AUDIO_S16LSB;
+    audioSpec.freq = 6896;
+    audioSpec.format = AUDIO_U8;
     audioSpec.callback = audioCallback;
-    audioSpec.channels = 2;
-    audioSpec.samples = 4096 / 4;
+    audioSpec.channels = 1;
+    audioSpec.samples = 200;
     audioSpec.userdata = nullptr;
     if (SDL_OpenAudio(&audioSpec, NULL) < 0)
     {
@@ -580,11 +580,6 @@ int main(int argc, char** argv)
     //SDL_Quit();
 }
 
-void audioCallback(void *userdata, Uint8 *stream, int len)
-{
-    memset(stream, 0, len);
-}
-
 int getDosScanCode(int sdlScanCode)
 {
     auto it = SDL2DosKeymap.find(sdlScanCode);
@@ -595,7 +590,7 @@ int getDosScanCode(int sdlScanCode)
 void ws_update_sdl()
 {
     // Poll events
-    SDL_LockAudio();
+    // SDL_LockAudio();
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
@@ -645,9 +640,9 @@ void ws_update_sdl()
         }
     }
 
-    s_scale = (float)screen_h / (float)MaxY;
+    // SDL_UnlockAudio();
 
-    SDL_UnlockAudio();
+    s_scale = (float)screen_h / (float)MaxY;
 
     // Update ticks
     static auto lastTime = std::chrono::high_resolution_clock::now();
@@ -1287,4 +1282,35 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
         (float)(pic.h * SCALE) * s_scale, 
         0, 0, 1, 1, { 1, 1, 1, 1 });
     flush();
+}
+
+byte* current_sound_data = nullptr;
+int current_sound_len = 0;
+
+void audioCallback(void *userdata, Uint8 *stream, int len)
+{
+    memset(stream, 0, len);
+
+    // static float angle = 0.0f;
+    // for (int i = 0; i < len;)
+    // {
+    //     out[i++] = (int16_t)(sinf(angle) * 1500);
+    //     out[i++] = (int16_t)(cosf(angle) * 1500);
+    //     angle += 0.05f;
+    // }
+
+    len = std::min(len, current_sound_len);
+    for (int i = 0; i < len; ++i)
+    {
+        stream[i] = current_sound_data[i];
+    }
+    current_sound_data += len;
+    current_sound_len -= len;
+}
+
+void ws_play_sound(byte* data, int len)
+{
+    printf("snd len: %i\n", len);
+    current_sound_data = data;
+    current_sound_len = len;
 }

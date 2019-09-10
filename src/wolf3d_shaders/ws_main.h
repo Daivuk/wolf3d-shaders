@@ -25,4 +25,6 @@ Interrupt getvect(int16_t r_num);
 void setvect(int16_t r_num, Interrupt interrupt);
 void ws_draw_screen_from_raw(byte* data, int16_t chunk);
 
+void ws_play_sound(byte* data, int len);
+
 #endif

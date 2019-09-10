@@ -40,6 +40,8 @@
 #pragma	hdrstop
 #pragma	warn	-pia
 
+#include "ws_main.h"
+
 #ifdef	nil
 #undef	nil
 #endif
@@ -76,7 +78,7 @@ extern	void        	SDL_t0ExtremeAsmService(void),
 	SDSMode		DigiMode;
 	longword	TimeCount;
 	word		HackCount;
-	word		*SoundTable;	// Really *  *SoundTable, but that don't work
+	byte		**SoundTable;	// Really *  *SoundTable, but that don't work
 	_boolean		ssIsTandy;
 	word		ssPort = 2;
 	int16_t			DigiMap[LASTSOUND];
@@ -1031,6 +1033,7 @@ asm	out	dx,al
 void
 SDL_PlayDigiSegment(memptr addr,word len)
 {
+    ws_play_sound((byte*)addr, (int)len);
 	// switch (DigiMode)
 	// {
 	// case sds_PC:
@@ -1133,36 +1136,36 @@ SD_SetPosition(int16_t leftpos,int16_t rightpos)
 void
 SD_PlayDigitized(word which,int16_t leftpos,int16_t rightpos)
 {
-	// word	len;
-	// memptr	addr;
+	word	len;
+	memptr	addr;
 
 	// if (!DigiMode)
 	// 	return;
 
-	// SD_StopDigitized();
-	// if (which >= NumDigi)
-	// 	Quit("SD_PlayDigitized: bad sound number");
+	SD_StopDigitized();
+	if (which >= NumDigi)
+		Quit((char*)"SD_PlayDigitized: bad sound number");
 
-	// SD_SetPosition(leftpos,rightpos);
+	SD_SetPosition(leftpos,rightpos);
 
-	// DigiPage = DigiList[(which * 2) + 0];
-	// DigiLeft = DigiList[(which * 2) + 1];
+	DigiPage = DigiList[(which * 2) + 0];
+	DigiLeft = DigiList[(which * 2) + 1];
 
-	// DigiLastStart = DigiPage;
-	// DigiLastEnd = DigiPage + ((DigiLeft + (PMPageSize - 1)) / PMPageSize);
+	DigiLastStart = DigiPage;
+	DigiLastEnd = DigiPage + ((DigiLeft + (PMPageSize - 1)) / PMPageSize);
 
-	// len = (DigiLeft >= PMPageSize)? PMPageSize : (DigiLeft % PMPageSize);
-	// addr = SDL_LoadDigiSegment(DigiPage++);
+	len = (DigiLeft >= PMPageSize)? PMPageSize : (DigiLeft % PMPageSize);
+	addr = SDL_LoadDigiSegment(DigiPage++);
 
-	// DigiPlaying = _true;
-	// DigiLastSegment = _false;
+	DigiPlaying = _true;
+	DigiLastSegment = _false;
 
-	// SDL_PlayDigiSegment(addr,len);
-	// DigiLeft -= len;
-	// if (!DigiLeft)
-	// 	DigiLastSegment = _true;
+	SDL_PlayDigiSegment(addr,len);
+	DigiLeft -= len;
+	if (!DigiLeft)
+		DigiLastSegment = _true;
 
-	// SD_Poll();
+	SD_Poll();
 }
 
 void
@@ -1238,31 +1241,31 @@ SD_SetDigiDevice(SDSMode mode)
 void
 SDL_SetupDigi(void)
 {
-	// memptr	list;
-	// word	 *p,
-	// 		pg;
-	// int16_t		i;
+	memptr	list;
+	word	 *p,
+			pg;
+	int16_t		i;
 
-	// PM_UnlockMainMem();
-	// MM_GetPtr(&list,PMPageSize);
-	// PM_CheckMainMem();
-	// p = (word  *)MK_FP(PM_GetPage(ChunksInFile - 1),0);
-	// _fmemcpy((void  *)list,(void  *)p,PMPageSize);
-	// pg = PMSoundStart;
-	// for (i = 0;i < PMPageSize / (sizeof(word) * 2);i++,p += 2)
-	// {
-	// 	if (pg >= ChunksInFile - 1)
-	// 		break;
-	// 	pg += (p[1] + (PMPageSize - 1)) / PMPageSize;
-	// }
-	// PM_UnlockMainMem();
-	// MM_GetPtr((memptr *)&DigiList,i * sizeof(word) * 2);
-	// _fmemcpy((void  *)DigiList,(void  *)list,i * sizeof(word) * 2);
-	// MM_FreePtr(&list);
-	// NumDigi = i;
+	PM_UnlockMainMem();
+	MM_GetPtr(&list,PMPageSize);
+	PM_CheckMainMem();
+	p = (word  *)PM_GetPage(ChunksInFile - 1);
+	memcpy((void  *)list,(void  *)p,PMPageSize);
+	pg = PMSoundStart;
+	for (i = 0;i < PMPageSize / (sizeof(word) * 2);i++,p += 2)
+	{
+		if (pg >= ChunksInFile - 1)
+			break;
+		pg += (p[1] + (PMPageSize - 1)) / PMPageSize;
+	}
+	PM_UnlockMainMem();
+	MM_GetPtr((memptr *)&DigiList,i * sizeof(word) * 2);
+	memcpy((void  *)DigiList,(void  *)list,i * sizeof(word) * 2);
+	MM_FreePtr(&list);
+	NumDigi = i;
 
-	// for (i = 0;i < LASTSOUND;i++)
-	// 	DigiMap[i] = -1;
+	for (i = 0;i < LASTSOUND;i++)
+		DigiMap[i] = -1;
 }
 
 // 	AdLib Code
@@ -1436,30 +1439,37 @@ static void
 #endif
 SDL_ALPlaySound(AdLibSound *sound)
 {
+    // // SoundCommon	common;
+    // // Instrument	inst;
+    // // byte		block,
+    // //             data[1];
+
+    // auto data = (byte*)sound + sizeof(SoundCommon) + sizeof(Instrument);
+
 // 	Instrument	 *inst;
 // 	byte		 *data;
 
 // 	SDL_ALStopSound();
 
-// asm	pushf
-// asm	cli
+// // asm	pushf
+// // asm	cli
 
-// 	alLengthLeft = sound->common.length;
-// 	data = sound->data;
-// 	data++;
-// 	data--;
-// 	alSound = (byte  *)data;
-// 	alBlock = ((sound->block & 7) << 2) | 0x20;
-// 	inst = &sound->inst;
+// 	soundLen = (int)sound->common.length;
+// 	soundData = sound->data;
+	// data++;
+	// data--;
+	// alSound = (byte  *)data;
+	// alBlock = ((sound->block & 7) << 2) | 0x20;
+	// inst = &sound->inst;
 
-// 	if (!(inst->mSus | inst->cSus))
-// 	{
-// 	asm	popf
-// 		Quit("SDL_ALPlaySound() - Bad instrument");
-// 	}
+	// if (!(inst->mSus | inst->cSus))
+	// {
+	// // asm	popf
+	// 	Quit("SDL_ALPlaySound() - Bad instrument");
+	// }
 
-// 	SDL_AlSetFXInst(&alZeroInst);	// DEBUG
-// 	SDL_AlSetFXInst(inst);
+	// SDL_AlSetFXInst(&alZeroInst);	// DEBUG
+	// SDL_AlSetFXInst(inst);
 
 // asm	popf
 }
@@ -1727,16 +1737,17 @@ asm	out	dx,al
 static void
 SDL_ShutDevice(void)
 {
-	// switch (SoundMode)
-	// {
-	// case sdm_PC:
-	// 	SDL_ShutPC();
-	// 	break;
-	// case sdm_AdLib:
-	// 	SDL_ShutAL();
-	// 	break;
-	// }
-	// SoundMode = sdm_Off;
+	switch (SoundMode)
+	{
+        default: break;
+	case sdm_PC:
+		SDL_ShutPC();
+		break;
+	case sdm_AdLib:
+		SDL_ShutAL();
+		break;
+	}
+	SoundMode = sdm_Off;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1747,8 +1758,8 @@ SDL_ShutDevice(void)
 static void
 SDL_CleanDevice(void)
 {
-	// if ((SoundMode == sdm_AdLib) || (MusicMode == smm_AdLib))
-		// SDL_CleanAL();
+	if ((SoundMode == sdm_AdLib) || (MusicMode == smm_AdLib))
+		SDL_CleanAL();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1765,7 +1776,8 @@ SDL_StartDevice(void)
 	// 	SDL_StartAL();
 	// 	break;
 	// }
-	// SoundNumber = SoundPriority = 0;
+	SoundNumber = (soundnames)0;
+    SoundPriority = 0;
 }
 
 //	Public routines
@@ -1779,49 +1791,50 @@ _boolean
 SD_SetSoundMode(SDMode mode)
 {
 	_boolean	result = _false;
-// 	word	tableoffset;
+	SD_StopSound();
+    SoundMode = mode;
+	word	tableoffset;
 
-// 	SD_StopSound();
 
-// #ifndef	_MUSE_
-// 	if ((mode == sdm_AdLib) && !AdLibPresent)
-// 		mode = sdm_PC;
+#ifndef	_MUSE_
+	// if ((mode == sdm_AdLib) && !AdLibPresent)
+	// 	mode = sdm_PC;
 
-// 	switch (mode)
-// 	{
-// 	case sdm_Off:
-// 		NeedsDigitized = _false;
-// 		result = _true;
-// 		break;
-// 	case sdm_PC:
-// 		tableoffset = STARTPCSOUNDS;
-// 		NeedsDigitized = _false;
-// 		result = _true;
-// 		break;
-// 	case sdm_AdLib:
-// 		if (AdLibPresent)
-// 		{
-// 			tableoffset = STARTADLIBSOUNDS;
-// 			NeedsDigitized = _false;
-// 			result = _true;
-// 		}
-// 		break;
-// 	}
-// #else
-// 	result = _true;
-// #endif
+	// switch (mode)
+	// {
+	// case sdm_Off:
+	// 	NeedsDigitized = _false;
+	// 	result = _true;
+	// 	break;
+	// case sdm_PC:
+		// tableoffset = STARTPCSOUNDS;
+		// NeedsDigitized = _false;
+		// result = _true;
+	// 	break;
+	// case sdm_AdLib:
+	// 	if (AdLibPresent)
+		// {
+		// 	tableoffset = STARTADLIBSOUNDS;
+		// 	NeedsDigitized = _false;
+		// 	result = _true;
+		// }
+	// 	break;
+	// }
+#else
+	result = _true;
+#endif
 
-// 	if (result && (mode != SoundMode))
-// 	{
-// 		SDL_ShutDevice();
-// 		SoundMode = mode;
-// #ifndef	_MUSE_
-// 		SoundTable = (word *)(&audiosegs[tableoffset]);
-// #endif
-// 		SDL_StartDevice();
-// 	}
+	// if (result && (mode != SoundMode))
+	{
+		SDL_ShutDevice();
+		SoundMode = sdm_PC;
+#ifndef	_MUSE_
+		SoundTable = audiosegs + tableoffset;
+#endif
+		SDL_StartDevice();
+	}
 
-// 	SDL_SetTimerSpeed();
+	SDL_SetTimerSpeed();
 
 	return(result);
 }
@@ -1872,10 +1885,10 @@ SD_SetMusicMode(SMMode mode)
 void
 SD_Startup(void)
 {
-// 	int16_t	i;
+	int16_t	i;
 
-// 	if (SD_Started)
-// 		return;
+	if (SD_Started)
+		return;
 
 // 	SDL_SetDS();
 
@@ -1920,14 +1933,14 @@ SD_Startup(void)
 // 	}
 // #endif
 
-// 	SoundUserHook = 0;
+	SoundUserHook = 0;
 
 // 	t0OldService = getvect(8);	// Get old timer 0 ISR
 
 // 	LocalTime = TimeCount = alTimeCount = 0;
 
-// 	SD_SetSoundMode(sdm_Off);
-// 	SD_SetMusicMode(smm_Off);
+	SD_SetSoundMode(sdm_Off);
+	SD_SetMusicMode(smm_Off);
 
 // 	if (!ssNoCheck)
 // 		SoundSourcePresent = SDL_DetectSoundSource();
@@ -1996,15 +2009,17 @@ SD_Startup(void)
 // 		}
 // 	}
 
-// 	for (i = 0;i < 255;i++)
-// 		pcSoundLookup[i] = i * 60;
+	for (i = 0;i < 255;i++)
+		pcSoundLookup[i] = i * 60;
 
-// 	if (SoundBlasterPresent)
-// 		SDL_StartSB();
+    SoundBlasterPresent = _true; // We just pretend we have a sound blaster
 
-// 	SDL_SetupDigi();
+	if (SoundBlasterPresent)
+		SDL_StartSB();
 
-// 	SD_Started = _true;
+	SDL_SetupDigi();
+
+	SD_Started = _true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2016,6 +2031,7 @@ SD_Startup(void)
 void
 SD_Default(_boolean gotit,SDMode sd,SMMode sm)
 {
+    SD_SetSoundMode(sdm_AdLib);
 	// _boolean	gotsd,gotsm;
 
 	// gotsd = gotsm = gotit;
@@ -2127,24 +2143,28 @@ SD_PositionSound(int16_t leftvol,int16_t rightvol)
 _boolean
 SD_PlaySound(soundnames sound)
 {
-	// _boolean		ispos;
-	// SoundCommon	*s;
-	// int16_t	lp,rp;
+	_boolean ispos;
+	SoundCommon	*s;
+	int16_t	lp,rp;
 
-	// lp = LeftPosition;
-	// rp = RightPosition;
-	// LeftPosition = 0;
-	// RightPosition = 0;
+	lp = LeftPosition;
+	rp = RightPosition;
+	LeftPosition = 0;
+	RightPosition = 0;
 
-	// ispos = nextsoundpos;
-	// nextsoundpos = _false;
+	ispos = nextsoundpos;
+	nextsoundpos = _false;
 
-	// if (sound == -1)
-	// 	return(_false);
+	if (sound == (soundnames)-1)
+		return(_false);
 
-	// s = MK_FP(SoundTable[sound],0);
+	// s = (SoundCommon*)SoundTable[sound];
 	// if ((SoundMode != sdm_Off) && !s)
-	// 	Quit("SD_PlaySound() - Uncached sound");
+	// 	Quit((char*)"SD_PlaySound() - Uncached sound");
+
+			// longword	length;
+			// word		priority;
+    // printf("playsound:%i l:%i, p:%i\n", (int)sound, (int)s->length, (int)s->priority);
 
 	// if ((DigiMode != sds_Off) && (DigiMap[sound] != -1))
 	// {
@@ -2162,14 +2182,14 @@ SD_PlaySound(soundnames sound)
 	// 	}
 	// 	else
 	// 	{
-	// 	asm	pushf
-	// 	asm	cli
-	// 		if (DigiPriority && !DigiNumber)
-	// 		{
-	// 		asm	popf
-	// 			Quit("SD_PlaySound: Priority without a sound");
-	// 		}
-	// 	asm	popf
+	// 	// asm	pushf
+	// 	// asm	cli
+	// 	// 	if (DigiPriority && !DigiNumber)
+	// 	// 	{
+	// 	// 	asm	popf
+	// 	// 		Quit("SD_PlaySound: Priority without a sound");
+	// 	// 	}
+	// 	// asm	popf
 
 	// 		if (s->priority < DigiPriority)
 	// 			return(_false);
@@ -2186,24 +2206,29 @@ SD_PlaySound(soundnames sound)
 	// if (SoundMode == sdm_Off)
 	// 	return(_false);
 	// if (!s->length)
-	// 	Quit("SD_PlaySound() - Zero length sound");
+	// 	Quit((char*)"SD_PlaySound() - Zero length sound");
 	// if (s->priority < SoundPriority)
 	// 	return(_false);
 
 	// switch (SoundMode)
 	// {
+    //     default: break;
 	// case sdm_PC:
-	// 	SDL_PCPlaySound((void  *)s);
+	// 	SDL_PCPlaySound((PCSound *)(void  *)s);
 	// 	break;
 	// case sdm_AdLib:
-	// 	SDL_ALPlaySound((void  *)s);
+    // if (SoundMode != sdm_Off)
+    {
+        // ws_play_sound((byte*)s + sizeof(*s) + 4, (int)s->length);
+        SD_PlayDigitized(DigiMap[sound],lp,rp);
+    }
 	// 	break;
 	// }
 
-	// SoundNumber = sound;
+	SoundNumber = sound;
 	// SoundPriority = s->priority;
 
-	return(_false);
+	return(_true);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2215,22 +2240,23 @@ SD_PlaySound(soundnames sound)
 word
 SD_SoundPlaying(void)
 {
-	// _boolean	result = _false;
+	_boolean	result = _false;
 
-	// switch (SoundMode)
-	// {
-	// case sdm_PC:
-	// 	result = pcSound? _true : _false;
-	// 	break;
-	// case sdm_AdLib:
-	// 	result = alSound? _true : _false;
-	// 	break;
-	// }
+	switch (SoundMode)
+	{
+        default: break;
+	case sdm_PC:
+		result = pcSound? _true : _false;
+		break;
+	case sdm_AdLib:
+		result = alSound? _true : _false;
+		break;
+	}
 
-	// if (result)
-	// 	return(SoundNumber);
-	// else
-	// 	return(_false);
+	if (result)
+		return(SoundNumber);
+	else
+		return(_false);
     return(_false);
 }
 
@@ -2268,7 +2294,7 @@ SD_StopSound(void)
 void
 SD_WaitSoundDone(void)
 {
-	while (SD_SoundPlaying())
+	while (SD_SoundPlaying()) ws_update_sdl()
 		;
 }
 
@@ -2339,14 +2365,14 @@ SD_StartMusic(MusicGroup *music)
 void
 SD_FadeOutMusic(void)
 {
-	switch (MusicMode)
-	{
-	case smm_AdLib:
-		// DEBUG - quick hack to turn the music off
-		SD_MusicOff();
-		break;
-    default: break;
-	}
+	// switch (MusicMode)
+	// {
+	// case smm_AdLib:
+	// 	// DEBUG - quick hack to turn the music off
+	// 	SD_MusicOff();
+	// 	break;
+    // default: break;
+	// }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2358,17 +2384,18 @@ SD_FadeOutMusic(void)
 _boolean
 SD_MusicPlaying(void)
 {
-	_boolean	result;
+	// _boolean	result;
 
-	switch (MusicMode)
-	{
-	case smm_AdLib:
-		result = _false;
-		// DEBUG - not written
-		break;
-	default:
-		result = _false;
-	}
+	// switch (MusicMode)
+	// {
+	// case smm_AdLib:
+	// 	result = _false;
+	// 	// DEBUG - not written
+	// 	break;
+	// default:
+	// 	result = _false;
+	// }
 
-	return(result);
+	// return(result);
+    return (_false);
 }
