@@ -11,6 +11,8 @@
 #include "ws_main.h"
 #include "ws_shaders.h"
 
+#include "ws_Vector3.h"
+
 #include <algorithm>
 #include <assert.h>
 #include <chrono>
@@ -34,6 +36,7 @@ int16_t _argc; // global arguments. this is referenced a bit everywhere
 char** _argv;
 int pcCount = 0;
 int ptcCount = 0;
+int pntcCount = 0;
 ws_Matrix matrix2D;
 ws_Matrix matrix3D;
 int screen_w = 1024, screen_h = 640;
@@ -206,6 +209,7 @@ std::map<int16_t, Pic> sprites;
 
 #define DRAW_MODE_PC 0
 #define DRAW_MODE_PTC 1
+#define DRAW_MODE_PNTC 2
 int drawMode = -1;
 GLenum drawModePrim = 0;
 float fade_val = 1.0f;
@@ -326,6 +330,27 @@ static void drawPC(const VertexPC *pVertices, int count, GLenum mode)
     glDrawArrays(mode, 0, count);
 }
 
+static void drawPTC(const VertexPTC *pVertices, int count, GLenum mode)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, resources.vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPTC) * count, pVertices, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(0));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(8));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(16));
+    glDrawArrays(mode, 0, count);
+}
+
+static void drawPNTC(const VertexPNTC *pVertices, int count, GLenum mode)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, resources.vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPNTC) * count, pVertices, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float*)(uintptr_t)(0));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float*)(uintptr_t)(12));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float*)(uintptr_t)(24));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float*)(uintptr_t)(30));
+    glDrawArrays(mode, 0, count);
+}
+
 void drawLines(const VertexPC *pVertices, int count)
 {
     drawPC(pVertices, count, GL_LINES);
@@ -350,10 +375,12 @@ void prepareForPC(int prim)
     {
         drawMode = DRAW_MODE_PC;
         glDisable(GL_TEXTURE_2D);
+        glDisable(GL_DEPTH_TEST);
         glUseProgram(resources.programPC);
         glEnableVertexAttribArray(0); // pos
         glEnableVertexAttribArray(1); // color
         glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(3);
     }
 }
 
@@ -366,22 +393,37 @@ void prepareForPTC(int prim)
     {
         drawMode = DRAW_MODE_PTC;
         glEnable(GL_TEXTURE_2D);
+        glDisable(GL_DEPTH_TEST);
         glActiveTexture(GL_TEXTURE0);
         glUseProgram(resources.programPTC);
         glEnableVertexAttribArray(0); // pos
-        glEnableVertexAttribArray(1); // color
-        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(1); // texcoord
+        glEnableVertexAttribArray(2); // color
+        glDisableVertexAttribArray(3);
     }
 }
 
-static void drawPTC(const VertexPTC *pVertices, int count, GLenum mode)
+GLuint current3DTexture = 0;
+void prepareForPNTC(int prim, GLuint texture)
 {
-    glBindBuffer(GL_ARRAY_BUFFER, resources.vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPTC) * count, pVertices, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(0));
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(8));
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float*)(uintptr_t)(16));
-    glDrawArrays(mode, 0, count);
+    if (drawMode == DRAW_MODE_PNTC && prim == drawModePrim && current3DTexture == texture) return;
+    flush();
+    drawModePrim = prim;
+    current3DTexture = texture;
+    if (drawMode != DRAW_MODE_PNTC)
+    {
+        drawMode = DRAW_MODE_PNTC;
+        glEnable(GL_TEXTURE_2D);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, current3DTexture);
+        glUseProgram(resources.programPNTC);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        glEnableVertexAttribArray(0); // pos
+        glEnableVertexAttribArray(1); // normal
+        glEnableVertexAttribArray(1); // texcoord
+        glEnableVertexAttribArray(2); // color
+    }
 }
 
 void drawLines(const VertexPTC *pVertices, int count)
@@ -480,12 +522,11 @@ RenderTarget createRT(int w, int h)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, handle, 0);
     assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
-    //TODO
-    //GLuint rboDepthStencil;
-    //glGenRenderbuffers(1, &rboDepthStencil);
-    //glBindRenderbuffer(GL_RENDERBUFFER, rboDepthStencil);
-    //glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
-    //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboDepthStencil);
+    GLuint rboDepthStencil;
+    glGenRenderbuffers(1, &rboDepthStencil);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepthStencil);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboDepthStencil);
 
     RenderTarget ret;
     ret.handle = handle;
@@ -542,7 +583,7 @@ int main(int argc, char** argv)
     // Init audio
     SDL_AudioSpec audioSpec;
     memset(&audioSpec, 0, sizeof(SDL_AudioSpec));
-    audioSpec.freq = 6896;
+    audioSpec.freq = 6896; //TODO: use 44khz and resample on load
     audioSpec.format = AUDIO_U8;
     audioSpec.callback = audioCallback;
     audioSpec.channels = 1;
@@ -667,6 +708,7 @@ void VW_UpdateScreen()
     // Draw game
     pcCount = 0;
     ptcCount = 0;
+    pntcCount = 0;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -788,8 +830,10 @@ void VW_UpdateScreen()
 
     pcCount = 0;
     ptcCount = 0;
+    pntcCount = 0;
     drawMode = -1;
     drawModePrim = 0;
+    current3DTexture = 0;
 }
 
 void VGAClearScreen(void)
@@ -876,6 +920,13 @@ static void flush()
             {
                 drawPTC(resources.pPTCVertices, ptcCount, drawModePrim);
                 ptcCount = 0;
+            }
+            break;
+        case DRAW_MODE_PNTC:
+            if (pntcCount)
+            {
+                drawPNTC(resources.pPNTCVertices, pntcCount, drawModePrim);
+                pntcCount = 0;
             }
             break;
     }
@@ -1284,8 +1335,117 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     flush();
 }
 
-byte* current_sound_data = nullptr;
-int current_sound_len = 0;
+void ws_update_camera()
+{
+    //viewangle = player->angle;
+    //midangle = viewangle * (FINEANGLES / ANGLES);
+    //viewsin = sintable[viewangle];
+    //viewcos = costable[viewangle];
+    //viewx = player->x - FixedByFrac(focallength, viewcos);
+    //viewy = player->y + FixedByFrac(focallength, viewsin);
+
+    //focaltx = viewx >> TILESHIFT;
+    //focalty = viewy >> TILESHIFT;
+
+    //viewtx = player->x >> TILESHIFT;
+    //viewty = player->y >> TILESHIFT;
+
+    //xpartialdown = viewx & (TILEGLOBAL - 1);
+    //xpartialup = (uint16_t)(TILEGLOBAL - xpartialdown);
+    //ypartialdown = viewy & (TILEGLOBAL - 1);
+    //ypartialup = (uint16_t)(TILEGLOBAL - ypartialdown);
+
+    //auto pangle = viewangle * (FINEANGLES / ANGLES);
+    float pangle = (float)(player->angle * 10) / 65536.0f * M_PI / 180.0f;
+    //auto vsin = (float)sintable[player->angle] / 65536.0f;
+    //auto vcos = (float)costable[player->angle] / 65536.0f;
+    float px = (float)player->x / 65536.0f;
+    float py = (float)player->y / 65536.0f;
+
+    auto proj = ws_Matrix::CreatePerspectiveFieldOfView(90.0f * (float)M_PI / 180.0f, (float)screen_w / (float)screen_h, 0.01f, 1000.0f);
+    //auto view = ws_Matrix::CreateLookAt(ws_Vector3(32.0f, 70.0f, 16.0f), ws_Vector3(32.0f, 32.0f, 0.5f), ws_Vector3(0.0f, 0.0f, 1.0f));
+    auto view = ws_Matrix::CreateLookAt(
+        ws_Vector3(px, py, 0.5f), 
+        ws_Vector3(px + cosf(pangle), py + sinf(pangle), 0.5f),
+        ws_Vector3(0.0f, 0.0f, 1.0f));
+    matrix3D = view * proj;
+    {
+        glUseProgram(resources.programPNTC);
+        auto uniform = glGetUniformLocation(resources.programPNTC, "ProjMtx");
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix3D._11);
+    }
+    glClear(GL_DEPTH_BUFFER_BIT);
+}
+
+void ws_draw_wall(float x, float y, int dir, int texture)
+{
+    texture = resources.checkerTexture;
+
+    prepareForPNTC(GL_QUADS, texture);
+    const Position DIROFS[4] = {
+        {-1.0f, 0.0f},
+        {0.0f, -1.0f},
+        {1.0f, 0.0f},
+        {0.0f, 1.0f}
+    };
+    const Position DIRNS[4] = {
+        {0.0f, -1.0f},
+        {1.0f, 0.0f},
+        {0.0f, 1.0f},
+        {-1.0f, 0.0f}
+    };
+
+    auto pVertices = resources.pPNTCVertices + pntcCount;
+
+    auto &ofs = DIROFS[dir];
+    auto &n = DIRNS[dir];
+
+    pVertices[0].position.x = x;
+    pVertices[0].position.y = y;
+    pVertices[0].position.z = 1.0f;
+    pVertices[0].normal.x = n.x;
+    pVertices[0].normal.y = n.y;
+    pVertices[0].normal.z = 0.0f;
+    pVertices[0].texCoord = { 0, 0 };
+    pVertices[0].color = { 1, 1, 1, 1 };
+
+    pVertices[1].position.x = x;
+    pVertices[1].position.y = y;
+    pVertices[1].position.z = 0.0f;
+    pVertices[1].normal.x = n.x;
+    pVertices[1].normal.y = n.y;
+    pVertices[1].normal.z = 0.0f;
+    pVertices[1].texCoord = { 0, 1 };
+    pVertices[1].color = { 1, 1, 1, 1 };
+
+    pVertices[2].position.x = x + ofs.x;
+    pVertices[2].position.y = y + ofs.y;
+    pVertices[2].position.z = 0.0f;
+    pVertices[2].normal.x = n.x;
+    pVertices[2].normal.y = n.y;
+    pVertices[2].normal.z = 0.0f;
+    pVertices[2].texCoord = { 1, 1 };
+    pVertices[2].color = { 1, 1, 1, 1 };
+
+    pVertices[3].position.x = x + ofs.x;
+    pVertices[3].position.y = y + ofs.y;
+    pVertices[3].position.z = 1.0f;
+    pVertices[3].normal.x = n.x;
+    pVertices[3].normal.y = n.y;
+    pVertices[3].normal.z = 0.0f;
+    pVertices[3].texCoord = { 1, 0 };
+    pVertices[3].color = { 1, 1, 1, 1 };
+
+    pntcCount += 4;
+}
+
+void ws_finish_draw_3d()
+{
+    flush();
+}
+
+static byte* current_sound_data = nullptr;
+static int current_sound_len = 0;
 
 void audioCallback(void *userdata, Uint8 *stream, int len)
 {

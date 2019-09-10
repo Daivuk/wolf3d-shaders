@@ -3380,6 +3380,15 @@ void DrawHalfStep(int16_t x,int16_t y)
 	VWB_DrawPic(x,y,C_CURSOR1PIC);
 	VW_UpdateScreen();
 	SD_PlaySound(MOVEGUN1SND);
+
+    //static int snd_i = 0;
+    //while (DigiMap[snd_i] == -1)
+    //{
+    //    snd_i = (snd_i + 1) % LASTSOUND;
+    //}
+    //SD_PlaySound((soundnames)snd_i);
+    //snd_i = (snd_i + 1) % LASTSOUND;
+
 	TimeCount=0;
     while (TimeCount < 8) ws_update_sdl();
 }

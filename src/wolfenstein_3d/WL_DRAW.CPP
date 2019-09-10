@@ -1303,6 +1303,12 @@ void	FixOfs (void)
 ====================
 */
 
+int wall_at(int x, int y)
+{
+    if (tilemap[x][y] & 0x80) return 0;
+    return tilemap[x][y];
+}
+
 void WallRefresh (void)
 {
 //
@@ -1322,13 +1328,42 @@ void WallRefresh (void)
 	viewty = player->y >> TILESHIFT;
 
 	xpartialdown = viewx&(TILEGLOBAL-1);
-	xpartialup = TILEGLOBAL-xpartialdown;
+	xpartialup = (uint16_t)(TILEGLOBAL-xpartialdown);
 	ypartialdown = viewy&(TILEGLOBAL-1);
-	ypartialup = TILEGLOBAL-ypartialdown;
+	ypartialup = (uint16_t)(TILEGLOBAL-ypartialdown);
 
 	lastside = -1;			// the first pixel is on a _new wall
 	// AsmRefresh ();
 	// ScalePost ();			// no more optimization on last post
+
+    ws_update_camera();
+
+    //TODO: Batch this for static walls
+    for (int x = 1; x < 63; ++x)
+    {
+        for (int y = 1; y < 63; ++y)
+        {
+            if (!wall_at(x, y))
+            {
+                if (wall_at(x, y - 1))
+                {
+                    ws_draw_wall((float)x, (float)y, 2, 0);
+                }
+                if (wall_at(x - 1, y))
+                {
+                    ws_draw_wall((float)x, (float)y + 1.0f, 1, 0);
+                }
+                if (wall_at(x, y + 1))
+                {
+                    ws_draw_wall((float)x + 1.0f, (float)y + 1.0f, 0, 0);
+                }
+                if (wall_at(x + 1, y))
+                {
+                    ws_draw_wall((float)x + 1.0f, (float)y, 3, 0);
+                }
+            }
+        }
+    }
 }
 
 //==========================================================================
@@ -1371,6 +1406,7 @@ void	ThreeDRefresh (void)
  // draw all the scaled images
  //
 DrawScaleds();			// draw scaled stuff
+ws_finish_draw_3d();
 DrawPlayerWeapon ();	// draw player's hands
 
  //

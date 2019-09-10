@@ -455,6 +455,8 @@ void PollJoystickMove (void)
 
 void PollControls (void)
 {
+    ws_update_sdl();
+
 	int16_t		max,min,i;
 	byte	buttonbits;
 
@@ -1465,6 +1467,8 @@ void PlayLoop (void)
 			if (player->angle < 0)
 				player->angle += ANGLES;
 		}
+
+        VW_UpdateScreen();
 
 	}while (!playstate && !startgame);
 

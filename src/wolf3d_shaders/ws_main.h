@@ -24,7 +24,9 @@ typedef int16_t(*Interrupt)(void);
 Interrupt getvect(int16_t r_num);
 void setvect(int16_t r_num, Interrupt interrupt);
 void ws_draw_screen_from_raw(byte* data, int16_t chunk);
-
 void ws_play_sound(byte* data, int len);
+void ws_draw_wall(float x, float y, int dir, int texture);
+void ws_finish_draw_3d();
+void ws_update_camera();
 
 #endif
