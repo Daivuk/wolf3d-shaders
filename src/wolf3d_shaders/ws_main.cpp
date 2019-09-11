@@ -1360,28 +1360,10 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
 
 void ws_update_camera()
 {
-    //viewangle = player->angle;
-    //midangle = viewangle * (FINEANGLES / ANGLES);
-    //viewsin = sintable[viewangle];
-    //viewcos = costable[viewangle];
-    //viewx = player->x - FixedByFrac(focallength, viewcos);
-    //viewy = player->y + FixedByFrac(focallength, viewsin);
-
-    //focaltx = viewx >> TILESHIFT;
-    //focalty = viewy >> TILESHIFT;
-
-    //viewtx = player->x >> TILESHIFT;
-    //viewty = player->y >> TILESHIFT;
-
-    //xpartialdown = viewx & (TILEGLOBAL - 1);
-    //xpartialup = (uint16_t)(TILEGLOBAL - xpartialdown);
-    //ypartialdown = viewy & (TILEGLOBAL - 1);
-    //ypartialup = (uint16_t)(TILEGLOBAL - ypartialdown);
-
-    //auto pangle = viewangle * (FINEANGLES / ANGLES);
-    float pangle = (float)(player->angle * 10) / 65536.0f * M_PI / 180.0f;
-    //auto vsin = (float)sintable[player->angle] / 65536.0f;
-    //auto vcos = (float)costable[player->angle] / 65536.0f;
+    // auto vsin = -(float)sintable[player->angle] / 65536.0f;
+    // auto vcos = (float)costable[player->angle] / 65536.0f;
+    auto vsin = sinf((float)player->angle * M_PI / 180.0f);
+    auto vcos = cosf((float)player->angle * M_PI / 180.0f);
     float px = (float)player->x / 65536.0f;
     float py = (float)player->y / 65536.0f;
 
@@ -1389,7 +1371,7 @@ void ws_update_camera()
     //auto view = ws_Matrix::CreateLookAt(ws_Vector3(32.0f, 70.0f, 16.0f), ws_Vector3(32.0f, 32.0f, 0.5f), ws_Vector3(0.0f, 0.0f, 1.0f));
     auto view = ws_Matrix::CreateLookAt(
         ws_Vector3(px, py, 0.5f),
-        ws_Vector3(px + cosf(pangle), py + sinf(pangle), 0.5f),
+        ws_Vector3(px + vcos, py - vsin, 0.5f),
         ws_Vector3(0.0f, 0.0f, 1.0f));
     matrix3D = view * proj;
     {
@@ -1559,6 +1541,7 @@ void ws_finish_draw_3d()
     flush();
     glScissor(0, 0, screen_w, screen_h);
     glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_DEPTH_TEST);
 }
 
 static byte *current_sound_data = nullptr;

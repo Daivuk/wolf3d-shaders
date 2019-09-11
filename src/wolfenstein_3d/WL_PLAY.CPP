@@ -279,6 +279,7 @@ void PollKeyboardButtons (void)
 
 void PollMouseButtons (void)
 {
+    return;
 	int16_t	buttons;
 
 	buttons = IN_MouseButtons ();
@@ -303,6 +304,7 @@ void PollMouseButtons (void)
 
 void PollJoystickButtons (void)
 {
+    return;
 	int16_t	buttons;
 
 	buttons = IN_JoyButtons ();
@@ -376,11 +378,11 @@ void PollKeyboardMove (void)
 
 void PollMouseMove (void)
 {
-	int16_t	mousexmove,mouseymove;
+	int16_t	mousexmove=0,mouseymove=0;
 
-	Mouse(MDelta);
-	mousexmove = _CX;
-	mouseymove = _DX;
+	// Mouse(MDelta);
+	// mousexmove = _CX;
+	// mouseymove = _DX;
 
 	controlx += mousexmove*10/(13-mouseadjustment);
 	controly += mouseymove*20/(13-mouseadjustment);
@@ -398,6 +400,7 @@ void PollMouseMove (void)
 
 void PollJoystickMove (void)
 {
+    return;
 	int16_t	joyx,joyy;
 
 	INL_GetJoyDelta(joystickport,&joyx,&joyy);
@@ -1416,6 +1419,30 @@ void PlayLoop (void)
 		UpdatePaletteShifts ();
 
 		ThreeDRefresh ();
+
+
+        // // for (i=0;i<3;i++)
+        // {
+        //     // bufferofs = screenloc[i];
+        //     //DrawPlayBorder (); // Dont need this anymore
+        //     // VWB_Bar(0, 0, 320, 200, 0); // All black
+        //     VWB_DrawPic (0,200-STATUSLINES,STATUSBARPIC);
+        //     VWB_Hlin(0, 319, 160, 125); // Little line at the bottom
+        // }
+
+        // // bufferofs = temp;
+
+        // // UNCACHEGRCHUNK (STATUSBARPIC);
+
+        // DrawFace ();
+        // DrawHealth ();
+        // DrawLives ();
+        // DrawLevel ();
+        // DrawAmmo ();
+        // DrawKeys ();
+        // DrawWeapon ();
+        // DrawScore ();
+
 
 		//
 		// MAKE FUNNY FACE IF BJ DOESN'T MOVE FOR AWHILE

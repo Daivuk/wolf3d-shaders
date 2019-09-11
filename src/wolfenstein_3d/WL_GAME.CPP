@@ -888,7 +888,7 @@ void DrawPlayScreen (void)
 
 	bufferofs = temp;
 
-	UNCACHEGRCHUNK (STATUSBARPIC);
+	// UNCACHEGRCHUNK (STATUSBARPIC);
 
 	DrawFace ();
 	DrawHealth ();

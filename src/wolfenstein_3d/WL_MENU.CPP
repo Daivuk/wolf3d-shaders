@@ -3827,6 +3827,8 @@ IN_GetScanName(ScanCode scan)
 	byte		**p;
 	ScanCode   *s;
 
+    if (scan >= 128 + 36) return (byte*)"?inv";
+
 	for (s = ExtScanCodes,p = ExtScanNames;*s;p++,s++)
 		if (*s == scan)
 			return(*p);

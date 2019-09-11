@@ -604,7 +604,7 @@ void BuildTables (void)
   anglestep = (float)(PI/2/ANGLEQUAD);
   for (i=0;i<=ANGLEQUAD;i++)
   {
-	value=(fixed)(GLOBAL1*std::sin(angle));
+	value=(fixed)(GLOBAL1*sin(angle));
 	sintable[i]=
 	  sintable[i+ANGLES]=
 	  sintable[ANGLES/2-i] = value;
