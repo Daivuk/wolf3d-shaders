@@ -1346,7 +1346,7 @@ passhoriz:
     }
 }
 
-void DrawScaleds (void)
+void Pickups(void)
 {
  	int16_t 		i,j,least,numvisable,height;
  	memptr		shape;
@@ -1374,6 +1374,39 @@ void DrawScaleds (void)
  			,&visptr->viewx,&visptr->viewheight) && statptr->flags & FL_BONUS)
  		{
  			GetBonus (statptr);
+ 			continue;
+ 		}
+    }
+}
+
+void DrawScaleds (void)
+{
+ 	int16_t 		i,j,least,numvisable,height;
+ 	memptr		shape;
+ 	byte		*tilespot,*visspot;
+ 	int16_t			shapenum;
+ 	uint16_t	spotloc;
+
+ 	statobj_t	*statptr;
+ 	objtype		*obj;
+
+ 	visptr = &vislist[0];
+
+ //
+ // place static objects
+ //
+ 	for (statptr = &statobjlist[0] ; statptr !=laststatobj ; statptr++)
+ 	{
+ 		if ((visptr->shapenum = statptr->shapenum) == -1)
+ 			continue;						// object has been deleted
+
+ 		// if (!*statptr->visspot)
+ 		// 	continue;						// not visable
+
+ 		if (TransformTile (statptr->tilex,statptr->tiley
+ 			,&visptr->viewx,&visptr->viewheight) && statptr->flags & FL_BONUS)
+ 		{
+ 			// GetBonus (statptr);
  			continue;
  		}
 
@@ -1756,6 +1789,7 @@ void	ThreeDRefresh (void)
  //
 DrawScaleds();			// draw scaled stuff
 ws_finish_draw_3d();
+Pickups(); // This is like DrawScaleds for statics, but it does the pickup hud update
 DrawPlayerWeapon ();	// draw player's hands
 
  //
