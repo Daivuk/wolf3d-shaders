@@ -1205,21 +1205,21 @@ void UpdatePaletteShifts (void)
 
 	if (red)
 	{
-		VW_WaitVBL(1);
-		VL_SetPalette (redshifts[red-1]);
-		palshifted = _true;
+		// VW_WaitVBL(1);
+		// VL_SetPalette (redshifts[red-1]);
+		// palshifted = _true;
 	}
 	else if (white)
 	{
-		VW_WaitVBL(1);
-		VL_SetPalette (whiteshifts[white-1]);
-		palshifted = _true;
+		// VW_WaitVBL(1);
+		// VL_SetPalette (whiteshifts[white-1]);
+		// palshifted = _true;
 	}
 	else if (palshifted)
 	{
-		VW_WaitVBL(1);
-		VL_SetPalette ((byte*)gamepal);		// back to normal
-		palshifted = _false;
+		// VW_WaitVBL(1);
+		// VL_SetPalette ((byte*)gamepal);		// back to normal
+		// palshifted = _false;
 	}
 }
 

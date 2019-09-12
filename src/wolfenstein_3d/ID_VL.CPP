@@ -444,15 +444,15 @@ void VL_GetColor	(int16_t color, int16_t *red, int16_t *green, int16_t *blue)
 
 //byte current_palette[768] = {0};
 
-void VL_GetPalette (byte  *palette)
-{
-    //memcpy(palette, current_palette, 768);
-	 int16_t	i;
+// void VL_GetPalette (byte  *palette)
+// {
+//     //memcpy(palette, current_palette, 768);
+// 	 int16_t	i;
 
-	 outportb (PEL_READ_ADR,0);
-	 for (i=0;i<768;i++)
-	 	*palette++ = (byte)inportb(PEL_DATA);
-}
+// 	 outportb (PEL_READ_ADR,0);
+// 	 for (i=0;i<768;i++)
+// 	 	*palette++ = (byte)inportb(PEL_DATA);
+// }
 
 
 //===========================================================================

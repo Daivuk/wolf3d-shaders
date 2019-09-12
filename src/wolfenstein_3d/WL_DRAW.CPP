@@ -1407,7 +1407,7 @@ void DrawScaleds (void)
  			,&visptr->viewx,&visptr->viewheight) && statptr->flags & FL_BONUS)
  		{
  			// GetBonus (statptr);
- 			continue;
+ 			// continue;
  		}
 
  		// if (!visptr->viewheight)

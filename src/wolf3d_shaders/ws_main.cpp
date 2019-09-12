@@ -229,6 +229,13 @@ Color palette[] = {
 #include "wolfpal.inc"
 #endif
 };
+Color dynamic_palette[] = {
+#ifdef SPEAR
+#include "sodpal.inc"
+#else
+#include "wolfpal.inc"
+#endif
+};
 
 static void checkShader(GLuint handle)
 {
@@ -575,6 +582,9 @@ int main(int argc, char **argv)
     _argv = argv;
     palette[255].a = 0.0f; // Last color is transparent
 
+    extern 	byte gamepal[256][3];
+    VL_GetPalette((byte*)gamepal);
+
     // Init SDL
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     sdlWindow = SDL_CreateWindow(
@@ -753,8 +763,41 @@ void VW_UpdateScreen()
         {
             pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, palette[i]);
         }
-        prepareForPTC(GL_QUADS);
         y += 5;
+        flush();
+        extern byte	 redshifts[6][768];
+        extern byte	 whiteshifts[6][768];
+        for (int j = 0; j < 6; ++j)
+        {
+            for (int i = 0; i < 256; ++i)
+            {
+                pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, 
+                {
+                    (float)whiteshifts[j][i * 3 + 0] / 255.0f,
+                    (float)whiteshifts[j][i * 3 + 1] / 255.0f,
+                    (float)whiteshifts[j][i * 3 + 2] / 255.0f,
+                    255.0f
+                });
+            }
+            y += 5;
+            flush();
+        }
+        for (int j = 0; j < 6; ++j)
+        {
+            for (int i = 0; i < 256; ++i)
+            {
+                pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, 
+                {
+                    (float)redshifts[j][i * 3 + 0] / 255.0f,
+                    (float)redshifts[j][i * 3 + 1] / 255.0f,
+                    (float)redshifts[j][i * 3 + 2] / 255.0f,
+                    255.0f
+                });
+            }
+            y += 5;
+            flush();
+        }
+        prepareForPTC(GL_QUADS);
         for (auto &kv : fontTextures)
         {
             glBindTexture(GL_TEXTURE_2D, kv.second.tex);
@@ -866,6 +909,7 @@ void VW_UpdateScreen()
 void VGAClearScreen(void)
 {
     glEnable(GL_SCISSOR_TEST);
+    glClearColor(0, 0, 0, 1);
     glScissor(0, (int)(float)(STATUSLINES * s_scale), screen_w, screen_h - (int)(float)(STATUSLINES * s_scale));
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glScissor(0, 0, screen_w, screen_h);
@@ -1258,13 +1302,24 @@ void VL_SetPalette(byte *pal)
 {
     for (int i = 0; i < 256; ++i)
     {
-        auto &col = palette[i];
+        auto &col = dynamic_palette[i];
         col.r = (float)pal[i * 3 + 0] * 255.0f;
         col.g = (float)pal[i * 3 + 1] * 255.0f;
         col.b = (float)pal[i * 3 + 2] * 255.0f;
         col.a = 1.0f;
     }
-    palette[255].a = 0.0f;
+    dynamic_palette[255].a = 0.0f;
+}
+
+void VL_GetPalette (byte  *palette)
+{
+    for (int i = 0; i < 256; ++i)
+    {
+        auto &col = dynamic_palette[i];
+        palette[i * 3 + 0] = (byte)(col.r * 255.0f);
+        palette[i * 3 + 1] = (byte)(col.g * 255.0f);
+        palette[i * 3 + 2] = (byte)(col.b * 255.0f);
+    }
 }
 
 Pic load_sprite(int16_t shapenum)
@@ -1451,7 +1506,7 @@ void ws_update_camera()
 
 void ws_draw_ceiling(int color)
 {
-    auto& col = palette[color];
+    auto& col = dynamic_palette[color];
 
     prepareForPNTC(GL_QUADS, resources.whiteTexture);
     auto pVertices = resources.pPNTCVertices + pntcCount;
@@ -1497,7 +1552,7 @@ void ws_draw_ceiling(int color)
 
 void ws_draw_floor(int color)
 {
-    auto& col = palette[color];
+    auto& col = dynamic_palette[color];
 
     prepareForPNTC(GL_QUADS, resources.whiteTexture);
     auto pVertices = resources.pPNTCVertices + pntcCount;
