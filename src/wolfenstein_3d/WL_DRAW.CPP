@@ -59,6 +59,7 @@ fixed 		 sintable[ANGLES+ANGLES/4], *costable = sintable+(ANGLES/4);
 fixed	viewx,viewy;			// the focal point
 int16_t		viewangle;
 fixed	viewsin,viewcos;
+word    xspot,yspot;
 
 
 
@@ -99,6 +100,7 @@ int16_t		xtile,ytile;
 int16_t		xtilestep,ytilestep;
 int32_t	xintercept,yintercept;
 int32_t	xstep,ystep;
+int texdelta;
 
 int16_t		horizwall[MAXWALLTILES],vertwall[MAXWALLTILES];
 
@@ -141,7 +143,7 @@ int16_t		horizwall[MAXWALLTILES],vertwall[MAXWALLTILES];
 
 fixed FixedByFrac (fixed a, fixed b)
 {
-    return (fixed)(((int16_t)a * (int16_t)b) / 65536);
+    return (fixed)(((int64_t)a * (int64_t)b) / 65536);
     //return (fixed)(((int64_t)a * b + 0x8000) >> 16);
 //
 // setup
@@ -210,61 +212,61 @@ fixed FixedByFrac (fixed a, fixed b)
 //
 // transform actor
 //
-// void TransformActor (objtype *ob)
-// {
-// 	int16_t ratio;
-// 	fixed gx,gy,gxt,gyt,nx,ny;
-// 	int32_t	temp;
+ void TransformActor (objtype *ob)
+ {
+ 	int16_t ratio;
+ 	fixed gx,gy,gxt,gyt,nx,ny;
+ 	int32_t	temp;
 
-// //
-// // translate point to view centered coordinates
-// //
-// 	gx = ob->x-viewx;
-// 	gy = ob->y-viewy;
+ //
+ // translate point to view centered coordinates
+ //
+ 	gx = ob->x-viewx;
+ 	gy = ob->y-viewy;
 
-// //
-// // calculate newx
-// //
-// 	gxt = FixedByFrac(gx,viewcos);
-// 	gyt = FixedByFrac(gy,viewsin);
-// 	nx = gxt-gyt-ACTORSIZE;		// fudge the shape forward a bit, because
-// 								// the midpoint could put parts of the shape
-// 								// into an adjacent wall
+ //
+ // calculate newx
+ //
+ 	gxt = FixedByFrac(gx,viewcos);
+ 	gyt = FixedByFrac(gy,viewsin);
+ 	nx = gxt-gyt-ACTORSIZE;		// fudge the shape forward a bit, because
+ 								// the midpoint could put parts of the shape
+ 								// into an adjacent wall
 
-// //
-// // calculate newy
-// //
-// 	gxt = FixedByFrac(gx,viewsin);
-// 	gyt = FixedByFrac(gy,viewcos);
-// 	ny = gyt+gxt;
+ //
+ // calculate newy
+ //
+ 	gxt = FixedByFrac(gx,viewsin);
+ 	gyt = FixedByFrac(gy,viewcos);
+ 	ny = gyt+gxt;
 
-// //
-// // calculate perspective ratio
-// //
-// 	ob->transx = nx;
-// 	ob->transy = ny;
+ //
+ // calculate perspective ratio
+ //
+ 	ob->transx = nx;
+ 	ob->transy = ny;
 
-// 	if (nx<mindist)			// too close, don't overflow the divide
-// 	{
-// 	  ob->viewheight = 0;
-// 	  return;
-// 	}
+ 	if (nx<mindist)			// too close, don't overflow the divide
+ 	{
+ 	  ob->viewheight = 0;
+ 	  return;
+ 	}
 
-// 	ob->viewx = centerx + ny*scale/nx;	// DEBUG: use assembly divide
+ 	ob->viewx = centerx + ny*scale/nx;	// DEBUG: use assembly divide
 
-// //
-// // calculate height (heightnumerator/(nx>>8))
-// //
-// 	// asm	mov	ax,[WORD PTR heightnumerator]
-// 	// asm	mov	dx,[WORD PTR heightnumerator+2]
-// 	// asm	idiv	[WORD PTR nx+1]			// nx>>8
-// 	// asm	mov	[WORD PTR temp],ax
-// 	// asm	mov	[WORD PTR temp+2],dx
+ //
+ // calculate height (heightnumerator/(nx>>8))
+ //
+ 	// asm	mov	ax,[WORD PTR heightnumerator]
+ 	// asm	mov	dx,[WORD PTR heightnumerator+2]
+ 	// asm	idiv	[WORD PTR nx+1]			// nx>>8
+ 	// asm	mov	[WORD PTR temp],ax
+ 	// asm	mov	[WORD PTR temp+2],dx
 
-//     temp = heightnumerator/(nx>>8);
+     temp = heightnumerator/(nx>>8);
 
-// 	ob->viewheight = temp;
-// }
+ 	ob->viewheight = temp;
+ }
 
 //==========================================================================
 
@@ -289,64 +291,64 @@ fixed FixedByFrac (fixed a, fixed b)
 ========================
 */
 
-// _boolean TransformTile (int16_t tx, int16_t ty, int16_t *dispx, int16_t *dispheight)
-// {
-// 	int16_t ratio;
-// 	fixed gx,gy,gxt,gyt,nx,ny;
-// 	int32_t	temp;
+ _boolean TransformTile (int16_t tx, int16_t ty, int16_t *dispx, int16_t *dispheight)
+ {
+ 	int16_t ratio;
+ 	fixed gx,gy,gxt,gyt,nx,ny;
+ 	int32_t	temp;
 
-// //
-// // translate point to view centered coordinates
-// //
-// 	gx = ((int32_t)tx<<TILESHIFT)+0x8000-viewx;
-// 	gy = ((int32_t)ty<<TILESHIFT)+0x8000-viewy;
+ //
+ // translate point to view centered coordinates
+ //
+ 	gx = ((int32_t)tx<<TILESHIFT)+0x8000-viewx;
+ 	gy = ((int32_t)ty<<TILESHIFT)+0x8000-viewy;
 
-// //
-// // calculate newx
-// //
-// 	gxt = FixedByFrac(gx,viewcos);
-// 	gyt = FixedByFrac(gy,viewsin);
-// 	nx = gxt-gyt-0x2000;		// 0x2000 is size of object
+ //
+ // calculate newx
+ //
+ 	gxt = FixedByFrac(gx,viewcos);
+ 	gyt = FixedByFrac(gy,viewsin);
+ 	nx = gxt-gyt-0x2000;		// 0x2000 is size of object
 
-// //
-// // calculate newy
-// //
-// 	gxt = FixedByFrac(gx,viewsin);
-// 	gyt = FixedByFrac(gy,viewcos);
-// 	ny = gyt+gxt;
+ //
+ // calculate newy
+ //
+ 	gxt = FixedByFrac(gx,viewsin);
+ 	gyt = FixedByFrac(gy,viewcos);
+ 	ny = gyt+gxt;
 
 
-// //
-// // calculate perspective ratio
-// //
-// 	if (nx<mindist)			// too close, don't overflow the divide
-// 	{
-// 		*dispheight = 0;
-// 		return _false;
-// 	}
+ //
+ // calculate perspective ratio
+ //
+ 	if (nx<mindist)			// too close, don't overflow the divide
+ 	{
+ 		*dispheight = 0;
+ 		return _false;
+ 	}
 
-// 	*dispx = centerx + ny*scale/nx;	// DEBUG: use assembly divide
+ 	*dispx = centerx + ny*scale/nx;	// DEBUG: use assembly divide
 
-// //
-// // calculate height (heightnumerator/(nx>>8))
-// //
-// 	// asm	mov	ax,[WORD PTR heightnumerator]
-// 	// asm	mov	dx,[WORD PTR heightnumerator+2]
-// 	// asm	idiv	[WORD PTR nx+1]			// nx>>8
-// 	// asm	mov	[WORD PTR temp],ax
-// 	// asm	mov	[WORD PTR temp+2],dx
+ //
+ // calculate height (heightnumerator/(nx>>8))
+ //
+ 	// asm	mov	ax,[WORD PTR heightnumerator]
+ 	// asm	mov	dx,[WORD PTR heightnumerator+2]
+ 	// asm	idiv	[WORD PTR nx+1]			// nx>>8
+ 	// asm	mov	[WORD PTR temp],ax
+ 	// asm	mov	[WORD PTR temp+2],dx
 
-//     temp = (heightnumerator/(nx>>8));
-// 	*dispheight = temp;
+     temp = (heightnumerator/(nx>>8));
+ 	*dispheight = temp;
 
-// //
-// // see if it should be grabbed
-// //
-// 	if (nx<TILEGLOBAL && ny>-TILEGLOBAL/2 && ny<TILEGLOBAL/2)
-// 		return _true;
-// 	else
-// 		return _false;
-// }
+ //
+ // see if it should be grabbed
+ //
+ 	if (nx<TILEGLOBAL && ny>-TILEGLOBAL/2 && ny<TILEGLOBAL/2)
+ 		return _true;
+ 	else
+ 		return _false;
+ }
 
 //==========================================================================
 
@@ -1065,129 +1067,404 @@ int16_t	CalcRotate (objtype *ob)
 =====================
 */
 
-#define MAXVISABLE	50
+#define MAXVISABLE	1024 // Increased the max so we can render the whole thing
 
 typedef struct
 {
 	int16_t	viewx,
 		viewheight,
 		shapenum;
+    fixed x, y;
 } visobj_t;
 
 visobj_t	vislist[MAXVISABLE],*visptr,*visstep,*farthest;
 
+void AsmRefresh()
+{
+    int32_t xstep,ystep;
+    longword xpartial,ypartial;
+    _boolean playerInPushwallBackTile = (tilemap[focaltx][focalty] == 64) ? _true : _false;
+
+    for(pixx=0;pixx<viewwidth;pixx++)
+    {
+        short angl=midangle+pixelangle[pixx];
+        if(angl<0) angl+=FINEANGLES;
+        if(angl>=3600) angl-=FINEANGLES;
+        if(angl<900)
+        {
+            xtilestep=1;
+            ytilestep=-1;
+            xstep=finetangent[900-1-angl];
+            ystep=-finetangent[angl];
+            xpartial=xpartialup;
+            ypartial=ypartialdown;
+        }
+        else if(angl<1800)
+        {
+            xtilestep=-1;
+            ytilestep=-1;
+            xstep=-finetangent[angl-900];
+            ystep=-finetangent[1800-1-angl];
+            xpartial=xpartialdown;
+            ypartial=ypartialdown;
+        }
+        else if(angl<2700)
+        {
+            xtilestep=-1;
+            ytilestep=1;
+            xstep=-finetangent[2700-1-angl];
+            ystep=finetangent[angl-1800];
+            xpartial=xpartialdown;
+            ypartial=ypartialup;
+        }
+        else if(angl<3600)
+        {
+            xtilestep=1;
+            ytilestep=1;
+            xstep=finetangent[angl-2700];
+            ystep=finetangent[3600-1-angl];
+            xpartial=xpartialup;
+            ypartial=ypartialup;
+        }
+        yintercept=FixedByFrac(ystep,xpartial)+viewy;
+        xtile=focaltx+xtilestep;
+        xspot=(word)((xtile<<6)+((uint32_t)yintercept>>16));
+        xintercept=FixedByFrac(xstep,ypartial)+viewx;
+        ytile=focalty+ytilestep;
+        yspot=(word)((((uint32_t)xintercept>>16)<<6)+ytile);
+        texdelta=0;
+
+        // Special treatment when player is in back tile of pushwall
+        if(playerInPushwallBackTile)
+        {
+            if(    pwalldir == di_east && xtilestep ==  1
+                || pwalldir == di_west && xtilestep == -1)
+            {
+                int32_t yintbuf = yintercept - ((ystep * (64 - pwallpos)) >> 6);
+                if((yintbuf >> 16) == focalty)   // ray hits pushwall back?
+                {
+                    continue;
+                }
+            }
+            else if(pwalldir == di_south && ytilestep ==  1
+                ||  pwalldir == di_north && ytilestep == -1)
+            {
+                int32_t xintbuf = xintercept - ((xstep * (64 - pwallpos)) >> 6);
+                if((xintbuf >> 16) == focaltx)   // ray hits pushwall back?
+                {
+                    continue;
+                }
+            }
+        }
+
+        do
+        {
+            if(ytilestep==-1 && (yintercept>>16)<=ytile) goto horizentry;
+            if(ytilestep==1 && (yintercept>>16)>=ytile) goto horizentry;
+vertentry:
+            if((uint32_t)yintercept>mapheight*65536-1 || (word)xtile>=mapwidth)
+            {
+                break;
+            }
+            if(xspot>=64*64) break;
+            tilehit=((byte *)tilemap)[xspot];
+            if(tilehit)
+            {
+                if(tilehit&0x80)
+                {
+                    int32_t yintbuf=yintercept+(ystep>>1);
+                    if((yintbuf>>16)!=(yintercept>>16))
+                        goto passvert;
+                    if((word)yintbuf<doorposition[tilehit&0x7f])
+                        goto passvert;
+                }
+                else
+                {
+                    if(tilehit==64)
+                    {
+                        if(pwalldir==di_west || pwalldir==di_east)
+                        {
+	                        int32_t yintbuf;
+                            int pwallposnorm;
+                            int pwallposinv;
+                            if(pwalldir==di_west)
+                            {
+                                pwallposnorm = 64-pwallpos;
+                                pwallposinv = pwallpos;
+                            }
+                            else
+                            {
+                                pwallposnorm = pwallpos;
+                                pwallposinv = 64-pwallpos;
+                            }
+                            if(pwalldir == di_east && xtile==pwallx && ((uint32_t)yintercept>>16)==pwally
+                                || pwalldir == di_west && !(xtile==pwallx && ((uint32_t)yintercept>>16)==pwally))
+                            {
+                                yintbuf=yintercept+((ystep*pwallposnorm)>>6);
+                                if((yintbuf>>16)!=(yintercept>>16))
+                                    goto passvert;
+                            }
+                            else
+                            {
+                                yintbuf=yintercept+((ystep*pwallposinv)>>6);
+                                if((yintbuf>>16)!=(yintercept>>16))
+                                    goto passvert;
+                            }
+                        }
+                        else
+                        {
+                            int pwallposi = pwallpos;
+                            if(pwalldir==di_north) pwallposi = 64-pwallpos;
+                            if(pwalldir==di_south && (word)yintercept<(pwallposi<<10)
+                                || pwalldir==di_north && (word)yintercept>(pwallposi<<10))
+                            {
+                                if(((uint32_t)yintercept>>16)==pwally && xtile==pwallx)
+                                {
+                                    if(pwalldir==di_south && (int32_t)((word)yintercept)+ystep<(pwallposi<<10)
+                                            || pwalldir==di_north && (int32_t)((word)yintercept)+ystep>(pwallposi<<10))
+                                        goto passvert;
+                                }
+                            }
+                            else
+                            {
+                                if(((uint32_t)yintercept>>16)==pwally && xtile==pwallx)
+                                {
+                                }
+                                else
+                                {
+                                    if(pwalldir==di_south && (int32_t)((word)yintercept)+ystep>(pwallposi<<10)
+                                            || pwalldir==di_north && (int32_t)((word)yintercept)+ystep<(pwallposi<<10))
+                                        goto passvert;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+passvert:
+            *((byte *)spotvis+xspot)=1;
+            xtile+=xtilestep;
+            yintercept+=ystep;
+            xspot=(word)((xtile<<6)+((uint32_t)yintercept>>16));
+        }
+        while(1);
+        continue;
+
+        do
+        {
+            if(xtilestep==-1 && (xintercept>>16)<=xtile) goto vertentry;
+            if(xtilestep==1 && (xintercept>>16)>=xtile) goto vertentry;
+horizentry:
+            if((uint32_t)xintercept>mapwidth*65536-1 || (word)ytile>=mapheight)
+            {
+                break;
+            }
+            if(yspot>=64*64) break;
+            tilehit=((byte *)tilemap)[yspot];
+            if(tilehit)
+            {
+                if(tilehit&0x80)
+                {
+                    int32_t xintbuf=xintercept+(xstep>>1);
+                    if((xintbuf>>16)!=(xintercept>>16))
+                        goto passhoriz;
+                    if((word)xintbuf<doorposition[tilehit&0x7f])
+                        goto passhoriz;
+                }
+                else
+                {
+                    if(tilehit==64)
+                    {
+                        if(pwalldir==di_north || pwalldir==di_south)
+                        {
+                            int32_t xintbuf;
+                            int pwallposnorm;
+                            int pwallposinv;
+                            if(pwalldir==di_north)
+                            {
+                                pwallposnorm = 64-pwallpos;
+                                pwallposinv = pwallpos;
+                            }
+                            else
+                            {
+                                pwallposnorm = pwallpos;
+                                pwallposinv = 64-pwallpos;
+                            }
+                            if(pwalldir == di_south && ytile==pwally && ((uint32_t)xintercept>>16)==pwallx
+                                || pwalldir == di_north && !(ytile==pwally && ((uint32_t)xintercept>>16)==pwallx))
+                            {
+                                xintbuf=xintercept+((xstep*pwallposnorm)>>6);
+                                if((xintbuf>>16)!=(xintercept>>16))
+                                    goto passhoriz;
+                            }
+                            else
+                            {
+                                xintbuf=xintercept+((xstep*pwallposinv)>>6);
+                                if((xintbuf>>16)!=(xintercept>>16))
+                                    goto passhoriz;
+                            }
+                        }
+                        else
+                        {
+                            int pwallposi = pwallpos;
+                            if(pwalldir==di_west) pwallposi = 64-pwallpos;
+                            if(pwalldir==di_east && (word)xintercept<(pwallposi<<10)
+                                    || pwalldir==di_west && (word)xintercept>(pwallposi<<10))
+                            {
+                                if(((uint32_t)xintercept>>16)==pwallx && ytile==pwally)
+                                {
+                                    if(pwalldir==di_east && (int32_t)((word)xintercept)+xstep<(pwallposi<<10)
+                                            || pwalldir==di_west && (int32_t)((word)xintercept)+xstep>(pwallposi<<10))
+                                        goto passhoriz;
+                                }
+                            }
+                            else
+                            {
+                                if(((uint32_t)xintercept>>16)==pwallx && ytile==pwally)
+                                {
+                                }
+                                else
+                                {
+                                    if(pwalldir==di_east && (int32_t)((word)xintercept)+xstep>(pwallposi<<10)
+                                            || pwalldir==di_west && (int32_t)((word)xintercept)+xstep<(pwallposi<<10))
+                                        goto passhoriz;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+passhoriz:
+            *((byte *)spotvis+yspot)=1;
+            ytile+=ytilestep;
+            xintercept+=xstep;
+            yspot=(word)((((uint32_t)xintercept>>16)<<6)+ytile);
+        }
+        while(1);
+    }
+}
+
 void DrawScaleds (void)
 {
-// 	int16_t 		i,j,least,numvisable,height;
-// 	memptr		shape;
-// 	byte		*tilespot,*visspot;
-// 	int16_t			shapenum;
-// 	uint16_t	spotloc;
+ 	int16_t 		i,j,least,numvisable,height;
+ 	memptr		shape;
+ 	byte		*tilespot,*visspot;
+ 	int16_t			shapenum;
+ 	uint16_t	spotloc;
 
-// 	statobj_t	*statptr;
-// 	objtype		*obj;
+ 	statobj_t	*statptr;
+ 	objtype		*obj;
 
-// 	visptr = &vislist[0];
+ 	visptr = &vislist[0];
 
-// //
-// // place static objects
-// //
-// 	for (statptr = &statobjlist[0] ; statptr !=laststatobj ; statptr++)
-// 	{
-// 		if ((visptr->shapenum = statptr->shapenum) == -1)
-// 			continue;						// object has been deleted
+ //
+ // place static objects
+ //
+ 	for (statptr = &statobjlist[0] ; statptr !=laststatobj ; statptr++)
+ 	{
+ 		if ((visptr->shapenum = statptr->shapenum) == -1)
+ 			continue;						// object has been deleted
 
-// 		if (!*statptr->visspot)
-// 			continue;						// not visable
+ 		// if (!*statptr->visspot)
+ 		// 	continue;						// not visable
 
-// 		if (TransformTile (statptr->tilex,statptr->tiley
-// 			,&visptr->viewx,&visptr->viewheight) && statptr->flags & FL_BONUS)
-// 		{
-// 			GetBonus (statptr);
-// 			continue;
-// 		}
+ 		if (TransformTile (statptr->tilex,statptr->tiley
+ 			,&visptr->viewx,&visptr->viewheight) && statptr->flags & FL_BONUS)
+ 		{
+ 			GetBonus (statptr);
+ 			continue;
+ 		}
 
-// 		if (!visptr->viewheight)
-// 			continue;						// to close to the object
+ 		// if (!visptr->viewheight)
+ 		// 	continue;						// to close to the object
 
-// 		if (visptr < &vislist[MAXVISABLE-1])	// don't let it overflow
-// 			visptr++;
-// 	}
+        visptr->x = (fixed)statptr->tilex * 65536 + 32768;
+        visptr->y = (fixed)statptr->tiley * 65536 + 32768;
 
-// //
-// // place active objects
-// //
-// 	for (obj = player->next;obj;obj=obj->next)
-// 	{
-// 		if (!(visptr->shapenum = obj->state->shapenum))
-// 			continue;						// no shape
+ 		if (visptr < &vislist[MAXVISABLE-1])	// don't let it overflow
+ 			visptr++;
+ 	}
 
-// 		spotloc = (obj->tilex<<6)+obj->tiley;	// optimize: keep in struct?
-// 		visspot = &spotvis[0][0]+spotloc;
-// 		tilespot = &tilemap[0][0]+spotloc;
+ //
+ // place active objects
+ //
+ 	for (obj = player->next;obj;obj=obj->next)
+ 	{
+ 		if (!(visptr->shapenum = obj->state->shapenum))
+ 			continue;						// no shape
 
-// 		//
-// 		// could be in any of the nine surrounding tiles
-// 		//
-// 		if (*visspot
-// 		|| ( *(visspot-1) && !*(tilespot-1) )
-// 		|| ( *(visspot+1) && !*(tilespot+1) )
-// 		|| ( *(visspot-65) && !*(tilespot-65) )
-// 		|| ( *(visspot-64) && !*(tilespot-64) )
-// 		|| ( *(visspot-63) && !*(tilespot-63) )
-// 		|| ( *(visspot+65) && !*(tilespot+65) )
-// 		|| ( *(visspot+64) && !*(tilespot+64) )
-// 		|| ( *(visspot+63) && !*(tilespot+63) ) )
-// 		{
-// 			obj->active = _true;
-// 			TransformActor (obj);
-// 			if (!obj->viewheight)
-// 				continue;						// too close or  away
+ 		spotloc = (obj->tilex<<6)+obj->tiley;	// optimize: keep in struct?
+ 		visspot = &spotvis[0][0]+spotloc;
+ 		tilespot = &tilemap[0][0]+spotloc;
 
-// 			visptr->viewx = obj->viewx;
-// 			visptr->viewheight = obj->viewheight;
-// 			if (visptr->shapenum == -1)
-// 				visptr->shapenum = obj->temp1;	// special shape
+ 		/*
+ 		 could be in any of the nine surrounding tiles
+ 		*/
+ 		// if (*visspot
+ 		// || ( *(visspot-1) && !*(tilespot-1) )
+ 		// || ( *(visspot+1) && !*(tilespot+1) )
+ 		// || ( *(visspot-65) && !*(tilespot-65) )
+ 		// || ( *(visspot-64) && !*(tilespot-64) )
+ 		// || ( *(visspot-63) && !*(tilespot-63) )
+ 		// || ( *(visspot+65) && !*(tilespot+65) )
+ 		// || ( *(visspot+64) && !*(tilespot+64) )
+ 		// || ( *(visspot+63) && !*(tilespot+63) ) )
+ 		{
+ 			obj->active = (activetype)_true;
+ 			TransformActor (obj);
+ 			// if (!obj->viewheight)
+ 			// 	continue;						// too close or  away
 
-// 			if (obj->state->rotate)
-// 				visptr->shapenum += CalcRotate (obj);
+            visptr->x = obj->x;
+            visptr->y = obj->y;
+ 			visptr->viewx = obj->viewx;
+ 			visptr->viewheight = obj->viewheight;
+ 			if (visptr->shapenum == -1)
+ 				visptr->shapenum = obj->temp1;	// special shape
 
-// 			if (visptr < &vislist[MAXVISABLE-1])	// don't let it overflow
-// 				visptr++;
-// 			obj->flags |= FL_VISABLE;
-// 		}
-// 		else
-// 			obj->flags &= ~FL_VISABLE;
-// 	}
+ 			if (obj->state->rotate)
+ 				visptr->shapenum += CalcRotate (obj);
 
-// //
-// // draw from back to front
-// //
-// 	numvisable = visptr-&vislist[0];
+ 			if (visptr < &vislist[MAXVISABLE-1])	// don't let it overflow
+ 				visptr++;
+ 			obj->flags |= FL_VISABLE;
+ 		}
+ 		// else
+ 		// 	obj->flags &= ~FL_VISABLE;
+ 	}
 
-// 	if (!numvisable)
-// 		return;									// no visable objects
+ //
+ // draw from back to front
+ //TODO: In our case, front to back is more efficient
+ //
+ 	numvisable = visptr-&vislist[0];
 
-// 	for (i = 0; i<numvisable; i++)
-// 	{
-// 		least = 32000;
-// 		for (visstep=&vislist[0] ; visstep<visptr ; visstep++)
-// 		{
-// 			height = visstep->viewheight;
-// 			if (height < least)
-// 			{
-// 				least = height;
-// 				farthest = visstep;
-// 			}
-// 		}
-// 		//
-// 		// draw farthest
-// 		//
-// 		ScaleShape(farthest->viewx,farthest->shapenum,farthest->viewheight);
+ 	if (!numvisable)
+ 		return;									// no visable objects
 
-// 		farthest->viewheight = 32000;
-// 	}
+ 	for (i = 0; i<numvisable; i++)
+ 	{
+ 		// least = 32000;
+ 		// for (visstep=&vislist[0] ; visstep<visptr ; visstep++)
+ 		// {
+ 		// 	height = visstep->viewheight;
+ 		// 	if (height < least)
+ 		// 	{
+ 		// 		least = height;
+ 		// 		farthest = visstep;
+ 		// 	}
+ 		// }
+ 		//
+ 		// draw farthest
+ 		//
+ 		//ScaleShape(farthest->viewx,farthest->shapenum,farthest->viewheight);
+        auto s = vislist + i;
+        ws_draw_sprite(s->x, s->y, s->shapenum);
 
+ 		// farthest->viewheight = 32000;
+ 	}
 }
 
 //==========================================================================
@@ -1309,6 +1586,17 @@ int wall_at(int x, int y)
     return tilemap[x][y];
 }
 
+_boolean is_door_at(int x, int y)
+{
+    return (tilemap[x][y] & 0x80) ? _true : _false;
+}
+
+float door_percent(int x, int y)
+{
+    auto doorNum = tilemap[x][y] & 0x3F;
+    return (float)doorposition[doorNum] / (float)0xffff;
+}
+
 void WallRefresh (void)
 {
 //
@@ -1334,7 +1622,7 @@ void WallRefresh (void)
 
 	lastside = -1;			// the first pixel is on a _new wall
 	// AsmRefresh ();
-	// ScalePost ();			// no more optimization on last post
+	 //ScalePost ();			// no more optimization on last post
 
     ws_update_camera();
 
@@ -1345,34 +1633,84 @@ void WallRefresh (void)
         {
             if (!wall_at(x, y))
             {
-                if (wall_at(x, y - 1))
+                if (int w = wall_at(x, y - 1))
                 {
-                    ws_draw_wall((float)x, (float)y, 2, 0);
+                    if (is_door_at(x, y))
+                        w = DOORWALL + 3;
+                    else
+                        w = vertwall[w & 63];
+                    ws_draw_wall((float)x, (float)y, SOUTH, w);
                 }
-                if (wall_at(x - 1, y))
+                if (int w = wall_at(x - 1, y))
                 {
-                    ws_draw_wall((float)x, (float)y + 1.0f, 1, 0);
+                    if (is_door_at(x, y))
+                        w = DOORWALL + 2;
+                    else
+                        w = horizwall[w & 63];
+                    ws_draw_wall((float)x, (float)y + 1.0f, EAST, w);
                 }
-                if (wall_at(x, y + 1))
+                if (int w = wall_at(x, y + 1))
                 {
-                    ws_draw_wall((float)x + 1.0f, (float)y + 1.0f, 0, 0);
+                    if (is_door_at(x, y))
+                        w = DOORWALL + 3;
+                    else
+                        w = vertwall[w & 63];
+                    ws_draw_wall((float)x + 1.0f, (float)y + 1.0f, NORTH, w);
                 }
-                if (wall_at(x + 1, y))
+                if (int w = wall_at(x + 1, y))
                 {
-                    ws_draw_wall((float)x + 1.0f, (float)y, 3, 0);
+                    if (is_door_at(x, y))
+                        w = DOORWALL + 2;
+                    else
+                        w = horizwall[w & 63];
+                    ws_draw_wall((float)x + 1.0f, (float)y, WEST, w);
+                }
+
+                if (is_door_at(x, y))
+                {
+                    auto percent = door_percent(x, y);
+                    auto tilehit = tilemap[x][y];
+                    uint16_t wallpic, doornum;
+                    doornum = tilehit & 0x7f;
+
+                    switch (doorobjlist[doornum].lock)
+                    {
+                    case dr_normal:
+                        wallpic = (PMSpriteStart - 8);
+                        break;
+                    case dr_lock1:
+                    case dr_lock2:
+                    case dr_lock3:
+                    case dr_lock4:
+                        wallpic = (PMSpriteStart - 8) + 6;
+                        break;
+                    case dr_elevator:
+                        wallpic = (PMSpriteStart - 8) + 4;
+                        break;
+                    }
+
+                    if (wall_at(x - 1, y))
+                    {
+                        ws_draw_wall((float)x + percent, (float)y + 0.5f, SOUTH, wallpic);
+                        ws_draw_wall((float)x + 1.0f + percent, (float)y + 0.5f, NORTH, wallpic);
+                    }
+                    else if (wall_at(x, y - 1))
+                    {
+                        ws_draw_wall((float)x + 0.5f, (float)y + 1.0f + percent, EAST, wallpic);
+                        ws_draw_wall((float)x + 0.5f, (float)y + percent, WEST, wallpic);
+                    }
                 }
             }
         }
     }
 
     // Draw ceilling
-    // extern uint16_t vgaCeiling[];
-    // uint16_t ceiling=vgaCeiling[gamestate.episode*10+mapon];
-    // shadetable[GetShade((viewheight / 2 - y) << 3)][ceiling]
-    ws_draw_ceiling(4);
+    extern uint16_t vgaCeiling[];
+    uint16_t ceiling = vgaCeiling[gamestate.episode*10+mapon];
+    ws_draw_ceiling(ceiling & 0xFF);
 
     // Draw floor
-    ws_draw_floor(7);
+    ws_draw_floor(0x19);
 }
 
 //==========================================================================
@@ -1387,6 +1725,8 @@ void WallRefresh (void)
 void VGAClearScreen(void);
 void	ThreeDRefresh (void)
 {
+    memset(spotvis,0,64*64);
+
  	int16_t tracedir;
 
  // this wouldn't need to be done except for my debugger/video wierdness

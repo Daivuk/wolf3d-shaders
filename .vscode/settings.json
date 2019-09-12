@@ -99,6 +99,7 @@
         "cinttypes": "cpp",
         "WOLFHACK.C": "cpp",
         "MUNGE.C": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "map": "cpp"
     }
 }

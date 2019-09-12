@@ -194,26 +194,24 @@ ws_Matrix ws_Matrix::CreateFromAxisAngle(const ws_Vector3& axis, float angle)
 
 ws_Matrix ws_Matrix::CreateLookAt(const ws_Vector3& position, const ws_Vector3& target, const ws_Vector3& up)
 {
-    auto EyeDirection = position - target;
-    auto R2 = EyeDirection;
-    R2.Normalize();
+    //auto front = target - position;
+    //front.Normalize();
+    //auto right = front.Cross(up);
+    //right.Normalize();
+    //auto _up = right.Cross(front);
+    //_up.Normalize();
 
-    auto R0 = R2.Cross(up);
-    R0.Normalize();
+    //ws_Matrix view(
+    //    right.x, right.y, right.z, 0,
+    //    _up.x, _up.y, _up.z, 0,
+    //    front.x, front.y, front.z, 0,
+    //    position.x, position.y, position.z, 1
+    //);
 
-    auto R1 = R0.Cross(R2);
+    //return view.Invert();
 
-    auto NegEyePosition = -position;
 
-    auto D0 = R0.Dot(NegEyePosition);
-    auto D1 = R1.Dot(NegEyePosition);
-    auto D2 = R2.Dot(NegEyePosition);
 
-    return ws_Matrix(
-        R0.x, R1.x, R2.x, 0,
-        R0.y, R1.y, R2.y, 0,
-        R0.z, R1.z, R2.z, 0,
-        D0, D1, D2, 1);
     //auto EyeDirection = position - target;
     //auto R2 = EyeDirection;
     //R2.Normalize();
@@ -234,6 +232,29 @@ ws_Matrix ws_Matrix::CreateLookAt(const ws_Vector3& position, const ws_Vector3& 
     //    R0.y, R1.y, R2.y, 0,
     //    R0.z, R1.z, R2.z, 0,
     //    D0, D1, D2, 1);
+
+
+
+    auto EyeDirection = position - target;
+    auto R2 = EyeDirection;
+    R2.Normalize();
+
+    auto R0 = up.Cross(R2);
+    R0.Normalize();
+
+    auto R1 = R2.Cross(R0);
+
+    auto NegEyePosition = -position;
+
+    auto D0 = R0.Dot(NegEyePosition);
+    auto D1 = R1.Dot(NegEyePosition);
+    auto D2 = R2.Dot(NegEyePosition);
+
+    return ws_Matrix(
+        R0.x, R1.x, R2.x, 0,
+        R0.y, R1.y, R2.y, 0,
+        R0.z, R1.z, R2.z, 0,
+        D0, D1, D2, 1);
 }
 
 ws_Matrix ws_Matrix::CreateWorld(const ws_Vector3& position, const ws_Vector3& forward, const ws_Vector3& up)

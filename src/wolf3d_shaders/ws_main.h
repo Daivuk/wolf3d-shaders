@@ -30,5 +30,6 @@ void ws_finish_draw_3d();
 void ws_update_camera();
 void ws_draw_ceiling(int color);
 void ws_draw_floor(int color);
+void ws_draw_sprite(int x, int y, int texture);
 
 #endif

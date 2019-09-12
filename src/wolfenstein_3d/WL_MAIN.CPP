@@ -570,7 +570,6 @@ void ShutdownId (void)
 =
 ==================
 */
-
 const   float   radtoint = (float)(FINEANGLES/2/PI);
 
 void BuildTables (void)
@@ -604,15 +603,15 @@ void BuildTables (void)
   anglestep = (float)(PI/2/ANGLEQUAD);
   for (i=0;i<=ANGLEQUAD;i++)
   {
-	value=(fixed)(GLOBAL1*sin(angle));
+      auto ss = sin(angle);
+	value=(fixed)(GLOBAL1*ss);
 	sintable[i]=
 	  sintable[i+ANGLES]=
 	  sintable[ANGLES/2-i] = value;
 	sintable[ANGLES-i]=
-	  sintable[ANGLES/2+i] = value | 0x80000000l;
+	  sintable[ANGLES/2+i] = -value;
 	angle += anglestep;
   }
-
 }
 
 //===========================================================================

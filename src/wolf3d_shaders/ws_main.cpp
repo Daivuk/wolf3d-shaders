@@ -207,6 +207,7 @@ std::map<int16_t, Pic> pics;
 std::map<int16_t, GLuint> screenRaws;
 std::map<int, BakedFont> fontTextures;
 std::map<int16_t, Pic> sprites;
+std::map<int16_t, Pic> walls;
 
 #define DRAW_MODE_PC 0
 #define DRAW_MODE_PTC 1
@@ -808,6 +809,21 @@ void VW_UpdateScreen()
             x += (float)kv.second.w + 2;
             maxy = std::max(maxy, (float)kv.second.h);
         }
+        for (auto &kv : walls)
+        {
+            if (x + (float)kv.second.w + 2 > (float)screen_w)
+            {
+                x = 0.0f;
+                y += maxy + 2;
+                maxy = 0.0f;
+            }
+            glBindTexture(GL_TEXTURE_2D, kv.second.tex);
+            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, {1, 1, 1, 1});
+            flush();
+            drawDebugString((char *)std::to_string(kv.first).c_str(), x, y);
+            x += (float)kv.second.w + 2;
+            maxy = std::max(maxy, (float)kv.second.h);
+        }
     }
     else
     {
@@ -1317,6 +1333,42 @@ Pic load_sprite(int16_t shapenum)
     return pic;
 }
 
+Pic load_wall(int wallpic)
+{
+    uint16_t width, height;
+    Pic pic;
+
+    width = 64;
+    height = 64;
+
+    auto _data = (byte *)PM_GetPage(wallpic);
+    //auto _data2 = (byte *)PM_GetPage(wallpic + 1);
+
+    auto data = new byte[64 * 64 * 4];
+
+    for (int x = 0; x < 64; ++x)
+    {
+        for (int y = 0; y < 64; ++y)
+        {
+            auto& col = palette[*_data++];
+            auto k = (y * 64 + x) * 4;
+            data[k + 0] = (byte)(col.r * 255.0f);
+            data[k + 1] = (byte)(col.g * 255.0f);
+            data[k + 2] = (byte)(col.b * 255.0f);
+            data[k + 3] = (byte)(col.a * 255.0f);
+        }
+    }
+
+    auto texture = ws_create_texture(data, width, height);
+    delete[] data;
+    pic.w = width;
+    pic.h = height;
+    pic.tex = texture;
+    walls[wallpic] = pic;
+
+    return pic;
+}
+
 extern word PMSpriteStart, PMSoundStart;
 
 void ws_preload_sprites()
@@ -1335,6 +1387,7 @@ void ws_preload_sprites()
 void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
 {
     //ws_preload_sprites();
+    //auto offset = xcenter - viewwidth / 2;
 
     auto it = sprites.find(shapenum);
     Pic pic;
@@ -1350,13 +1403,16 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     glBindTexture(GL_TEXTURE_2D, pic.tex);
     ptcCount += drawRect(
         resources.pPTCVertices + ptcCount,
-        (float)(MaxX / 2 + (xcenter - pic.w / 2) * SCALE) * s_scale,
-        (float)(MaxY - height * SCALE + 1 - STATUSLINES - pic.h * SCALE) * s_scale,
+        (float)(MaxX / 2 - pic.w / 2 * SCALE) * s_scale,
+        (float)(MaxY - SCALE - STATUSLINES - pic.h * SCALE + SCALE) * s_scale,
         (float)(pic.w * SCALE) * s_scale,
         (float)(pic.h * SCALE) * s_scale,
         0, 0, 1, 1, {1, 1, 1, 1});
     flush();
 }
+
+ws_Vector3 right;
+ws_Vector3 front;
 
 void ws_update_camera()
 {
@@ -1367,13 +1423,19 @@ void ws_update_camera()
     float px = (float)player->x / 65536.0f;
     float py = (float)player->y / 65536.0f;
 
-    auto proj = ws_Matrix::CreatePerspectiveFieldOfView(90.0f * (float)M_PI / 180.0f, (float)screen_w / (float)screen_h, 0.01f, 1000.0f);
+    auto proj = ws_Matrix::CreatePerspectiveFieldOfView(60.0f * (float)M_PI / 180.0f, (float)screen_w / ((float)screen_h - (float)STATUSLINES * s_scale), 0.01f, 1000.0f);
+    front = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
+    front = ws_Vector3(vcos, vsin, 0.0f);
+    front.Normalize();
+    right = { front.y, -front.x, 0.0f };
+    right.Normalize();
     //auto view = ws_Matrix::CreateLookAt(ws_Vector3(32.0f, 70.0f, 16.0f), ws_Vector3(32.0f, 32.0f, 0.5f), ws_Vector3(0.0f, 0.0f, 1.0f));
     auto view = ws_Matrix::CreateLookAt(
-        ws_Vector3(px, py, 0.5f),
-        ws_Vector3(px + vcos, py - vsin, 0.5f),
+        ws_Vector3(px, 64.0f - py, 0.5f),
+        ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f),
         ws_Vector3(0.0f, 0.0f, 1.0f));
     matrix3D = view * proj;
+    //matrix3D = matrix3D.Transpose();
     {
         glUseProgram(resources.programPNTC);
         auto uniform = glGetUniformLocation(resources.programPNTC, "ProjMtx");
@@ -1381,7 +1443,10 @@ void ws_update_camera()
     }
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_SCISSOR_TEST);
+    glEnable(GL_CULL_FACE);
+    //glFrontFace(GL_BACK);
     glScissor(0, (int)(float)(STATUSLINES * s_scale), screen_w, screen_h - (int)(float)(STATUSLINES * s_scale));
+    glViewport(0, (int)(float)(STATUSLINES * s_scale), screen_w, screen_h - (int)(float)(STATUSLINES * s_scale));
 }
 
 void ws_draw_ceiling(int color)
@@ -1392,7 +1457,7 @@ void ws_draw_ceiling(int color)
     auto pVertices = resources.pPNTCVertices + pntcCount;
 
     pVertices[0].position.x = 1.0f;
-    pVertices[0].position.y = 63.0f;
+    pVertices[0].position.y = 1.0f;
     pVertices[0].position.z = 1.0f;
     pVertices[0].normal.x = 0;
     pVertices[0].normal.y = 0;
@@ -1401,8 +1466,8 @@ void ws_draw_ceiling(int color)
     pVertices[0].color = col;
 
     pVertices[1].position.x = 1.0f;
-    pVertices[1].position.y = 1.0f;
-    pVertices[1].position.z = 0.0f;
+    pVertices[1].position.y = 63.0f;
+    pVertices[1].position.z = 1.0f;
     pVertices[1].normal.x = 0;
     pVertices[1].normal.y = 0;
     pVertices[1].normal.z = -1;
@@ -1410,8 +1475,8 @@ void ws_draw_ceiling(int color)
     pVertices[1].color = col;
 
     pVertices[2].position.x = 63.0f;
-    pVertices[2].position.y = 1.0f;
-    pVertices[2].position.z = 0.0f;
+    pVertices[2].position.y = 63.0f;
+    pVertices[2].position.z = 1.0f;
     pVertices[2].normal.x = 0;
     pVertices[2].normal.y = 0;
     pVertices[2].normal.z = -1;
@@ -1419,7 +1484,7 @@ void ws_draw_ceiling(int color)
     pVertices[2].color = col;
 
     pVertices[3].position.x = 63.0f;
-    pVertices[3].position.y = 63.0f;;
+    pVertices[3].position.y = 1.0f;;
     pVertices[3].position.z = 1.0f;
     pVertices[3].normal.x = 0;
     pVertices[3].normal.y = 0;
@@ -1438,8 +1503,8 @@ void ws_draw_floor(int color)
     auto pVertices = resources.pPNTCVertices + pntcCount;
 
     pVertices[0].position.x = 1.0f;
-    pVertices[0].position.y = 1.0f;
-    pVertices[0].position.z = 1.0f;
+    pVertices[0].position.y = 63.0f;
+    pVertices[0].position.z = 0.0f;
     pVertices[0].normal.x = 0;
     pVertices[0].normal.y = 0;
     pVertices[0].normal.z = 1;
@@ -1447,7 +1512,7 @@ void ws_draw_floor(int color)
     pVertices[0].color = col;
 
     pVertices[1].position.x = 1.0f;
-    pVertices[1].position.y = 63.0f;
+    pVertices[1].position.y = 1.0f;
     pVertices[1].position.z = 0.0f;
     pVertices[1].normal.x = 0;
     pVertices[1].normal.y = 0;
@@ -1456,7 +1521,7 @@ void ws_draw_floor(int color)
     pVertices[1].color = col;
 
     pVertices[2].position.x = 63.0f;
-    pVertices[2].position.y = 63.0f;
+    pVertices[2].position.y = 1.0f;
     pVertices[2].position.z = 0.0f;
     pVertices[2].normal.x = 0;
     pVertices[2].normal.y = 0;
@@ -1465,8 +1530,8 @@ void ws_draw_floor(int color)
     pVertices[2].color = col;
 
     pVertices[3].position.x = 63.0f;
-    pVertices[3].position.y = 1.0f;;
-    pVertices[3].position.z = 1.0f;
+    pVertices[3].position.y = 63.0f;;
+    pVertices[3].position.z = 0.0f;
     pVertices[3].normal.x = 0;
     pVertices[3].normal.y = 0;
     pVertices[3].normal.z = 1;
@@ -1476,20 +1541,32 @@ void ws_draw_floor(int color)
     pntcCount += 4;
 }
 
-void ws_draw_wall(float x, float y, int dir, int texture)
+void ws_draw_wall(float x, float y, int dir, int wallpic)
 {
-    texture = resources.checkerTexture;
+    GLuint tex = resources.checkerTexture;
+    //if (wallpic != 0)
+    {
+        auto it = walls.find(wallpic);
+        Pic pic;
+        if (it == walls.end())
+            pic = load_wall(wallpic);
+        else
+            pic = it->second;
+        tex = pic.tex;
+    }
 
-    prepareForPNTC(GL_QUADS, texture);
+    y = 64.0f - y;
+
+    prepareForPNTC(GL_QUADS, tex);
     const Position DIROFS[4] = {
         {-1.0f, 0.0f},
-        {0.0f, -1.0f},
-        {1.0f, 0.0f},
-        {0.0f, 1.0f}};
-    const Position DIRNS[4] = {
-        {0.0f, -1.0f},
-        {1.0f, 0.0f},
         {0.0f, 1.0f},
+        {1.0f, 0.0f},
+        {0.0f, -1.0f}};
+    const Position DIRNS[4] = {
+        {0.0f, 1.0f},
+        {1.0f, 0.0f},
+        {0.0f, -1.0f},
         {-1.0f, 0.0f}};
 
     auto pVertices = resources.pPNTCVertices + pntcCount;
@@ -1536,12 +1613,69 @@ void ws_draw_wall(float x, float y, int dir, int texture)
     pntcCount += 4;
 }
 
+void ws_draw_sprite(int x, int y, int texture)
+{
+    auto xf = (float)x / 65536.0f;
+    auto yf = 64.0f - (float)y / 65536.0f;
+
+    auto it = sprites.find(texture);
+    Pic pic;
+    if (it == sprites.end())
+        pic = load_sprite(texture);
+    else
+        pic = it->second;
+
+    prepareForPNTC(GL_QUADS, pic.tex);
+
+    auto pVertices = resources.pPNTCVertices + pntcCount;
+
+    pVertices[0].position.x = xf - right.x * 0.5f;
+    pVertices[0].position.y = yf - right.y * 0.5f;
+    pVertices[0].position.z = 1.0f;
+    pVertices[0].normal.x = -front.x;
+    pVertices[0].normal.y = -front.y;
+    pVertices[0].normal.z = -front.z;
+    pVertices[0].texCoord = { 0, 0 };
+    pVertices[0].color = { 1, 1, 1, 1 };
+
+    pVertices[1].position.x = xf - right.x * 0.5f;
+    pVertices[1].position.y = yf - right.y * 0.5f;
+    pVertices[1].position.z = 0.0f;
+    pVertices[1].normal.x = -front.x;
+    pVertices[1].normal.y = -front.y;
+    pVertices[1].normal.z = -front.z;
+    pVertices[1].texCoord = { 0, 1 };
+    pVertices[1].color = { 1, 1, 1, 1 };
+
+    pVertices[2].position.x = xf + right.x * 0.5f;
+    pVertices[2].position.y = yf + right.y * 0.5f;
+    pVertices[2].position.z = 0.0f;
+    pVertices[2].normal.x = -front.x;
+    pVertices[2].normal.y = -front.y;
+    pVertices[2].normal.z = -front.z;
+    pVertices[2].texCoord = { 1, 1 };
+    pVertices[2].color = { 1, 1, 1, 1 };
+
+    pVertices[3].position.x = xf + right.x * 0.5f;
+    pVertices[3].position.y = yf + right.y * 0.5f;
+    pVertices[3].position.z = 1.0f;
+    pVertices[3].normal.x = -front.x;
+    pVertices[3].normal.y = -front.y;
+    pVertices[3].normal.z = -front.z;
+    pVertices[3].texCoord = { 1, 0 };
+    pVertices[3].color = { 1, 1, 1, 1 };
+
+    pntcCount += 4;
+}
+
 void ws_finish_draw_3d()
 {
     flush();
     glScissor(0, 0, screen_w, screen_h);
+    glViewport(0, 0, screen_w, screen_h);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 }
 
 static byte *current_sound_data = nullptr;
@@ -1570,7 +1704,6 @@ void audioCallback(void *userdata, Uint8 *stream, int len)
 
 void ws_play_sound(byte *data, int len)
 {
-    printf("snd len: %i\n", len);
     current_sound_data = data;
     current_sound_len = len;
 }

@@ -95,6 +95,7 @@ static const char *PNTC_FRAG =
 "void main()"
 "{"
 "   vec4 diffuse = texture2D(Texture, Frag_TexCoord);"
+"   if (diffuse.a < .3) discard;"
 "   gl_FragColor = diffuse * Frag_Color;"
 "}"
 ;
