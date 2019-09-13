@@ -765,38 +765,38 @@ void VW_UpdateScreen()
         }
         y += 5;
         flush();
-        extern byte	 redshifts[6][768];
-        extern byte	 whiteshifts[6][768];
-        for (int j = 0; j < 6; ++j)
-        {
-            for (int i = 0; i < 256; ++i)
-            {
-                pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, 
-                {
-                    (float)whiteshifts[j][i * 3 + 0] / 255.0f,
-                    (float)whiteshifts[j][i * 3 + 1] / 255.0f,
-                    (float)whiteshifts[j][i * 3 + 2] / 255.0f,
-                    255.0f
-                });
-            }
-            y += 5;
-            flush();
-        }
-        for (int j = 0; j < 6; ++j)
-        {
-            for (int i = 0; i < 256; ++i)
-            {
-                pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, 
-                {
-                    (float)redshifts[j][i * 3 + 0] / 255.0f,
-                    (float)redshifts[j][i * 3 + 1] / 255.0f,
-                    (float)redshifts[j][i * 3 + 2] / 255.0f,
-                    255.0f
-                });
-            }
-            y += 5;
-            flush();
-        }
+        // extern byte	 redshifts[6][768];
+        // extern byte	 whiteshifts[6][768];
+        // for (int j = 0; j < 6; ++j)
+        // {
+        //     for (int i = 0; i < 256; ++i)
+        //     {
+        //         pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, 
+        //         {
+        //             (float)whiteshifts[j][i * 3 + 0] / 255.0f,
+        //             (float)whiteshifts[j][i * 3 + 1] / 255.0f,
+        //             (float)whiteshifts[j][i * 3 + 2] / 255.0f,
+        //             255.0f
+        //         });
+        //     }
+        //     y += 5;
+        //     flush();
+        // }
+        // for (int j = 0; j < 6; ++j)
+        // {
+        //     for (int i = 0; i < 256; ++i)
+        //     {
+        //         pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, 
+        //         {
+        //             (float)redshifts[j][i * 3 + 0] / 255.0f,
+        //             (float)redshifts[j][i * 3 + 1] / 255.0f,
+        //             (float)redshifts[j][i * 3 + 2] / 255.0f,
+        //             255.0f
+        //         });
+        //     }
+        //     y += 5;
+        //     flush();
+        // }
         prepareForPTC(GL_QUADS);
         for (auto &kv : fontTextures)
         {
@@ -1344,6 +1344,7 @@ Pic load_sprite(int16_t shapenum)
     auto sprdata = new byte[64 * 64];
     memset(sprdata, 255, 64 * 64);
 
+    byte* trexel = _data + (4 + 2 * (last_column - first_column + 1));
     word *column_offset_reader = column_offsets; // read-head that will traverse the column offsets
     for (word column = first_column; column <= last_column; ++column)
     {
@@ -1353,7 +1354,7 @@ Pic load_sprite(int16_t shapenum)
         {
             for (int row = drawing_instructions[idx + 2] / 2; row < drawing_instructions[idx] / 2; ++row)
             {
-                sprdata[column + row * 64] = _data[drawing_instructions[idx + 1] + row];
+                sprdata[column - 1 + row * 64 - 1] = *trexel++;
             }
             idx += 3;
         }
