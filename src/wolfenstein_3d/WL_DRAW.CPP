@@ -1736,13 +1736,36 @@ void WallRefresh (void)
                     }
                 }
             }
-            else if (tilemap[x][y] & 0x80 && tilemap[x][y] & 0x40)
-            {
-                // push wall
-                auto percent = door_percent(x, y);
-                ws_draw_wall((float)x + 1.0f, (float)y, EAST, 0);
-            }
         }
+    }
+
+    // Push walls
+    //pwallx = checkx;
+    //pwally = checky;
+    //pwalldir = dir;
+    //pwallstate = 1;
+    //pwallpos = 0;
+    if (pwallstate)
+    {
+        float percent = (float)pwallpos / 64.0f;
+        const float DIROFS[4][2] = {
+            {0.0f, -1.0f},
+            {1.0f, 0.0f},
+            {0.0f, 1.0f},
+            {-1.0f, -0.0f} };
+        const int DIROFSi[4][2] = {
+            {0, -1},
+            {1, 0},
+            {0, 1},
+            {-1, -0} };
+        auto &ofs = DIROFS[pwalldir];
+        int n = wall_at(pwallx + DIROFSi[pwalldir][0], pwally + DIROFSi[pwalldir][1]);
+        int w = horizwall[n & 63];
+        ws_draw_wall((float)pwallx + ofs[0] * percent, (float)pwally + 1.0f + ofs[1] * percent, SOUTH, w);
+        ws_draw_wall((float)pwallx + 1.0f + ofs[0] * percent, (float)pwally + ofs[1] * percent, NORTH, w);
+        w = vertwall[n & 63];
+        ws_draw_wall((float)pwallx + 1.0f + ofs[0] * percent, (float)pwally + 1.0f + ofs[1] * percent, EAST, w);
+        ws_draw_wall((float)pwallx + ofs[0] * percent, (float)pwally + ofs[1] * percent, WEST, w);
     }
 
     // Draw ceilling
