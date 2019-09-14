@@ -1793,7 +1793,7 @@ void audioCallback(void *userdata, Uint8 *stream, int len)
         {
             auto sndPos = ws_Vector3(playingSound.x, playingSound.y, 0.5f);
             auto distance = ws_Vector3::DistanceSquared(eyePos, sndPos);
-            auto vol = 1.0f / std::max(1.0f, distance / 10.0f);
+            auto vol = 1.0f / std::max(1.0f, distance / 15.0f);
             auto dir = sndPos - eyePos;
             dir.Normalize();
             auto dot = dir.Dot(right) + 1.0f; // 0 = left, 2 = right

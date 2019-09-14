@@ -1223,7 +1223,7 @@ void SD_PlayDigitized(word which, int16_t leftpos, int16_t rightpos)
     auto it = digiMap.find(which);
     if (it != digiMap.end())
     {
-        ws_play_sound(it->second.data(), (int)it->second.size(), xf, yf);
+        ws_play_sound(it->second.data(), (int)it->second.size(), xf, yf, global_snd_x != 0);
         global_snd_x = 0;
         return;
     }
