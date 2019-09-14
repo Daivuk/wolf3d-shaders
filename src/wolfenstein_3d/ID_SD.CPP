@@ -1224,6 +1224,7 @@ void SD_PlayDigitized(word which, int16_t leftpos, int16_t rightpos)
     if (it != digiMap.end())
     {
         ws_play_sound(it->second.data(), (int)it->second.size(), xf, yf);
+        global_snd_x = 0;
         return;
     }
     auto& raw = digiMap[which];
@@ -1250,7 +1251,8 @@ void SD_PlayDigitized(word which, int16_t leftpos, int16_t rightpos)
 
     resampleSound(raw);
 
-    ws_play_sound(raw.data(), (int)raw.size(), xf, yf);
+    ws_play_sound(raw.data(), (int)raw.size(), xf, yf, global_snd_x != 0);
+    global_snd_x = 0;
 }
 
 void

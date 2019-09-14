@@ -1488,6 +1488,7 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     flush();
 }
 
+ws_Vector3 eyePos;
 ws_Vector3 right;
 ws_Vector3 front;
 
@@ -1506,9 +1507,10 @@ void ws_update_camera()
     front.Normalize();
     right = { front.y, -front.x, 0.0f };
     right.Normalize();
+    eyePos = ws_Vector3(px, 64.0f - py, 0.5f);
     //auto view = ws_Matrix::CreateLookAt(ws_Vector3(32.0f, 70.0f, 16.0f), ws_Vector3(32.0f, 32.0f, 0.5f), ws_Vector3(0.0f, 0.0f, 1.0f));
     auto view = ws_Matrix::CreateLookAt(
-        ws_Vector3(px, 64.0f - py, 0.5f),
+        eyePos,
         ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f),
         ws_Vector3(0.0f, 0.0f, 1.0f));
     matrix3D = view * proj;
@@ -1766,12 +1768,13 @@ struct PlayingSound
     float *data;
     int len;
     float x, y;
+    bool _3d;
 };
 static std::vector<PlayingSound> playingSounds;
 
-void ws_play_sound(float *data, int len, float x, float y)
+void ws_play_sound(float *data, int len, float x, float y, bool _3d)
 {
-    playingSounds.push_back({ data, len, x, y });
+    playingSounds.push_back({ data, len, x, 64.0f - y, _3d });
 }
 
 void audioCallback(void *userdata, Uint8 *stream, int len)
@@ -1780,17 +1783,39 @@ void audioCallback(void *userdata, Uint8 *stream, int len)
 
     len /= 8; // float * 2 channels
     float *pOut = (float*)stream;
+    float volL, volR;
 
     for (auto it = playingSounds.begin(); it != playingSounds.end();)
     {
         auto& playingSound = *it;
 
+        if (playingSound._3d)
+        {
+            auto sndPos = ws_Vector3(playingSound.x, playingSound.y, 0.5f);
+            auto distance = ws_Vector3::DistanceSquared(eyePos, sndPos);
+            auto vol = 1.0f / std::max(1.0f, distance / 10.0f);
+            auto dir = sndPos - eyePos;
+            dir.Normalize();
+            auto dot = dir.Dot(right) + 1.0f; // 0 = left, 2 = right
+            auto dotf = dir.Dot(front); // We attenuate stuff behind us
+            dotf = std::max(0.75f, std::min(dotf, 0.0f) + 1.0f); // [0.75 to 1] 1 = perpenticular to camera and forward, 0.75 completely in back
+            volL = vol * dotf;
+            volR = vol * dotf;
+            volL *= std::min(1.0f, (2.0f - dot));
+            volR *= std::min(1.0f, dot);
+        }
+        else
+        {
+            volL = 1.0f;
+            volR = 1.0f;
+        }
+
         auto len1 = std::min(len, playingSound.len);
         for (int i = 0; i < len1; ++i)
         {
             auto sample = playingSound.data[i];
-            pOut[i * 2 + 0] += sample;
-            pOut[i * 2 + 1] += sample;
+            pOut[i * 2 + 0] += sample * volL;
+            pOut[i * 2 + 1] += sample * volR;
         }
         playingSound.data += len1;
         playingSound.len -= len1;

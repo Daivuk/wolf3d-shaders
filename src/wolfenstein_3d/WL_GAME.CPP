@@ -183,11 +183,11 @@ void PlaySoundLocGlobal(word s,fixed gx,fixed gy)
 
 void UpdateSoundLoc(void)
 {
-	if (SoundPositioned)
-	{
-		SetSoundLoc(globalsoundx,globalsoundy);
-		SD_SetPosition(leftchannel,rightchannel);
-	}
+	//if (SoundPositioned)
+	//{
+	//	SetSoundLoc(globalsoundx,globalsoundy);
+	//	SD_SetPosition(leftchannel,rightchannel);
+	//}
 }
 
 /*
