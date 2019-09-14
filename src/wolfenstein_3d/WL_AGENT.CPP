@@ -161,31 +161,31 @@ void ControlMovement (objtype *ob)
 //
 // side to side move
 //
-	if (buttonstate[bt_strafe])
-	{
+	//if (buttonstate[bt_strafe])
+	//{
 	//
 	// strafing
 	//
 	//
-		if (controlx > 0)
+		if (strafecontrol > 0)
 		{
 			angle = ob->angle - ANGLES/4;
 			if (angle < 0)
 				angle += ANGLES;
-			Thrust (angle,controlx*MOVESCALE);	// move to left
+			Thrust (angle, strafecontrol*MOVESCALE);	// move to left
 		}
-		else if (controlx < 0)
+		else if (strafecontrol < 0)
 		{
 			angle = ob->angle + ANGLES/4;
 			if (angle >= ANGLES)
 				angle -= ANGLES;
-			Thrust (angle,-controlx*MOVESCALE);	// move to right
+			Thrust (angle,-strafecontrol *MOVESCALE);	// move to right
 		}
-	}
-	else
+	//}
+	//else
 	{
 	//
-	// not strafing
+	// not strafing (never, we use strafe dedicated buttons for this)
 	//
 		anglefrac += controlx;
 		angleunits = anglefrac/ANGLESCALE;

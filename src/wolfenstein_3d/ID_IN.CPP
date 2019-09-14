@@ -31,7 +31,7 @@
 #define	MDelta		11
 
 #define	MouseInt	0x33
-#define	Mouse(x)	//_AX = x,geninterrupt(MouseInt)
+//#define	Mouse(x)	//_AX = x,geninterrupt(MouseInt)
 int16_t _BX = 0;
 int16_t _CX = 0;
 int16_t _DX = 0;
@@ -159,8 +159,11 @@ INL_KeyService(void)
 
  	if (k == 0xe0)		// Special key prefix
  		special = _true;
- 	else if (k == 0xe1)	// Handle Pause key
- 		Paused = _true;
+    else if (k == 0xe1)	// Handle Pause key
+    {
+        Paused = _true;
+        SDL_SetRelativeMouseMode(SDL_FALSE);
+    }
  	else
  	{
  		if (k & 0x80)	// Break code
@@ -977,13 +980,13 @@ _boolean IN_UserInput(longword delay)
 ===================
 */
 
+void Mouse(int16_t x);
 byte	IN_MouseButtons (void)
 {
 	if (MousePresent)
 	{
-		// Mouse(MButtons);
-		// return _BX;
-        return 0;
+		 Mouse(MButtons);
+		 return _BX;
 	}
 	else
 		return 0;

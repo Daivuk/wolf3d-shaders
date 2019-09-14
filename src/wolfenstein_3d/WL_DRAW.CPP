@@ -1621,7 +1621,9 @@ int wall_at(int x, int y)
 
 _boolean is_door_at(int x, int y)
 {
-    return (tilemap[x][y] & 0x80) ? _true : _false;
+    return 
+        ((tilemap[x][y] & 0x80) && !(tilemap[x][y] & 0x40))
+         ? _true : _false;
 }
 
 float door_percent(int x, int y)
@@ -1671,7 +1673,7 @@ void WallRefresh (void)
                     if (is_door_at(x, y))
                         w = DOORWALL + 3;
                     else
-                        w = vertwall[w & 63];
+                        w = horizwall[w & 63];
                     ws_draw_wall((float)x, (float)y, SOUTH, w);
                 }
                 if (int w = wall_at(x - 1, y))
@@ -1679,7 +1681,7 @@ void WallRefresh (void)
                     if (is_door_at(x, y))
                         w = DOORWALL + 2;
                     else
-                        w = horizwall[w & 63];
+                        w = vertwall[w & 63];
                     ws_draw_wall((float)x, (float)y + 1.0f, EAST, w);
                 }
                 if (int w = wall_at(x, y + 1))
@@ -1687,7 +1689,7 @@ void WallRefresh (void)
                     if (is_door_at(x, y))
                         w = DOORWALL + 3;
                     else
-                        w = vertwall[w & 63];
+                        w = horizwall[w & 63];
                     ws_draw_wall((float)x + 1.0f, (float)y + 1.0f, NORTH, w);
                 }
                 if (int w = wall_at(x + 1, y))
@@ -1695,7 +1697,7 @@ void WallRefresh (void)
                     if (is_door_at(x, y))
                         w = DOORWALL + 2;
                     else
-                        w = horizwall[w & 63];
+                        w = vertwall[w & 63];
                     ws_draw_wall((float)x + 1.0f, (float)y, WEST, w);
                 }
 
@@ -1724,15 +1726,21 @@ void WallRefresh (void)
 
                     if (wall_at(x - 1, y))
                     {
-                        ws_draw_wall((float)x + percent, (float)y + 0.5f, SOUTH, wallpic);
-                        ws_draw_wall((float)x + 1.0f + percent, (float)y + 0.5f, NORTH, wallpic);
+                        ws_draw_wall((float)x + percent, (float)y + 0.5f, SOUTH, wallpic, true);
+                        ws_draw_wall((float)x + 1.0f + percent, (float)y + 0.5f, NORTH, wallpic, true);
                     }
                     else if (wall_at(x, y - 1))
                     {
-                        ws_draw_wall((float)x + 0.5f, (float)y + 1.0f + percent, EAST, wallpic);
-                        ws_draw_wall((float)x + 0.5f, (float)y + percent, WEST, wallpic);
+                        ws_draw_wall((float)x + 0.5f, (float)y + 1.0f + percent, EAST, wallpic, true);
+                        ws_draw_wall((float)x + 0.5f, (float)y + percent, WEST, wallpic, true);
                     }
                 }
+            }
+            else if (tilemap[x][y] & 0x80 && tilemap[x][y] & 0x40)
+            {
+                // push wall
+                auto percent = door_percent(x, y);
+                ws_draw_wall((float)x + 1.0f, (float)y, EAST, 0);
             }
         }
     }

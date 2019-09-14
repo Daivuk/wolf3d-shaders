@@ -110,9 +110,7 @@ typedef	byte		ScanCode;
 
 #define	MouseInt	0x33
 //#define	Mouse(x)	//_AX = x,geninterrupt(MouseInt)
-static void Mouse(int16_t x)
-{
-}
+void Mouse(int16_t x);
 extern int16_t _BX;
 extern int16_t _CX;
 extern int16_t _DX;

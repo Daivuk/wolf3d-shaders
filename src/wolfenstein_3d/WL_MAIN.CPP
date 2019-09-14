@@ -173,7 +173,7 @@ void ReadConfig(void)
 		joystickprogressive = _false;
 
 		viewsize = 15;
-		mouseadjustment=5;
+		mouseadjustment=3;
 	}
 
 	SD_SetMusicMode (sm);
@@ -193,6 +193,7 @@ void ReadConfig(void)
 
 void WriteConfig(void)
 {
+    return; // Not yet
 	int16_t                     file;
 
 	file = file_open(configname,O_CREAT | O_BINARY | O_WRONLY,

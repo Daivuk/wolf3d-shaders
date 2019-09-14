@@ -42,6 +42,10 @@ ws_Matrix matrix3D;
 int screen_w = 1024, screen_h = 640;
 SDL_Window *sdlWindow;
 float s_scale = 1.0f;
+int lastMouse[2] = { 0 };
+int curMouse[2] = { 0 };
+bool mouseInitialized = false;
+int16_t mouseButtons = 0;
 
 #define KeyInt 9 // The keyboard ISR number
 
@@ -692,13 +696,30 @@ void ws_update_sdl()
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
-            // Input::onMouseButtonDown(registry, event.button.button);
+            if (event.button.button == SDL_BUTTON_LEFT)
+                mouseButtons |= 1;
+            else if (event.button.button == SDL_BUTTON_RIGHT)
+                mouseButtons |= 2;
+            else if (event.button.button == SDL_BUTTON_MIDDLE)
+                mouseButtons |= 4;
             break;
         case SDL_MOUSEBUTTONUP:
-            // Input::onMouseButtonUp(registry, event.button.button);
+            if (event.button.button == SDL_BUTTON_LEFT)
+                mouseButtons &= 0xFFFE;
+            else if (event.button.button == SDL_BUTTON_RIGHT)
+                mouseButtons &= 0xFFFD;
+            else if (event.button.button == SDL_BUTTON_MIDDLE)
+                mouseButtons &= 0xFFFB;
             break;
         case SDL_MOUSEMOTION:
-            // Input::onMouseMotion(registry, event.motion.x, event.motion.y);
+            curMouse[0] += (int)event.motion.xrel;
+            curMouse[1] += (int)event.motion.yrel;
+            if (!mouseInitialized)
+            {
+                mouseInitialized = true;
+                lastMouse[0] = curMouse[0];
+                lastMouse[1] = curMouse[1];
+            }
             break;
         }
     }
@@ -1263,7 +1284,7 @@ void LatchDrawPic(uint16_t x, uint16_t y, uint16_t picnum)
 
 void VWB_DrawPic(int16_t x, int16_t y, int16_t chunknum, int16_t w, int16_t h)
 {
-    // Load them into textures instead of doing them lazy
+    // Load them into textures instead of doing them lazy otherwise it crashes (?)
     ws_preload_pics();
 
     int16_t picnum = chunknum - STARTPICS;
@@ -1597,7 +1618,7 @@ void ws_draw_floor(int color)
     pntcCount += 4;
 }
 
-void ws_draw_wall(float x, float y, int dir, int wallpic)
+void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor)
 {
     GLuint tex = resources.checkerTexture;
     //if (wallpic != 0)
@@ -1623,12 +1644,18 @@ void ws_draw_wall(float x, float y, int dir, int wallpic)
         {0.0f, 1.0f},
         {1.0f, 0.0f},
         {0.0f, -1.0f},
-        {-1.0f, 0.0f}};
+        {-1.0f, 0.0f} };
+    const Position DIRUVS[4] = {
+        {1.0f, 0.0f},
+        {1.0f, 0.0f},
+        {0.0f, 1.0f},
+        {0.0f, 1.0f} };
 
     auto pVertices = resources.pPNTCVertices + pntcCount;
 
     auto &ofs = DIROFS[dir];
     auto &n = DIRNS[dir];
+    auto &uvs = DIRUVS[isDoor ? dir : 2];
 
     pVertices[0].position.x = x;
     pVertices[0].position.y = y;
@@ -1636,7 +1663,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic)
     pVertices[0].normal.x = n.x;
     pVertices[0].normal.y = n.y;
     pVertices[0].normal.z = 0.0f;
-    pVertices[0].texCoord = {0, 0};
+    pVertices[0].texCoord = { uvs.x, 0};
     pVertices[0].color = {1, 1, 1, 1};
 
     pVertices[1].position.x = x;
@@ -1645,7 +1672,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic)
     pVertices[1].normal.x = n.x;
     pVertices[1].normal.y = n.y;
     pVertices[1].normal.z = 0.0f;
-    pVertices[1].texCoord = {0, 1};
+    pVertices[1].texCoord = { uvs.x, 1};
     pVertices[1].color = {1, 1, 1, 1};
 
     pVertices[2].position.x = x + ofs.x;
@@ -1654,7 +1681,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic)
     pVertices[2].normal.x = n.x;
     pVertices[2].normal.y = n.y;
     pVertices[2].normal.z = 0.0f;
-    pVertices[2].texCoord = {1, 1};
+    pVertices[2].texCoord = { uvs.y, 1};
     pVertices[2].color = {1, 1, 1, 1};
 
     pVertices[3].position.x = x + ofs.x;
@@ -1663,7 +1690,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic)
     pVertices[3].normal.x = n.x;
     pVertices[3].normal.y = n.y;
     pVertices[3].normal.z = 0.0f;
-    pVertices[3].texCoord = {1, 0};
+    pVertices[3].texCoord = { uvs.y, 0};
     pVertices[3].color = {1, 1, 1, 1};
 
     pntcCount += 4;
@@ -1762,4 +1789,19 @@ void ws_play_sound(byte *data, int len)
 {
     current_sound_data = data;
     current_sound_len = len;
+}
+
+void Mouse(int16_t x)
+{
+    if (x == MDelta)
+    {
+        _CX = curMouse[0] - lastMouse[0];
+        _DX = curMouse[1] - lastMouse[1];
+        lastMouse[0] = curMouse[0];
+        lastMouse[1] = curMouse[1];
+    }
+    else if (x == MButtons)
+    {
+        _BX = mouseButtons;
+    }
 }

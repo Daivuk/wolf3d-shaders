@@ -58,11 +58,11 @@ byte		update[UPDATESIZE];
 //
 _boolean		mouseenabled,joystickenabled,joypadenabled,joystickprogressive;
 int16_t			joystickport;
-int16_t			dirscan[4] = {sc_UpArrow,sc_RightArrow,sc_DownArrow,sc_LeftArrow};
+int16_t			dirscan[6] = {sc_W,sc_RightArrow,sc_S,sc_LeftArrow,sc_A,sc_D};
 int16_t			buttonscan[NUMBUTTONS] =
-			{sc_Control,sc_Alt,sc_RShift,sc_Space,sc_1,sc_2,sc_3,sc_4};
-int16_t			buttonmouse[4]={bt_attack,bt_strafe,bt_use,bt_nobutton};
-int16_t			buttonjoy[4]={bt_attack,bt_strafe,bt_use,bt_run};
+			{ sc_Control,sc_Alt,sc_LShift,sc_E,sc_1,sc_2,sc_3,sc_4};
+int16_t			buttonmouse[4]={bt_attack,bt_use,bt_use,bt_nobutton};
+int16_t			buttonjoy[4]={bt_attack,bt_use,bt_use,bt_run};
 
 int16_t			viewsize;
 
@@ -75,7 +75,7 @@ memptr		demobuffer;
 //
 // curent user input
 //
-int16_t			controlx,controly;		// range from -100 to 100 per tic
+int16_t			controlx,controly,strafecontrol;		// range from -100 to 100 per tic
 _boolean		buttonstate[NUMBUTTONS];
 
 
@@ -279,7 +279,6 @@ void PollKeyboardButtons (void)
 
 void PollMouseButtons (void)
 {
-    return;
 	int16_t	buttons;
 
 	buttons = IN_MouseButtons ();
@@ -349,10 +348,16 @@ void PollKeyboardMove (void)
 			controly -= RUNMOVE*tics;
 		if (Keyboard[dirscan[di_south]])
 			controly += RUNMOVE*tics;
-		if (Keyboard[dirscan[di_west]])
-			controlx -= RUNMOVE*tics;
-		if (Keyboard[dirscan[di_east]])
-			controlx += RUNMOVE*tics;
+		//if (Keyboard[dirscan[di_west]])
+		//	controlx -= RUNMOVE*tics;
+		//if (Keyboard[dirscan[di_east]])
+		//	controlx += RUNMOVE*tics;
+		if (Keyboard[dirscan[4]])
+			strafecontrol -= RUNMOVE*tics;
+		if (Keyboard[dirscan[5]])
+            strafecontrol += RUNMOVE*tics;
+
+        //strafecontrol
 	}
 	else
 	{
@@ -360,10 +365,14 @@ void PollKeyboardMove (void)
 			controly -= BASEMOVE*tics;
 		if (Keyboard[dirscan[di_south]])
 			controly += BASEMOVE*tics;
-		if (Keyboard[dirscan[di_west]])
-			controlx -= BASEMOVE*tics;
-		if (Keyboard[dirscan[di_east]])
-			controlx += BASEMOVE*tics;
+		//if (Keyboard[dirscan[di_west]])
+		//	controlx -= BASEMOVE*tics;
+		//if (Keyboard[dirscan[di_east]])
+		//	controlx += BASEMOVE*tics;
+        if (Keyboard[dirscan[4]])
+            strafecontrol -= BASEMOVE * tics;
+        if (Keyboard[dirscan[5]])
+            strafecontrol += BASEMOVE * tics;
 	}
 }
 
@@ -380,12 +389,12 @@ void PollMouseMove (void)
 {
 	int16_t	mousexmove=0,mouseymove=0;
 
-	// Mouse(MDelta);
-	// mousexmove = _CX;
-	// mouseymove = _DX;
+	 Mouse(MDelta);
+	 mousexmove = _CX;
+	 mouseymove = _DX;
 
-	controlx += mousexmove*10/(13-mouseadjustment);
-	controly += mouseymove*20/(13-mouseadjustment);
+	controlx += mousexmove * mouseadjustment;
+	//controly += mouseymove*40/(13-mouseadjustment);
 }
 
 
@@ -489,32 +498,33 @@ void PollControls (void)
 
 	controlx = 0;
 	controly = 0;
+    strafecontrol = 0;
 	memcpy (buttonheld,buttonstate,sizeof(buttonstate));
 	memset (buttonstate,0,sizeof(buttonstate));
 
-	if (demoplayback)
-	{
-	//
-	// read commands from demo buffer
-	//
-		buttonbits = *demoptr++;
-		for (i=0;i<NUMBUTTONS;i++)
-		{
-			buttonstate[i] = (_boolean)(buttonbits&1);
-			buttonbits >>= 1;
-		}
+	//if (demoplayback)
+	//{
+	////
+	//// read commands from demo buffer
+	////
+	//	buttonbits = *demoptr++;
+	//	for (i=0;i<NUMBUTTONS;i++)
+	//	{
+	//		buttonstate[i] = (_boolean)(buttonbits&1);
+	//		buttonbits >>= 1;
+	//	}
 
-		controlx = *demoptr++;
-		controly = *demoptr++;
+	//	controlx = *demoptr++;
+	//	controly = *demoptr++;
 
-		if (demoptr == lastdemoptr)
-			playstate = ex_completed;		// demo is done
+	//	if (demoptr == lastdemoptr)
+	//		playstate = ex_completed;		// demo is done
 
-		controlx *= (int16_t)tics;
-		controly *= (int16_t)tics;
+	//	controlx *= (int16_t)tics;
+	//	controly *= (int16_t)tics;
 
-		return;
-	}
+	//	return;
+	//}
 
 
 //
@@ -544,43 +554,48 @@ void PollControls (void)
 //
 	max = 100*tics;
 	min = -max;
-	if (controlx > max)
-		controlx = max;
-	else if (controlx < min)
-		controlx = min;
+	//if (controlx > max) // We want the mouse movement to be 1:1 and not clamp the values
+	//	controlx = max;
+	//else if (controlx < min)
+	//	controlx = min;
 
 	if (controly > max)
 		controly = max;
 	else if (controly < min)
 		controly = min;
 
-	if (demorecord)
-	{
-	//
-	// save info out to demo buffer
-	//
-		controlx /= (int16_t)tics;
-		controly /= (int16_t)tics;
+	if (strafecontrol > max)
+        strafecontrol = max;
+	else if (strafecontrol < min)
+        strafecontrol = min;
 
-		buttonbits = 0;
+	//if (demorecord)
+	//{
+	////
+	//// save info out to demo buffer
+	////
+	//	//controlx /= (int16_t)tics; // Mouse movement not controlled by tics
+	//	controly /= (int16_t)tics;
 
-		for (i=NUMBUTTONS-1;i>=0;i--)
-		{
-			buttonbits <<= 1;
-			if (buttonstate[i])
-				buttonbits |= 1;
-		}
+	//	buttonbits = 0;
 
-		*demoptr++ = buttonbits;
-		*demoptr++ = controlx;
-		*demoptr++ = controly;
+	//	for (i=NUMBUTTONS-1;i>=0;i--)
+	//	{
+	//		buttonbits <<= 1;
+	//		if (buttonstate[i])
+	//			buttonbits |= 1;
+	//	}
 
-		if (demoptr >= lastdemoptr)
-			Quit ((char*)"Demo buffer overflowed!");
+	//	*demoptr++ = buttonbits;
+	//	*demoptr++ = controlx;
+	//	*demoptr++ = controly;
 
-		controlx *= (int16_t)tics;
-		controly *= (int16_t)tics;
-	}
+	//	if (demoptr >= lastdemoptr)
+	//		Quit ((char*)"Demo buffer overflowed!");
+
+	//	controlx *= (int16_t)tics;
+	//	controly *= (int16_t)tics;
+	//}
 }
 
 
@@ -764,6 +779,7 @@ void CheckKeys (void)
 		IN_ClearKeysDown ();
 		SD_MusicOn();
 		Paused = _false;
+        SDL_SetRelativeMouseMode(SDL_TRUE);
 		if (MousePresent)
 			Mouse(MDelta);	// Clear accumulated mouse movement
 		return;
@@ -799,6 +815,7 @@ void CheckKeys (void)
 
 	if ( (scan >= sc_F1 && scan <= sc_F9) || scan == sc_Escape)
 	{
+        SDL_SetRelativeMouseMode(SDL_FALSE);
 		StopMusic ();
 		ClearMemory ();
 		VW_FadeOut ();
@@ -819,6 +836,7 @@ void CheckKeys (void)
 		if (MousePresent)
 			Mouse(MDelta);	// Clear accumulated mouse movement
 		PM_CheckMainMem ();
+        SDL_SetRelativeMouseMode(SDL_TRUE);
 		return;
 	}
 
@@ -1392,6 +1410,8 @@ void PlayLoop (void)
 	if (demoplayback)
 		IN_StartAck ();
 
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+
 	do
 	{
 		if (virtualreality)
@@ -1498,6 +1518,8 @@ void PlayLoop (void)
         VW_UpdateScreen();
 
 	}while (!playstate && !startgame);
+
+    SDL_SetRelativeMouseMode(SDL_FALSE);
 
 	if (playstate != ex_died)
 		FinishPaletteShifts ();

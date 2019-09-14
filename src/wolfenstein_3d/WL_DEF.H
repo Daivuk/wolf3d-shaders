@@ -893,7 +893,7 @@ extern	int16_t			extravbls;
 //
 extern	_boolean		mouseenabled,joystickenabled,joypadenabled,joystickprogressive;
 extern	int16_t			joystickport;
-extern	int16_t			dirscan[4];
+extern	int16_t			dirscan[6];
 extern	int16_t			buttonscan[NUMBUTTONS];
 extern	int16_t			buttonmouse[4];
 extern	int16_t			buttonjoy[4];
@@ -905,7 +905,7 @@ extern	int16_t			viewsize;
 //
 // curent user input
 //
-extern	int16_t			controlx,controly;		// range from -100 to 100
+extern	int16_t			controlx,controly,strafecontrol;		// range from -100 to 100
 extern	_boolean		buttonstate[NUMBUTTONS];
 
 extern	_boolean		demorecord,demoplayback;

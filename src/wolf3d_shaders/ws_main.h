@@ -25,11 +25,12 @@ Interrupt getvect(int16_t r_num);
 void setvect(int16_t r_num, Interrupt interrupt);
 void ws_draw_screen_from_raw(byte* data, int16_t chunk);
 void ws_play_sound(byte* data, int len);
-void ws_draw_wall(float x, float y, int dir, int texture);
+void ws_draw_wall(float x, float y, int dir, int texture, bool isDoor=false);
 void ws_finish_draw_3d();
 void ws_update_camera();
 void ws_draw_ceiling(int color);
 void ws_draw_floor(int color);
 void ws_draw_sprite(int x, int y, int texture);
+void Mouse(int16_t x);
 
 #endif
