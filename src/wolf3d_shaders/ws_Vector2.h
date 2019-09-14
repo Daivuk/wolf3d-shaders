@@ -1,3 +1,5 @@
+// This file was taken from the open source engine onut: https://github.com/Daivuk/onut
+
 #ifndef VECTOR2_H_INCLUDED
 #define VECTOR2_H_INCLUDED
 

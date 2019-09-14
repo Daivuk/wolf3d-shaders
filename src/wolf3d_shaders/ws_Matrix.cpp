@@ -1,3 +1,6 @@
+// This file was taken from the open source engine onut: https://github.com/Daivuk/onut
+// CreateLookAt has been slightly modified to be Left Handed.
+
 #include <ws_Matrix.h>
 #include <ws_Vector2.h>
 #include <ws_Vector3.h>
