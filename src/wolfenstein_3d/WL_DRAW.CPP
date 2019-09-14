@@ -1370,8 +1370,11 @@ void Pickups(void)
  		// if (!*statptr->visspot)
  		// 	continue;						// not visable
 
- 		if (TransformTile (statptr->tilex,statptr->tiley
- 			,&visptr->viewx,&visptr->viewheight) && statptr->flags & FL_BONUS)
+ 		//if (TransformTile (statptr->tilex,statptr->tiley
+ 		//	,&visptr->viewx,&visptr->viewheight) && statptr->flags & FL_BONUS)
+        if (player->tilex == statptr->tilex && 
+            player->tiley == statptr->tiley && 
+            statptr->flags & FL_BONUS)
  		{
  			GetBonus (statptr);
  			continue;

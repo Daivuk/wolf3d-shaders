@@ -20,6 +20,8 @@
 #include <vector>
 #include <map>
 
+#include <imgui.h>
+
 // That's for 2D
 static const int MAX_VERTICES = 100000;
 
@@ -46,6 +48,11 @@ int lastMouse[2] = { 0 };
 int curMouse[2] = { 0 };
 bool mouseInitialized = false;
 int16_t mouseButtons = 0;
+bool ambientOcclusionEnabled = true;
+bool debugView = false;
+bool wasMouseRel = false;
+float AC = 0.65f;
+float AC_SIZE = 0.25f;
 
 #define KeyInt 9 // The keyboard ISR number
 
@@ -192,6 +199,7 @@ struct Resources
     GLuint checkerTexture;     /* Test texture to replace non-existing or corrupted data */
     GLuint whiteTexture;       /* ... */
     RenderTarget mainRT;       /* Main scree render target (Final image) */
+    GLuint imguiFontTexture;
 } resources;
 
 struct Pic
@@ -312,8 +320,9 @@ GLuint ws_create_texture(uint8_t *data, int w, int h)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, handle);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -632,6 +641,34 @@ int main(int argc, char **argv)
     resources.checkerTexture = ws_create_texture((uint8_t *)checkerBytes, 2, 2);
     resources.whiteTexture = ws_create_texture((uint8_t*)&checkerBytes[1], 1, 1);
 
+    // imgui
+    ImGui::CreateContext();
+    auto& io = ImGui::GetIO();
+    uint8_t *pPixelData;
+    int w, h;
+    io.Fonts->GetTexDataAsRGBA32(&pPixelData, &w, &h);
+    resources.imguiFontTexture = ws_create_texture(pPixelData, w, h);
+    io.Fonts->SetTexID(&resources.imguiFontTexture);
+    io.KeyMap[ImGuiKey_Tab] = (int)SDL_SCANCODE_TAB; // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array that we will update during the application lifetime.
+    io.KeyMap[ImGuiKey_LeftArrow] = (int)SDL_SCANCODE_LEFT;
+    io.KeyMap[ImGuiKey_RightArrow] = (int)SDL_SCANCODE_RIGHT;
+    io.KeyMap[ImGuiKey_UpArrow] = (int)SDL_SCANCODE_UP;
+    io.KeyMap[ImGuiKey_DownArrow] = (int)SDL_SCANCODE_DOWN;
+    io.KeyMap[ImGuiKey_PageUp] = (int)SDL_SCANCODE_PAGEUP;
+    io.KeyMap[ImGuiKey_PageDown] = (int)SDL_SCANCODE_PAGEDOWN;
+    io.KeyMap[ImGuiKey_Home] = (int)SDL_SCANCODE_HOME;
+    io.KeyMap[ImGuiKey_End] = (int)SDL_SCANCODE_END;
+    io.KeyMap[ImGuiKey_Delete] = (int)SDL_SCANCODE_DELETE;
+    io.KeyMap[ImGuiKey_Backspace] = (int)SDL_SCANCODE_BACKSPACE;
+    io.KeyMap[ImGuiKey_Enter] = (int)SDL_SCANCODE_RETURN;
+    io.KeyMap[ImGuiKey_Escape] = (int)SDL_SCANCODE_ESCAPE;
+    io.KeyMap[ImGuiKey_A] = (int)SDL_SCANCODE_A;
+    io.KeyMap[ImGuiKey_C] = (int)SDL_SCANCODE_C;
+    io.KeyMap[ImGuiKey_V] = (int)SDL_SCANCODE_V;
+    io.KeyMap[ImGuiKey_X] = (int)SDL_SCANCODE_X;
+    io.KeyMap[ImGuiKey_Y] = (int)SDL_SCANCODE_Y;
+    io.KeyMap[ImGuiKey_Z] = (int)SDL_SCANCODE_Z;
+
     ws_update_sdl();
     VW_UpdateScreen();
 
@@ -665,60 +702,139 @@ void ws_update_sdl()
             exit(0);
             break;
         case SDL_KEYDOWN:
-            if (showDebug)
+            if (debugView)
             {
+                auto& io = ImGui::GetIO();
+                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) ? true : false;
+                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) ? true : false;
+                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) ? true : false;
+                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) ? true : false;
+                io.KeysDown[event.key.keysym.scancode] = true;
+
                 if (event.key.keysym.scancode == SDL_SCANCODE_F1)
-                    showDebug = false;
-                else if (event.key.keysym.scancode == SDL_SCANCODE_DOWN)
-                    debugOffset += 120;
-                else if (event.key.keysym.scancode == SDL_SCANCODE_UP)
-                    debugOffset -= 120;
-                VW_UpdateScreen();
-            }
-            else if (event.key.keysym.scancode == SDL_SCANCODE_F1)
-            {
-                showDebug = true;
-                VW_UpdateScreen();
+                {
+                    if (wasMouseRel)
+                    {
+                        SDL_SetRelativeMouseMode(SDL_TRUE);
+                    }
+                    debugView = false;
+                }
             }
             else
             {
-                scancode = getDosScanCode(event.key.keysym.scancode);
-                if (KeyInt_in)
-                    KeyInt_in();
+                if (showDebug)
+                {
+                    if (event.key.keysym.scancode == SDL_SCANCODE_F1)
+                        showDebug = false;
+                    else if (event.key.keysym.scancode == SDL_SCANCODE_DOWN)
+                        debugOffset += 120;
+                    else if (event.key.keysym.scancode == SDL_SCANCODE_UP)
+                        debugOffset -= 120;
+                    VW_UpdateScreen();
+                }
+                else if (event.key.keysym.scancode == SDL_SCANCODE_F1)
+                {
+                    //showDebug = true;
+                    wasMouseRel = SDL_GetRelativeMouseMode() == SDL_TRUE;
+                    SDL_SetRelativeMouseMode(SDL_FALSE);
+                    debugView = true;
+                    VW_UpdateScreen();
+                }
+                else
+                {
+                    scancode = getDosScanCode(event.key.keysym.scancode);
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
             }
             break;
         case SDL_KEYUP:
-            if (!showDebug)
+            if (debugView)
             {
-                scancode = getDosScanCode(event.key.keysym.scancode) | 0x80;
-                if (KeyInt_in)
-                    KeyInt_in();
+                auto& io = ImGui::GetIO();
+                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) ? true : false;
+                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) ? true : false;
+                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) ? true : false;
+                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) ? true : false;
+                io.KeysDown[event.key.keysym.scancode] = false;
+            }
+            else
+            {
+                if (!showDebug)
+                {
+                    scancode = getDosScanCode(event.key.keysym.scancode) | 0x80;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
-            if (event.button.button == SDL_BUTTON_LEFT)
-                mouseButtons |= 1;
-            else if (event.button.button == SDL_BUTTON_RIGHT)
-                mouseButtons |= 2;
-            else if (event.button.button == SDL_BUTTON_MIDDLE)
-                mouseButtons |= 4;
+            if (debugView)
+            {
+                auto& io = ImGui::GetIO();
+                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) ? true : false;
+                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) ? true : false;
+                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) ? true : false;
+                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) ? true : false;
+                if (event.button.button == SDL_BUTTON_LEFT)
+                    io.MouseDown[0] = true;
+                else if (event.button.button == SDL_BUTTON_RIGHT)
+                    io.MouseDown[1] = true;
+                else if (event.button.button == SDL_BUTTON_MIDDLE)
+                    io.MouseDown[2] = true;
+            }
+            else
+            {
+                if (event.button.button == SDL_BUTTON_LEFT)
+                    mouseButtons |= 1;
+                else if (event.button.button == SDL_BUTTON_RIGHT)
+                    mouseButtons |= 2;
+                else if (event.button.button == SDL_BUTTON_MIDDLE)
+                    mouseButtons |= 4;
+            }
             break;
         case SDL_MOUSEBUTTONUP:
-            if (event.button.button == SDL_BUTTON_LEFT)
-                mouseButtons &= 0xFFFE;
-            else if (event.button.button == SDL_BUTTON_RIGHT)
-                mouseButtons &= 0xFFFD;
-            else if (event.button.button == SDL_BUTTON_MIDDLE)
-                mouseButtons &= 0xFFFB;
+            if (debugView)
+            {
+                auto& io = ImGui::GetIO();
+                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) ? true : false;
+                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) ? true : false;
+                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) ? true : false;
+                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) ? true : false;
+                if (event.button.button == SDL_BUTTON_LEFT)
+                    io.MouseDown[0] = false;
+                else if (event.button.button == SDL_BUTTON_RIGHT)
+                    io.MouseDown[1] = false;
+                else if (event.button.button == SDL_BUTTON_MIDDLE)
+                    io.MouseDown[2] = false;
+            }
+            else
+            {
+                if (event.button.button == SDL_BUTTON_LEFT)
+                    mouseButtons &= 0xFFFE;
+                else if (event.button.button == SDL_BUTTON_RIGHT)
+                    mouseButtons &= 0xFFFD;
+                else if (event.button.button == SDL_BUTTON_MIDDLE)
+                    mouseButtons &= 0xFFFB;
+            }
             break;
         case SDL_MOUSEMOTION:
-            curMouse[0] += (int)event.motion.xrel;
-            curMouse[1] += (int)event.motion.yrel;
-            if (!mouseInitialized)
+            if (debugView)
             {
-                mouseInitialized = true;
-                lastMouse[0] = curMouse[0];
-                lastMouse[1] = curMouse[1];
+                auto& io = ImGui::GetIO();
+                io.MousePos.x = (float)event.motion.x;
+                io.MousePos.y = (float)event.motion.y;
+            }
+            else
+            {
+                curMouse[0] += (int)event.motion.xrel;
+                curMouse[1] += (int)event.motion.yrel;
+                if (!mouseInitialized)
+                {
+                    mouseInitialized = true;
+                    lastMouse[0] = curMouse[0];
+                    lastMouse[1] = curMouse[1];
+                }
             }
             break;
         }
@@ -776,125 +892,101 @@ void VW_UpdateScreen()
     }
 
     prepareForPTC(GL_QUADS);
-    if (showDebug)
+    ptcCount += drawRect(resources.pPTCVertices + ptcCount, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, { 1, 1, 1, fade_val });
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, resources.mainRT.handle);
+    drawPTC(resources.pPTCVertices, ptcCount, GL_QUADS);
+
+    if (debugView)
     {
-        float y = -debugOffset;
-        prepareForPC(GL_QUADS);
-        for (int i = 0; i < 256; ++i)
-        {
-            pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, palette[i]);
-        }
-        y += 5;
-        flush();
-        // extern byte	 redshifts[6][768];
-        // extern byte	 whiteshifts[6][768];
-        // for (int j = 0; j < 6; ++j)
-        // {
-        //     for (int i = 0; i < 256; ++i)
-        //     {
-        //         pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, 
-        //         {
-        //             (float)whiteshifts[j][i * 3 + 0] / 255.0f,
-        //             (float)whiteshifts[j][i * 3 + 1] / 255.0f,
-        //             (float)whiteshifts[j][i * 3 + 2] / 255.0f,
-        //             255.0f
-        //         });
-        //     }
-        //     y += 5;
-        //     flush();
-        // }
-        // for (int j = 0; j < 6; ++j)
-        // {
-        //     for (int i = 0; i < 256; ++i)
-        //     {
-        //         pcCount += drawRect(resources.pPCVertices + pcCount, (float)i * 4, y, 4, 4, 
-        //         {
-        //             (float)redshifts[j][i * 3 + 0] / 255.0f,
-        //             (float)redshifts[j][i * 3 + 1] / 255.0f,
-        //             (float)redshifts[j][i * 3 + 2] / 255.0f,
-        //             255.0f
-        //         });
-        //     }
-        //     y += 5;
-        //     flush();
-        // }
-        prepareForPTC(GL_QUADS);
+        auto& io = ImGui::GetIO();
+        io.DeltaTime = 1.0f / 60.0f; //TODO:
+        io.DisplaySize = { (float)screen_w, (float)screen_h };
+        ImGui::NewFrame();
+
+        ImGui::Begin("Textures");
         for (auto &kv : fontTextures)
         {
-            glBindTexture(GL_TEXTURE_2D, kv.second.tex);
-            ptcCount += drawRect(resources.pPTCVertices + ptcCount, 0, y, (float)screen_w, 10, 0, 0, 1, 1, {1, 1, 1, 1});
-            flush();
-            y += 12.0f;
+            ImGui::Image(&kv.second.tex, { 128.0f, 10.0f }, { 0.0f, 0.0f }, {0.15f, 1.0f});
         }
-        float maxy = 0;
-        float x = 0;
         for (auto &kv : screenRaws)
         {
-            if (x + 320 + 2 > (float)screen_w)
-            {
-                x = 0.0f;
-                y += maxy + 2;
-                maxy = 0.0f;
-            }
-            glBindTexture(GL_TEXTURE_2D, kv.second);
-            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)320, (float)200, 0, 0, 1, 1, {1, 1, 1, 1});
-            flush();
-            drawDebugString((char *)std::to_string(kv.first).c_str(), x, y);
-            x += (float)320 + 2;
-            maxy = std::max(maxy, (float)200);
+            ImGui::Image(&kv.second, { 320.0f, 200.0f });
         }
         for (auto &kv : pics)
         {
-            if (x + (float)kv.second.w + 2 > (float)screen_w)
-            {
-                x = 0.0f;
-                y += maxy + 2;
-                maxy = 0.0f;
-            }
-            glBindTexture(GL_TEXTURE_2D, kv.second.tex);
-            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, {1, 1, 1, 1});
-            flush();
-            drawDebugString((char *)std::to_string(kv.first).c_str(), x, y);
-            x += (float)kv.second.w + 2;
-            maxy = std::max(maxy, (float)kv.second.h);
+            ImGui::Image(&kv.second.tex, { (float)kv.second.w, (float)kv.second.h });
         }
         for (auto &kv : sprites)
         {
-            if (x + (float)kv.second.w + 2 > (float)screen_w)
-            {
-                x = 0.0f;
-                y += maxy + 2;
-                maxy = 0.0f;
-            }
-            glBindTexture(GL_TEXTURE_2D, kv.second.tex);
-            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, {1, 1, 1, 1});
-            flush();
-            drawDebugString((char *)std::to_string(kv.first).c_str(), x, y);
-            x += (float)kv.second.w + 2;
-            maxy = std::max(maxy, (float)kv.second.h);
+            ImGui::Image(&kv.second.tex, { (float)kv.second.w, (float)kv.second.h });
         }
         for (auto &kv : walls)
         {
-            if (x + (float)kv.second.w + 2 > (float)screen_w)
-            {
-                x = 0.0f;
-                y += maxy + 2;
-                maxy = 0.0f;
-            }
-            glBindTexture(GL_TEXTURE_2D, kv.second.tex);
-            ptcCount += drawRect(resources.pPTCVertices + ptcCount, x, y, (float)kv.second.w, (float)kv.second.h, 0, 0, 1, 1, {1, 1, 1, 1});
-            flush();
-            drawDebugString((char *)std::to_string(kv.first).c_str(), x, y);
-            x += (float)kv.second.w + 2;
-            maxy = std::max(maxy, (float)kv.second.h);
+            ImGui::Image(&kv.second.tex, { (float)kv.second.w, (float)kv.second.h });
         }
-    }
-    else
-    {
-        ptcCount += drawRect(resources.pPTCVertices + ptcCount, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, {1, 1, 1, fade_val});
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, resources.mainRT.handle);
-        drawPTC(resources.pPTCVertices, ptcCount, GL_QUADS);
+        ImGui::End();
+
+        ImGui::Begin("Post Process");
+        ImGui::SliderFloat("Ambient Occlusion Amount", &AC, 0.0f, 1.0f);
+        ImGui::SliderFloat("Ambient Occlusion Size", &AC_SIZE, 0.0f, 0.5f);
+        ImGui::End();
+
+        ImGui::Render();
+        auto pDrawData = ImGui::GetDrawData();
+        auto cmdListCount = pDrawData->CmdListsCount;
+        glEnable(GL_SCISSOR_TEST);
+        for (int i = 0; i < cmdListCount; ++i)
+        {
+            auto pCmdList = pDrawData->CmdLists[i];
+            auto pIndexBuffer = pCmdList->IdxBuffer.Data;
+            auto pVertexBuffer = pCmdList->VtxBuffer.Data;
+
+            auto vertCount = pCmdList->VtxBuffer.size();
+            auto indexCount = pCmdList->IdxBuffer.size();
+            int drawOffset = 0;
+
+            // Loop sub meshes
+            auto cmdBufferCount = pCmdList->CmdBuffer.size();
+            for (int k = 0; k < cmdBufferCount; ++k)
+            {
+                auto pCmd = pCmdList->CmdBuffer.Data + k;
+
+                auto scissorW = (int)(pCmd->ClipRect.z - pCmd->ClipRect.x);
+                auto scissorH = (int)(pCmd->ClipRect.w - pCmd->ClipRect.y);
+                glScissor((int)pCmd->ClipRect.x, screen_h - (int)pCmd->ClipRect.y - scissorH, scissorW, scissorH);
+
+                if (pCmd->UserCallback)
+                {
+                    pCmd->UserCallback(pCmdList, pCmd);
+                }
+                else
+                {
+                    GLuint texture = *(GLuint*)pCmd->TextureId;
+                    prepareForPTC(GL_TRIANGLES);
+                    glBindTexture(GL_TEXTURE_2D, texture);
+                    auto pVertices = resources.pPTCVertices;
+                    for (int j = drawOffset; j < drawOffset + pCmd->ElemCount; ++j)
+                    {
+                        auto pVert = pVertexBuffer + pIndexBuffer[j];
+                        pVertices->position.x = pVert->pos.x;
+                        pVertices->position.y = pVert->pos.y;
+                        pVertices->texCoord.u = pVert->uv.x;
+                        pVertices->texCoord.v = pVert->uv.y;
+                        pVertices->color.r = (float)((pVert->col) & 0xff) / 255.0f;
+                        pVertices->color.g = (float)((pVert->col >> 8) & 0xff) / 255.0f;
+                        pVertices->color.b = (float)((pVert->col >> 16) & 0xff) / 255.0f;
+                        pVertices->color.a = (float)((pVert->col >> 24) & 0xff) / 255.0f;
+                        ++pVertices;
+                    }
+                    ptcCount = pCmd->ElemCount;
+                    flush();
+                }
+                drawOffset += pCmd->ElemCount;
+            }
+        }
+        glDisable(GL_SCISSOR_TEST);
+        glScissor(0, 0, screen_w, screen_h);
     }
 
     // Swap buffers
@@ -1623,7 +1715,7 @@ void ws_draw_floor(int color)
 void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor)
 {
     GLuint tex = resources.checkerTexture;
-    //if (wallpic != 0)
+    if (wallpic != -1)
     {
         auto it = walls.find(wallpic);
         Pic pic;
@@ -1653,49 +1745,172 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor)
         {0.0f, 1.0f},
         {0.0f, 1.0f} };
 
-    auto pVertices = resources.pPNTCVertices + pntcCount;
-
     auto &ofs = DIROFS[dir];
     auto &n = DIRNS[dir];
     auto &uvs = DIRUVS[isDoor ? dir : 2];
+    auto pVertices = resources.pPNTCVertices + pntcCount;
 
-    pVertices[0].position.x = x;
-    pVertices[0].position.y = y;
-    pVertices[0].position.z = 1.0f;
-    pVertices[0].normal.x = n.x;
-    pVertices[0].normal.y = n.y;
-    pVertices[0].normal.z = 0.0f;
-    pVertices[0].texCoord = { uvs.x, 0};
-    pVertices[0].color = {1, 1, 1, 1};
+    if (ambientOcclusionEnabled)
+    {
+        // top
+        pVertices[0].position.x = x;
+        pVertices[0].position.y = y;
+        pVertices[0].position.z = 1.0f;
+        pVertices[0].normal.x = n.x;
+        pVertices[0].normal.y = n.y;
+        pVertices[0].normal.z = 0.0f;
+        pVertices[0].texCoord = { uvs.x, 0 };
+        pVertices[0].color = { AC, AC, AC, 1 };
 
-    pVertices[1].position.x = x;
-    pVertices[1].position.y = y;
-    pVertices[1].position.z = 0.0f;
-    pVertices[1].normal.x = n.x;
-    pVertices[1].normal.y = n.y;
-    pVertices[1].normal.z = 0.0f;
-    pVertices[1].texCoord = { uvs.x, 1};
-    pVertices[1].color = {1, 1, 1, 1};
+        pVertices[1].position.x = x;
+        pVertices[1].position.y = y;
+        pVertices[1].position.z = 1.0f - AC_SIZE;
+        pVertices[1].normal.x = n.x;
+        pVertices[1].normal.y = n.y;
+        pVertices[1].normal.z = 0.0f;
+        pVertices[1].texCoord = { uvs.x, AC_SIZE };
+        pVertices[1].color = { 1, 1, 1, 1 };
 
-    pVertices[2].position.x = x + ofs.x;
-    pVertices[2].position.y = y + ofs.y;
-    pVertices[2].position.z = 0.0f;
-    pVertices[2].normal.x = n.x;
-    pVertices[2].normal.y = n.y;
-    pVertices[2].normal.z = 0.0f;
-    pVertices[2].texCoord = { uvs.y, 1};
-    pVertices[2].color = {1, 1, 1, 1};
+        pVertices[2].position.x = x + ofs.x;
+        pVertices[2].position.y = y + ofs.y;
+        pVertices[2].position.z = 1.0f - AC_SIZE;
+        pVertices[2].normal.x = n.x;
+        pVertices[2].normal.y = n.y;
+        pVertices[2].normal.z = 0.0f;
+        pVertices[2].texCoord = { uvs.y, AC_SIZE };
+        pVertices[2].color = { 1, 1, 1, 1 };
 
-    pVertices[3].position.x = x + ofs.x;
-    pVertices[3].position.y = y + ofs.y;
-    pVertices[3].position.z = 1.0f;
-    pVertices[3].normal.x = n.x;
-    pVertices[3].normal.y = n.y;
-    pVertices[3].normal.z = 0.0f;
-    pVertices[3].texCoord = { uvs.y, 0};
-    pVertices[3].color = {1, 1, 1, 1};
+        pVertices[3].position.x = x + ofs.x;
+        pVertices[3].position.y = y + ofs.y;
+        pVertices[3].position.z = 1.0f;
+        pVertices[3].normal.x = n.x;
+        pVertices[3].normal.y = n.y;
+        pVertices[3].normal.z = 0.0f;
+        pVertices[3].texCoord = { uvs.y, 0 };
+        pVertices[3].color = { AC, AC, AC, 1 };
 
-    pntcCount += 4;
+        pntcCount += 4;
+        pVertices = resources.pPNTCVertices + pntcCount;
+
+        // middle
+        pVertices[0].position.x = x;
+        pVertices[0].position.y = y;
+        pVertices[0].position.z = 1.0f - AC_SIZE;
+        pVertices[0].normal.x = n.x;
+        pVertices[0].normal.y = n.y;
+        pVertices[0].normal.z = 0.0f;
+        pVertices[0].texCoord = { uvs.x, AC_SIZE };
+        pVertices[0].color = { 1, 1, 1, 1 };
+
+        pVertices[1].position.x = x;
+        pVertices[1].position.y = y;
+        pVertices[1].position.z = AC_SIZE;
+        pVertices[1].normal.x = n.x;
+        pVertices[1].normal.y = n.y;
+        pVertices[1].normal.z = 0.0f;
+        pVertices[1].texCoord = { uvs.x, 1.0f - AC_SIZE };
+        pVertices[1].color = { 1, 1, 1, 1 };
+
+        pVertices[2].position.x = x + ofs.x;
+        pVertices[2].position.y = y + ofs.y;
+        pVertices[2].position.z = AC_SIZE;
+        pVertices[2].normal.x = n.x;
+        pVertices[2].normal.y = n.y;
+        pVertices[2].normal.z = 0.0f;
+        pVertices[2].texCoord = { uvs.y, 1.0f - AC_SIZE };
+        pVertices[2].color = { 1, 1, 1, 1 };
+
+        pVertices[3].position.x = x + ofs.x;
+        pVertices[3].position.y = y + ofs.y;
+        pVertices[3].position.z = 1.0f - AC_SIZE;
+        pVertices[3].normal.x = n.x;
+        pVertices[3].normal.y = n.y;
+        pVertices[3].normal.z = 0.0f;
+        pVertices[3].texCoord = { uvs.y, AC_SIZE };
+        pVertices[3].color = { 1, 1, 1, 1 };
+
+        pntcCount += 4;
+        pVertices = resources.pPNTCVertices + pntcCount;
+
+        // bottom
+        pVertices[0].position.x = x;
+        pVertices[0].position.y = y;
+        pVertices[0].position.z = AC_SIZE;
+        pVertices[0].normal.x = n.x;
+        pVertices[0].normal.y = n.y;
+        pVertices[0].normal.z = 0.0f;
+        pVertices[0].texCoord = { uvs.x, 1.0f - AC_SIZE };
+        pVertices[0].color = { 1, 1, 1, 1 };
+
+        pVertices[1].position.x = x;
+        pVertices[1].position.y = y;
+        pVertices[1].position.z = 0.0f;
+        pVertices[1].normal.x = n.x;
+        pVertices[1].normal.y = n.y;
+        pVertices[1].normal.z = 0.0f;
+        pVertices[1].texCoord = { uvs.x, 1 };
+        pVertices[1].color = { AC, AC, AC, 1 };
+
+        pVertices[2].position.x = x + ofs.x;
+        pVertices[2].position.y = y + ofs.y;
+        pVertices[2].position.z = 0.0f;
+        pVertices[2].normal.x = n.x;
+        pVertices[2].normal.y = n.y;
+        pVertices[2].normal.z = 0.0f;
+        pVertices[2].texCoord = { uvs.y, 1 };
+        pVertices[2].color = { AC, AC, AC, 1 };
+
+        pVertices[3].position.x = x + ofs.x;
+        pVertices[3].position.y = y + ofs.y;
+        pVertices[3].position.z = AC_SIZE;
+        pVertices[3].normal.x = n.x;
+        pVertices[3].normal.y = n.y;
+        pVertices[3].normal.z = 0.0f;
+        pVertices[3].texCoord = { uvs.y, 1.0f - AC_SIZE };
+        pVertices[3].color = { 1, 1, 1, 1 };
+
+        pntcCount += 4;
+    }
+    else
+    {
+        pVertices[0].position.x = x;
+        pVertices[0].position.y = y;
+        pVertices[0].position.z = 1.0f;
+        pVertices[0].normal.x = n.x;
+        pVertices[0].normal.y = n.y;
+        pVertices[0].normal.z = 0.0f;
+        pVertices[0].texCoord = { uvs.x, 0};
+        pVertices[0].color = {1, 1, 1, 1};
+
+        pVertices[1].position.x = x;
+        pVertices[1].position.y = y;
+        pVertices[1].position.z = 0.0f;
+        pVertices[1].normal.x = n.x;
+        pVertices[1].normal.y = n.y;
+        pVertices[1].normal.z = 0.0f;
+        pVertices[1].texCoord = { uvs.x, 1};
+        pVertices[1].color = {1, 1, 1, 1};
+
+        pVertices[2].position.x = x + ofs.x;
+        pVertices[2].position.y = y + ofs.y;
+        pVertices[2].position.z = 0.0f;
+        pVertices[2].normal.x = n.x;
+        pVertices[2].normal.y = n.y;
+        pVertices[2].normal.z = 0.0f;
+        pVertices[2].texCoord = { uvs.y, 1};
+        pVertices[2].color = {1, 1, 1, 1};
+
+        pVertices[3].position.x = x + ofs.x;
+        pVertices[3].position.y = y + ofs.y;
+        pVertices[3].position.z = 1.0f;
+        pVertices[3].normal.x = n.x;
+        pVertices[3].normal.y = n.y;
+        pVertices[3].normal.z = 0.0f;
+        pVertices[3].texCoord = { uvs.y, 0};
+        pVertices[3].color = {1, 1, 1, 1};
+
+        pntcCount += 4;
+    }
 }
 
 void ws_draw_sprite(int x, int y, int texture)

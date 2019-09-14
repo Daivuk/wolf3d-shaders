@@ -44,7 +44,7 @@ The Math classes are taken from the opensource engine onut: https://github.com/D
 * gl3w
 * tinyfiledialogs
 * dirent
-* imgui (Not there yet, but I know it will be in the future)
+* imgui
 
 ## License
 Find the original Wolfenstein 3D license bellow.

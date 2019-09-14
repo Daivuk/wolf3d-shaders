@@ -1412,31 +1412,40 @@ void PlayLoop (void)
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
+    extern bool debugView;
+
 	do
 	{
-		if (virtualreality)
-		{
-			helmetangle = 0;//peek (0x40,0xf0);
-			player->angle += helmetangle;
-			if (player->angle >= ANGLES)
-				player->angle -= ANGLES;
-		}
+        if (!debugView)
+        {
+            if (virtualreality)
+            {
+                helmetangle = 0;//peek (0x40,0xf0);
+                player->angle += helmetangle;
+                if (player->angle >= ANGLES)
+                    player->angle -= ANGLES;
+            }
 
 
-		PollControls();
+            PollControls();
 
-//
-// actor thinking
-//
-		madenoise = _false;
+            //
+            // actor thinking
+            //
+            madenoise = _false;
 
-		MoveDoors ();
-		MovePWalls ();
+            MoveDoors();
+            MovePWalls();
 
-		for (obj = player;obj;obj = obj->next)
-			DoActor (obj);
+            for (obj = player; obj; obj = obj->next)
+                DoActor(obj);
 
-		UpdatePaletteShifts ();
+            UpdatePaletteShifts();
+        }
+        else
+        {
+            ws_update_sdl();
+        }
 
 		ThreeDRefresh ();
 

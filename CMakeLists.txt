@@ -71,6 +71,23 @@ if (WIN32)
     list(APPEND includes PUBLIC ./thirdparty/dirent/)
 endif()
 
+# Dear imgui
+list(APPEND includes PUBLIC ./thirdparty/imgui/ ./thirdparty/imgui/examples/)
+list(APPEND src_thirdparty
+    ./thirdparty/imgui/imgui_demo.cpp
+    ./thirdparty/imgui/imgui_draw.cpp
+    ./thirdparty/imgui/imgui_internal.h
+    ./thirdparty/imgui/imgui.cpp
+    ./thirdparty/imgui/imgui.h
+    ./thirdparty/imgui/stb_rect_pack.h
+    ./thirdparty/imgui/stb_textedit.h
+    ./thirdparty/imgui/stb_truetype.h
+    # ./thirdparty/imgui/examples/imgui_impl_opengl3.cpp
+    # ./thirdparty/imgui/examples/imgui_impl_opengl3.h
+    # ./thirdparty/imgui/examples/imgui_impl_sdl.cpp
+    # ./thirdparty/imgui/examples/imgui_impl_sdl.h
+)
+
 #------------------------------------------------------------------------------
 # Exe
 #------------------------------------------------------------------------------
