@@ -605,11 +605,11 @@ int main(int argc, char **argv)
     // Init audio
     SDL_AudioSpec audioSpec;
     memset(&audioSpec, 0, sizeof(SDL_AudioSpec));
-    audioSpec.freq = 6896; //TODO: use 44khz and resample on load
-    audioSpec.format = AUDIO_U8;
+    audioSpec.freq = 44100;//6896;
+    audioSpec.format = AUDIO_F32;
     audioSpec.callback = audioCallback;
-    audioSpec.channels = 1;
-    audioSpec.samples = 200;
+    audioSpec.channels = 2;
+    audioSpec.samples = 512;
     audioSpec.userdata = nullptr;
     if (SDL_OpenAudio(&audioSpec, NULL) < 0)
     {
@@ -1761,34 +1761,46 @@ void ws_finish_draw_3d()
     glDisable(GL_CULL_FACE);
 }
 
-static byte *current_sound_data = nullptr;
-static int current_sound_len = 0;
+struct PlayingSound
+{
+    float *data;
+    int len;
+    float x, y;
+};
+static std::vector<PlayingSound> playingSounds;
+
+void ws_play_sound(float *data, int len, float x, float y)
+{
+    playingSounds.push_back({ data, len, x, y });
+}
 
 void audioCallback(void *userdata, Uint8 *stream, int len)
 {
     memset(stream, 0, len);
 
-    // static float angle = 0.0f;
-    // for (int i = 0; i < len;)
-    // {
-    //     out[i++] = (int16_t)(sinf(angle) * 1500);
-    //     out[i++] = (int16_t)(cosf(angle) * 1500);
-    //     angle += 0.05f;
-    // }
+    len /= 8; // float * 2 channels
+    float *pOut = (float*)stream;
 
-    len = std::min(len, current_sound_len);
-    for (int i = 0; i < len; ++i)
+    for (auto it = playingSounds.begin(); it != playingSounds.end();)
     {
-        stream[i] = current_sound_data[i];
-    }
-    current_sound_data += len;
-    current_sound_len -= len;
-}
+        auto& playingSound = *it;
 
-void ws_play_sound(byte *data, int len)
-{
-    current_sound_data = data;
-    current_sound_len = len;
+        auto len1 = std::min(len, playingSound.len);
+        for (int i = 0; i < len1; ++i)
+        {
+            auto sample = playingSound.data[i];
+            pOut[i * 2 + 0] += sample;
+            pOut[i * 2 + 1] += sample;
+        }
+        playingSound.data += len1;
+        playingSound.len -= len1;
+        if (playingSound.len <= 0)
+        {
+            it = playingSounds.erase(it);
+            continue;
+        }
+        ++it;
+    }
 }
 
 void Mouse(int16_t x)

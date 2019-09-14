@@ -109,12 +109,14 @@ byte lefttable[ATABLEMAX][ATABLEMAX * 2] = {
 { 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8},
 { 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8}
 };
-
+fixed global_snd_x = 0,global_snd_y = 0;
 void
 SetSoundLoc(fixed gx,fixed gy)
 {
 	fixed	xt,yt;
 	int16_t		x,y;
+    global_snd_x = gx;
+    global_snd_y = gy;
 
 //
 // translate point to view centered coordinates

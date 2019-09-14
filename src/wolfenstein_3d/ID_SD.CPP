@@ -1032,7 +1032,6 @@ asm	out	dx,al
 void
 SDL_PlayDigiSegment(memptr addr,word len)
 {
-    ws_play_sound((byte*)addr, (int)len);
 	// switch (DigiMode)
 	// {
 	// case sds_PC:
@@ -1132,40 +1131,126 @@ SD_SetPosition(int16_t leftpos,int16_t rightpos)
 	// }
 }
 
-void
-SD_PlayDigitized(word which,int16_t leftpos,int16_t rightpos)
+#include <map>
+#include <vector>
+#include <algorithm>
+std::map<word, std::vector<float>> digiMap;
+
+// Some magic found here: http://paulbourke.net/miscellaneous/interpolation/
+//
+// Tension: 1 is high, 0 normal, -1 is low
+// Bias: 0 is even,
+// positive is towards first segment,
+// negative towards the other
+static float resamplingHermite(
+    float y0, float y1,
+    float y2, float y3,
+    float mu,
+    float tension = 0.0f,
+    float bias = 0.0f)
 {
-	word	len;
-	memptr	addr;
+    float m0, m1, mu2, mu3;
+    float a0, a1, a2, a3;
 
-	// if (!DigiMode)
-	// 	return;
+    mu2 = mu * mu;
+    mu3 = mu2 * mu;
+    m0 = (y1 - y0)*(1 + bias)*(1 - tension) / 2;
+    m0 += (y2 - y1)*(1 - bias)*(1 - tension) / 2;
+    m1 = (y2 - y1)*(1 + bias)*(1 - tension) / 2;
+    m1 += (y3 - y2)*(1 - bias)*(1 - tension) / 2;
+    a0 = 2 * mu3 - 3 * mu2 + 1;
+    a1 = mu3 - 2 * mu2 + mu;
+    a2 = mu3 - mu2;
+    a3 = -2 * mu3 + 3 * mu2;
 
+    return (a0*y1 + a1 * m0 + a2 * m1 + a3 * y2);
+}
+
+void resampleSound(std::vector<float>& snd)
+{
+    // This code is taken from onut game engine: https://github.com/Daivuk/onut
+
+    std::vector<float> old = snd; // Copy
+
+    float t = 0.0f;
+    float progress = (float)6896 / (float)44100;
+    int index = 0;
+    int oldIndex = 0;
+    int newFrameCount = (int)ceilf((float)snd.size() / progress);
+
+    snd.resize(newFrameCount);
+    auto pOut = snd.data();
+
+    float pSamplings[4];
+    memset(pSamplings, 0, sizeof(float) * 4);
+
+    while (index < newFrameCount)
+    {
+        pOut[index] = resamplingHermite(
+            pSamplings[0],
+            pSamplings[1],
+            pSamplings[2],
+            pSamplings[3], t);
+
+        // Progress to the next sample
+        t += progress;
+        while (t >= 1.0f)
+        {
+            pSamplings[0] = pSamplings[1];
+            pSamplings[1] = pSamplings[2];
+            pSamplings[2] = pSamplings[3];
+            pSamplings[3] = old[oldIndex];
+            ++oldIndex;
+            if (oldIndex >= (int)old.size()) oldIndex = (int)old.size() - 1;
+            t -= 1.0f;
+        }
+        ++index;
+    }
+}
+
+void SD_PlayDigitized(word which, int16_t leftpos, int16_t rightpos)
+{
 	SD_StopDigitized();
 	if (which >= NumDigi)
 		Quit((char*)"SD_PlayDigitized: bad sound number");
 
-	SD_SetPosition(leftpos,rightpos);
+	SD_SetPosition(leftpos, rightpos);
+
+    extern int32_t global_snd_x, global_snd_y;
+    float xf = (float)global_snd_x / 65536.0f;
+    float yf = (float)global_snd_y / 65536.0f;
+
+    auto it = digiMap.find(which);
+    if (it != digiMap.end())
+    {
+        ws_play_sound(it->second.data(), (int)it->second.size(), xf, yf);
+        return;
+    }
+    auto& raw = digiMap[which];
 
 	DigiPage = DigiList[(which * 2) + 0];
 	DigiLeft = DigiList[(which * 2) + 1];
+    raw.resize(DigiLeft);
     
-	//DigiLastStart = DigiPage;
-	//DigiLastEnd = DigiPage + ((DigiLeft + (PMPageSize - 1)) / PMPageSize);
+	DigiLastStart = DigiPage;
+	DigiLastEnd = DigiPage + ((DigiLeft + (PMPageSize - 1)) / PMPageSize);
 
-    len = DigiLeft;
-	//len = (DigiLeft >= PMPageSize)? PMPageSize : (DigiLeft % PMPageSize);
-	addr = SDL_LoadDigiSegment(DigiPage++);
+    for (auto i = DigiLastStart; i < DigiLastEnd; ++i)
+    {
+        auto addr = SDL_LoadDigiSegment(i);
+        auto tocpy = std::min((int)PMPageSize, (int)DigiLeft);
+        auto offset = (i - DigiLastStart) * PMPageSize;
+        for (int j = 0; j < tocpy; ++j)
+        {
+            auto byteSample = ((byte*)addr)[j];
+            raw[offset + j] = ((float)byteSample - 128.0f) / 128.0f;
+        }
+        DigiLeft -= tocpy;
+    }
 
-	//DigiPlaying = _true;
-	//DigiLastSegment = _false;
+    resampleSound(raw);
 
-	SDL_PlayDigiSegment(addr,len);
-	//DigiLeft -= len;
-	//if (!DigiLeft)
-	//	DigiLastSegment = _true;
-
-	//SD_Poll();
+    ws_play_sound(raw.data(), (int)raw.size(), xf, yf);
 }
 
 void
