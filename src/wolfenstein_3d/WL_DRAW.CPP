@@ -1616,23 +1616,29 @@ void	FixOfs (void)
 ====================
 */
 
-int wall_at(int x, int y)
+inline int wall_at(int x, int y)
 {
     if (tilemap[x][y] & 0x80) return 0;
     return tilemap[x][y];
 }
 
-_boolean is_door_at(int x, int y)
+inline _boolean is_door_at(int x, int y)
 {
     return 
         ((tilemap[x][y] & 0x80) && !(tilemap[x][y] & 0x40))
          ? _true : _false;
 }
 
-float door_percent(int x, int y)
+inline float door_percent(int x, int y)
 {
     auto doorNum = tilemap[x][y] & 0x3F;
     return (float)doorposition[doorNum] / (float)0xffff;
+}
+
+inline bool has_floor_at(int x, int y)
+{
+    byte num = tilemap[x][y];
+    return !num || ((num & 0x80) && !(num & 0x40));
 }
 
 void WallRefresh (void)
@@ -1769,20 +1775,30 @@ void WallRefresh (void)
         ws_draw_wall((float)pwallx + ofs[0] * percent, (float)pwally + ofs[1] * percent, WEST, w);
 
         // Draw wall and celing for the push wall a bit differently
-        ws_draw_ceiling(pwallx, pwally, ceiling);
-        ws_draw_floor(pwallx, pwally, 0x19);
+        ws_draw_ceiling(pwallx, pwally, ceiling, nullptr);
+        ws_draw_floor(pwallx, pwally, 0x19, nullptr);
     }
 
     // Draw ceilling and floor tile by tile (We could have gone with a full map plane, but then we would be depth testing in useless places and its not
     // as nice to look at in freecam. + we need the AO to be done per tile
+    bool neighbors[] = { false, false, false, false, false, false, false, false };
     for (int x = 1; x < 63; ++x)
     {
         for (int y = 1; y < 63; ++y)
         {
-            if (!tilemap[x][y] || is_door_at(x, y))
+            if (has_floor_at(x, y))
             {
-                ws_draw_ceiling(x, y, ceiling);
-                ws_draw_floor(x, y, 0x19);
+                neighbors[0] = !has_floor_at(x, y + 1);
+                neighbors[1] = !has_floor_at(x + 1, y + 1);
+                neighbors[2] = !has_floor_at(x + 1, y);
+                neighbors[3] = !has_floor_at(x + 1, y - 1);
+                neighbors[4] = !has_floor_at(x, y - 1);
+                neighbors[5] = !has_floor_at(x - 1, y - 1);
+                neighbors[6] = !has_floor_at(x - 1, y);
+                neighbors[7] = !has_floor_at(x - 1, y + 1);
+
+                ws_draw_ceiling(x, y, ceiling, neighbors);
+                ws_draw_floor(x, y, 0x19, neighbors);
             }
         }
     }

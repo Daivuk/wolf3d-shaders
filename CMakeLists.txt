@@ -82,10 +82,16 @@ list(APPEND src_thirdparty
     ./thirdparty/imgui/stb_rect_pack.h
     ./thirdparty/imgui/stb_textedit.h
     ./thirdparty/imgui/stb_truetype.h
-    # ./thirdparty/imgui/examples/imgui_impl_opengl3.cpp
-    # ./thirdparty/imgui/examples/imgui_impl_opengl3.h
-    # ./thirdparty/imgui/examples/imgui_impl_sdl.cpp
-    # ./thirdparty/imgui/examples/imgui_impl_sdl.h
+)
+
+# jsoncpp
+list(APPEND includes PUBLIC ./thirdparty/jsoncpp/include/)
+list(APPEND src_thirdparty
+    ./thirdparty/jsoncpp/src/lib_json/json_reader.cpp
+    ./thirdparty/jsoncpp/src/lib_json/json_tool.h
+    ./thirdparty/jsoncpp/src/lib_json/json_value.cpp
+    ./thirdparty/jsoncpp/src/lib_json/json_valueiterator.inl
+    ./thirdparty/jsoncpp/src/lib_json/json_writer.cpp
 )
 
 #------------------------------------------------------------------------------

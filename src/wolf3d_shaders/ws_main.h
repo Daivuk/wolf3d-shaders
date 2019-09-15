@@ -28,8 +28,8 @@ void ws_play_sound(float* data, int len, float x, float y, bool _3d = false);
 void ws_draw_wall(float x, float y, int dir, int texture, bool isDoor=false);
 void ws_finish_draw_3d();
 void ws_update_camera();
-void ws_draw_ceiling(int x, int y, int color);
-void ws_draw_floor(int x, int y, int color);
+void ws_draw_ceiling(int x, int y, int color, bool* neighbors);
+void ws_draw_floor(int x, int y, int color, bool* neighbors);
 void ws_draw_sprite(int x, int y, int texture);
 void Mouse(int16_t x);
 
