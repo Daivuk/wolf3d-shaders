@@ -150,7 +150,7 @@ void ws_play_sound(float* data, int len, float x, float y, bool _3d = false);
 
 void ws_update_camera();
 void ws_finish_draw_3d();
-void ws_draw_wall(float x, float y, int dir, int texture, bool isDoor=false);
+void ws_draw_wall(float x, float y, int dir, int texture, bool isDoor=false, int wallLeft = 0, int wallRight = 0);
 void ws_draw_ceiling(int x, int y, int color, bool* neighbors);
 void ws_draw_floor(int x, int y, int color, bool* neighbors);
 void ws_draw_door_floor(int x, int y, int color, bool* neighbors, float percent);

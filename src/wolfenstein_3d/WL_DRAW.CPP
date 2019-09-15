@@ -1685,7 +1685,9 @@ void WallRefresh (void)
                         w = DOORWALL + 3;
                     else
                         w = horizwall[w & 63];
-                    ws_draw_wall((float)x, (float)y, SOUTH, w);
+                    ws_draw_wall((float)x, (float)y, SOUTH, w, false, 
+                        wall_at(x - 1, y) ? 1 : (wall_at(x - 1, y - 1) ? 0 : -1), 
+                        wall_at(x + 1, y) ? 1 : (wall_at(x + 1, y - 1) ? 0 : -1));
                 }
                 if (int w = wall_at(x - 1, y))
                 {
@@ -1693,7 +1695,9 @@ void WallRefresh (void)
                         w = DOORWALL + 2;
                     else
                         w = vertwall[w & 63];
-                    ws_draw_wall((float)x, (float)y + 1.0f, EAST, w);
+                    ws_draw_wall((float)x, (float)y + 1.0f, EAST, w, false,
+                        wall_at(x, y + 1) ? 1 : (wall_at(x - 1, y + 1) ? 0 : -1),
+                        wall_at(x, y - 1) ? 1 : (wall_at(x - 1, y - 1) ? 0 : -1));
                 }
                 if (int w = wall_at(x, y + 1))
                 {
@@ -1701,7 +1705,9 @@ void WallRefresh (void)
                         w = DOORWALL + 3;
                     else
                         w = horizwall[w & 63];
-                    ws_draw_wall((float)x + 1.0f, (float)y + 1.0f, NORTH, w);
+                    ws_draw_wall((float)x + 1.0f, (float)y + 1.0f, NORTH, w, false,
+                        wall_at(x + 1, y) ? 1 : (wall_at(x + 1, y + 1) ? 0 : -1),
+                        wall_at(x - 1, y) ? 1 : (wall_at(x - 1, y + 1) ? 0 : -1));
                 }
                 if (int w = wall_at(x + 1, y))
                 {
@@ -1709,7 +1715,9 @@ void WallRefresh (void)
                         w = DOORWALL + 2;
                     else
                         w = vertwall[w & 63];
-                    ws_draw_wall((float)x + 1.0f, (float)y, WEST, w);
+                    ws_draw_wall((float)x + 1.0f, (float)y, WEST, w, false,
+                        wall_at(x, y - 1) ? 1 : (wall_at(x + 1, y - 1) ? 0 : -1),
+                        wall_at(x, y + 1) ? 1 : (wall_at(x + 1, y + 1) ? 0 : -1));
                 }
 
                 if (is_door_at(x, y))
@@ -1737,13 +1745,13 @@ void WallRefresh (void)
 
                     if (wall_at(x - 1, y))
                     {
-                        ws_draw_wall((float)x + percent, (float)y + 0.5f, SOUTH, wallpic, true);
-                        ws_draw_wall((float)x + 1.0f + percent, (float)y + 0.5f, NORTH, wallpic, true);
+                        ws_draw_wall((float)x + percent, (float)y + 0.5f, SOUTH, wallpic, true, 0, 0);
+                        ws_draw_wall((float)x + 1.0f + percent, (float)y + 0.5f, NORTH, wallpic, true, 0, 0);
                     }
                     else if (wall_at(x, y - 1))
                     {
-                        ws_draw_wall((float)x + 0.5f, (float)y + 1.0f + percent, EAST, wallpic, true);
-                        ws_draw_wall((float)x + 0.5f, (float)y + percent, WEST, wallpic, true);
+                        ws_draw_wall((float)x + 0.5f, (float)y + 1.0f + percent, EAST, wallpic, true, 0, 0);
+                        ws_draw_wall((float)x + 0.5f, (float)y + percent, WEST, wallpic, true, 0, 0);
                     }
                 }
             }

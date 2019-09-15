@@ -53,8 +53,9 @@ void ws_draw_ceiling(int x, int y, int color, bool* neighbors)
     }
     else
     {
-        ws_Color aoCol = { col.r * ws_ao_amount, col.g * ws_ao_amount, col.b * ws_ao_amount, 1 };
-        auto midP = (1.0f + ws_ao_amount) * 0.5f;
+        auto ao_amount = 1.0f - (1.0f - ws_ao_amount) * 0.85f; // Slightly less because floor and ceilings don't have textures
+        ws_Color aoCol = { col.r * ao_amount, col.g * ao_amount, col.b * ao_amount, 1 };
+        auto midP = (1.0f + ao_amount) * 0.5f;
         ws_Color aoMidCol = { col.r * midP, col.g * midP, col.b * midP, 1 };
         ws_Color nCol[] = {
             neighbors[0] ? aoCol : col,
@@ -219,8 +220,9 @@ void ws_draw_floor(int x, int y, int color, bool* neighbors)
     }
     else
     {
-        ws_Color aoCol = { col.r * ws_ao_amount, col.g * ws_ao_amount, col.b * ws_ao_amount, 1 };
-        auto midP = (1.0f + ws_ao_amount) * 0.5f;
+        auto ao_amount = 1.0f - (1.0f - ws_ao_amount) * 0.85f; // Slightly less because floor and ceilings don't have textures
+        ws_Color aoCol = { col.r * ao_amount, col.g * ao_amount, col.b * ao_amount, 1 };
+        auto midP = (1.0f + ao_amount) * 0.5f;
         ws_Color aoMidCol = { col.r * midP, col.g * midP, col.b * midP, 1 };
         ws_Color nCol[] = {
             neighbors[0] ? aoCol : col,
@@ -348,7 +350,8 @@ void ws_draw_door_floor(int x, int y, int color, bool* neighbors, float percent)
 
     auto pVertices = ws_resources.pPNTCVertices + ws_pntc_count;
     ws_Color col = { 1, 1, 1, 1 };
-    ws_Color aoCol = { ws_ao_amount, ws_ao_amount, ws_ao_amount, 1 };
+    auto ao_amount = 1.0f - (1.0f - ws_ao_amount) * 0.85f; // Slightly less because floor and ceilings don't have textures
+    ws_Color aoCol = { ao_amount, ao_amount, ao_amount, 1 };
     for (int i = 0; i < 4 * 4; ++i)
     {
         pVertices[i].normal = { 0, 0, 1 };
@@ -459,7 +462,8 @@ void ws_draw_door_ceiling(int x, int y, int color, bool* neighbors, float percen
 
     auto pVertices = ws_resources.pPNTCVertices + ws_pntc_count;
     ws_Color col = { 1, 1, 1, 1 };
-    ws_Color aoCol = { ws_ao_amount, ws_ao_amount, ws_ao_amount, 1 };
+    auto ao_amount = 1.0f - (1.0f - ws_ao_amount) * 0.85f; // Slightly less because floor and ceilings don't have textures
+    ws_Color aoCol = { ao_amount, ao_amount, ao_amount, 1 };
     for (int i = 0; i < 4 * 4; ++i)
     {
         pVertices[i].normal = { 0, 0, 1 };
