@@ -48,9 +48,23 @@ int lastMouse[2] = { 0 };
 int curMouse[2] = { 0 };
 bool mouseInitialized = false;
 int16_t mouseButtons = 0;
-bool ambientOcclusionEnabled = true;
+float dt = 0.0f;
+ws_Vector3 eyePos;
+ws_Vector3 right;
+ws_Vector3 front;
+ws_Vector3 target;
+
 bool debugView = false;
+bool camControl = false;
+ws_Vector3 freecamPos(32.0f, 32.0f, 4.0f);
+float freecamAngleX = -30.0f;
+float freecamAngleZ = 45.0f;
+
 bool wasMouseRel = false;
+bool ambientOcclusionEnabled = true;
+bool texturesOn = true;
+bool spriteTexturesOn = true;
+bool spritesOn = true;
 float AC = 0.65f;
 float AC_SIZE = 0.25f;
 
@@ -694,6 +708,8 @@ void ws_update_sdl()
     // Poll events
     // SDL_LockAudio();
     SDL_Event event;
+    static bool freecamInputs[7] = { false };
+
     while (SDL_PollEvent(&event))
     {
         switch (event.type)
@@ -705,34 +721,40 @@ void ws_update_sdl()
             if (debugView)
             {
                 auto& io = ImGui::GetIO();
-                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) ? true : false;
-                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) ? true : false;
-                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) ? true : false;
-                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) ? true : false;
-                io.KeysDown[event.key.keysym.scancode] = true;
+                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) && !camControl ? true : false;
+                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) && !camControl ? true : false;
+                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) && !camControl ? true : false;
+                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) && !camControl ? true : false;
+                io.KeysDown[event.key.keysym.scancode] = !camControl ? true : false;
 
                 if (event.key.keysym.scancode == SDL_SCANCODE_F1)
                 {
-                    if (wasMouseRel)
-                    {
-                        SDL_SetRelativeMouseMode(SDL_TRUE);
-                    }
+                    memset(freecamInputs, 0, sizeof(freecamInputs));
+                    camControl = false;
+                    SDL_SetRelativeMouseMode(wasMouseRel ? SDL_TRUE : SDL_FALSE);
                     debugView = false;
+                }
+                if (camControl)
+                {
+                    if (event.key.keysym.scancode == SDL_SCANCODE_W)
+                        freecamInputs[0] = true;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_A)
+                        freecamInputs[1] = true;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_S)
+                        freecamInputs[2] = true;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_D)
+                        freecamInputs[3] = true;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_SPACE)
+                        freecamInputs[4] = true;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL)
+                        freecamInputs[5] = true;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_LSHIFT)
+                        freecamInputs[6] = true;
                 }
             }
             else
             {
-                if (showDebug)
-                {
-                    if (event.key.keysym.scancode == SDL_SCANCODE_F1)
-                        showDebug = false;
-                    else if (event.key.keysym.scancode == SDL_SCANCODE_DOWN)
-                        debugOffset += 120;
-                    else if (event.key.keysym.scancode == SDL_SCANCODE_UP)
-                        debugOffset -= 120;
-                    VW_UpdateScreen();
-                }
-                else if (event.key.keysym.scancode == SDL_SCANCODE_F1)
+                if (event.key.keysym.scancode == SDL_SCANCODE_F1)
                 {
                     //showDebug = true;
                     wasMouseRel = SDL_GetRelativeMouseMode() == SDL_TRUE;
@@ -752,11 +774,29 @@ void ws_update_sdl()
             if (debugView)
             {
                 auto& io = ImGui::GetIO();
-                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) ? true : false;
-                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) ? true : false;
-                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) ? true : false;
-                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) ? true : false;
+                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) && !camControl ? true : false;
+                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) && !camControl ? true : false;
+                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) && !camControl ? true : false;
+                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) && !camControl ? true : false;
                 io.KeysDown[event.key.keysym.scancode] = false;
+
+                if (camControl)
+                {
+                    if (event.key.keysym.scancode == SDL_SCANCODE_W)
+                        freecamInputs[0] = false;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_A)
+                        freecamInputs[1] = false;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_S)
+                        freecamInputs[2] = false;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_D)
+                        freecamInputs[3] = false;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_SPACE)
+                        freecamInputs[4] = false;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL)
+                        freecamInputs[5] = false;
+                    if (event.key.keysym.scancode == SDL_SCANCODE_LSHIFT)
+                        freecamInputs[6] = false;
+                }
             }
             else
             {
@@ -772,16 +812,20 @@ void ws_update_sdl()
             if (debugView)
             {
                 auto& io = ImGui::GetIO();
-                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) ? true : false;
-                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) ? true : false;
-                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) ? true : false;
-                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) ? true : false;
-                if (event.button.button == SDL_BUTTON_LEFT)
+                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) && !camControl ? true : false;
+                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) && !camControl ? true : false;
+                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) && !camControl ? true : false;
+                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) && !camControl ? true : false;
+                if (event.button.button == SDL_BUTTON_LEFT && !camControl)
                     io.MouseDown[0] = true;
-                else if (event.button.button == SDL_BUTTON_RIGHT)
+                else if (event.button.button == SDL_BUTTON_RIGHT && !camControl)
                     io.MouseDown[1] = true;
-                else if (event.button.button == SDL_BUTTON_MIDDLE)
-                    io.MouseDown[2] = true;
+                else if (event.button.button == SDL_BUTTON_MIDDLE && !camControl)
+                {
+                    if (!camControl) io.MouseDown[2] = true;
+                    camControl = true;
+                    SDL_SetRelativeMouseMode(SDL_TRUE);
+                }
             }
             else
             {
@@ -797,16 +841,20 @@ void ws_update_sdl()
             if (debugView)
             {
                 auto& io = ImGui::GetIO();
-                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) ? true : false;
-                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) ? true : false;
-                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) ? true : false;
-                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) ? true : false;
-                if (event.button.button == SDL_BUTTON_LEFT)
+                io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) && !camControl ? true : false;
+                io.KeyShift = (event.key.keysym.mod & KMOD_LSHIFT) && !camControl ? true : false;
+                io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) && !camControl ? true : false;
+                io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) && !camControl ? true : false;
+                if (event.button.button == SDL_BUTTON_LEFT && !camControl)
                     io.MouseDown[0] = false;
-                else if (event.button.button == SDL_BUTTON_RIGHT)
+                else if (event.button.button == SDL_BUTTON_RIGHT && !camControl)
                     io.MouseDown[1] = false;
                 else if (event.button.button == SDL_BUTTON_MIDDLE)
+                {
                     io.MouseDown[2] = false;
+                    camControl = false;
+                    SDL_SetRelativeMouseMode(SDL_FALSE);
+                }
             }
             else
             {
@@ -822,8 +870,21 @@ void ws_update_sdl()
             if (debugView)
             {
                 auto& io = ImGui::GetIO();
-                io.MousePos.x = (float)event.motion.x;
-                io.MousePos.y = (float)event.motion.y;
+                if (camControl)
+                {
+                    freecamAngleZ += (float)event.motion.xrel * 0.3f;
+                    freecamAngleX -= (float)event.motion.yrel * 0.3f;
+
+                    while (freecamAngleZ < 0.0f) freecamAngleZ += 360.0f;
+                    while (freecamAngleZ > 360.0f) freecamAngleZ -= 360.0f;
+                    if (freecamAngleX < -89.0f) freecamAngleX = -89.0f;
+                    if (freecamAngleX > 89.0f) freecamAngleX = 89.0f;
+                }
+                else
+                {
+                    io.MousePos.x = (float)event.motion.x;
+                    io.MousePos.y = (float)event.motion.y;
+                }
             }
             else
             {
@@ -837,6 +898,29 @@ void ws_update_sdl()
                 }
             }
             break;
+        case SDL_MOUSEWHEEL:
+            if (debugView)
+            {
+                if (!camControl)
+                {
+                    auto& io = ImGui::GetIO();
+                    io.MouseWheel = event.wheel.y;
+                    io.MouseWheelH = event.wheel.x;
+                }
+            }
+            break;
+        case SDL_TEXTINPUT:
+            if (debugView && !camControl)
+            {
+                auto& io = ImGui::GetIO();
+                auto len = strlen(event.text.text);
+                for (decltype(len) i = 0; i < len; ++i)
+                {
+                    auto c = event.text.text[i];
+                    io.AddInputCharacter(c);
+                }
+                break;
+            }
         }
     }
 
@@ -848,6 +932,7 @@ void ws_update_sdl()
     static auto lastTime = std::chrono::high_resolution_clock::now();
     auto curTime = std::chrono::high_resolution_clock::now();
     auto elapsed = curTime - lastTime;
+    dt = (float)((double)std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0);
     static const long long TARGET_FPS = 1000000 / 70;
     static long long curStep = 0;
     curStep += std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
@@ -857,6 +942,34 @@ void ws_update_sdl()
     {
         curStep -= TARGET_FPS;
         ++TimeCount;
+    }
+
+    if (debugView && camControl)
+    {
+        // Update camera crap
+        front.x = sinf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
+        front.y = cosf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
+        front.z = sinf(freecamAngleX * M_PI / 180.0f);
+        front.Normalize();
+        right = { front.y, -front.x, 0.0f };
+        right.Normalize();
+        eyePos = freecamPos;
+        target = eyePos + front;
+
+        float moveSpeed = (freecamInputs[6] ? 15.0f : 5.0f) * dt;
+
+        if (freecamInputs[0])
+            freecamPos += front * moveSpeed;
+        if (freecamInputs[1])
+            freecamPos -= right * moveSpeed;
+        if (freecamInputs[2])
+            freecamPos -= front * moveSpeed;
+        if (freecamInputs[3])
+            freecamPos += right * moveSpeed;
+        if (freecamInputs[4])
+            freecamPos += ws_Vector3(0, 0, 1.0f) * moveSpeed;
+        if (freecamInputs[5])
+            freecamPos -= ws_Vector3(0, 0, 1.0f) * moveSpeed;
     }
 }
 
@@ -927,9 +1040,12 @@ void VW_UpdateScreen()
         }
         ImGui::End();
 
-        ImGui::Begin("Post Process");
-        ImGui::SliderFloat("Ambient Occlusion Amount", &AC, 0.0f, 1.0f);
-        ImGui::SliderFloat("Ambient Occlusion Size", &AC_SIZE, 0.0f, 0.5f);
+        ImGui::Begin("Rendering");
+        ImGui::Checkbox("Textures", &texturesOn);
+        ImGui::Checkbox("Sprite textures", &spriteTexturesOn);
+        ImGui::Checkbox("Sprites", &spritesOn);
+        ImGui::SliderFloat("AO Amount", &AC, 0.0f, 1.0f);
+        ImGui::SliderFloat("AO Size", &AC_SIZE, 0.0f, 0.5f);
         ImGui::End();
 
         ImGui::Render();
@@ -1555,6 +1671,8 @@ void ws_preload_sprites()
 
 void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
 {
+    if (debugView) return; // Don't show the gun in debug view
+
     //ws_preload_sprites();
     //auto offset = xcenter - viewwidth / 2;
 
@@ -1580,49 +1698,60 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     flush();
 }
 
-ws_Vector3 eyePos;
-ws_Vector3 right;
-ws_Vector3 front;
-
 void ws_update_camera()
 {
-    // auto vsin = -(float)sintable[player->angle] / 65536.0f;
-    // auto vcos = (float)costable[player->angle] / 65536.0f;
-    auto vsin = sinf((float)player->angle * M_PI / 180.0f);
-    auto vcos = cosf((float)player->angle * M_PI / 180.0f);
-    float px = (float)player->x / 65536.0f;
-    float py = (float)player->y / 65536.0f;
-
     auto proj = ws_Matrix::CreatePerspectiveFieldOfView(60.0f * (float)M_PI / 180.0f, (float)screen_w / ((float)screen_h - (float)STATUSLINES * s_scale), 0.01f, 1000.0f);
-    front = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
-    front = ws_Vector3(vcos, vsin, 0.0f);
-    front.Normalize();
-    right = { front.y, -front.x, 0.0f };
-    right.Normalize();
-    eyePos = ws_Vector3(px, 64.0f - py, 0.5f);
-    //auto view = ws_Matrix::CreateLookAt(ws_Vector3(32.0f, 70.0f, 16.0f), ws_Vector3(32.0f, 32.0f, 0.5f), ws_Vector3(0.0f, 0.0f, 1.0f));
+
+    if (debugView)
+    {
+        front.x = sinf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
+        front.y = cosf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
+        front.z = sinf(freecamAngleX * M_PI / 180.0f);
+        front.Normalize();
+        right = { front.y, -front.x, 0.0f };
+        right.Normalize();
+        eyePos = freecamPos;
+        target = eyePos + front;
+    }
+    else
+    {
+        auto vsin = sinf((float)player->angle * M_PI / 180.0f);
+        auto vcos = cosf((float)player->angle * M_PI / 180.0f);
+        float px = (float)player->x / 65536.0f;
+        float py = (float)player->y / 65536.0f;
+
+        front = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
+        front = ws_Vector3(vcos, vsin, 0.0f);
+        front.Normalize();
+        right = { front.y, -front.x, 0.0f };
+        right.Normalize();
+        eyePos = ws_Vector3(px, 64.0f - py, 0.5f);
+        target = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
+    }
+
     auto view = ws_Matrix::CreateLookAt(
         eyePos,
-        ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f),
+        target,
         ws_Vector3(0.0f, 0.0f, 1.0f));
     matrix3D = view * proj;
-    //matrix3D = matrix3D.Transpose();
+
     {
         glUseProgram(resources.programPNTC);
         auto uniform = glGetUniformLocation(resources.programPNTC, "ProjMtx");
         glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix3D._11);
     }
+
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_SCISSOR_TEST);
     glEnable(GL_CULL_FACE);
-    //glFrontFace(GL_BACK);
     glScissor(0, (int)(float)(STATUSLINES * s_scale), screen_w, screen_h - (int)(float)(STATUSLINES * s_scale));
     glViewport(0, (int)(float)(STATUSLINES * s_scale), screen_w, screen_h - (int)(float)(STATUSLINES * s_scale));
 }
 
 void ws_draw_ceiling(int color)
 {
-    auto& col = dynamic_palette[color];
+    auto col = dynamic_palette[color];
+    if (!texturesOn) col = { 1, 1, 1, 1 };
 
     prepareForPNTC(GL_QUADS, resources.whiteTexture);
     auto pVertices = resources.pPNTCVertices + pntcCount;
@@ -1669,6 +1798,7 @@ void ws_draw_ceiling(int color)
 void ws_draw_floor(int color)
 {
     auto& col = dynamic_palette[color];
+    if (!texturesOn) col = { 1, 1, 1, 1 };
 
     prepareForPNTC(GL_QUADS, resources.whiteTexture);
     auto pVertices = resources.pPNTCVertices + pntcCount;
@@ -1725,6 +1855,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor)
             pic = it->second;
         tex = pic.tex;
     }
+    if (!texturesOn) tex = resources.whiteTexture;
 
     y = 64.0f - y;
 
@@ -1915,6 +2046,8 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor)
 
 void ws_draw_sprite(int x, int y, int texture)
 {
+    if (!spritesOn) return;
+
     auto xf = (float)x / 65536.0f;
     auto yf = 64.0f - (float)y / 65536.0f;
 
@@ -1925,7 +2058,7 @@ void ws_draw_sprite(int x, int y, int texture)
     else
         pic = it->second;
 
-    prepareForPNTC(GL_QUADS, pic.tex);
+    prepareForPNTC(GL_QUADS, spriteTexturesOn ? pic.tex : resources.whiteTexture);
 
     auto pVertices = resources.pPNTCVertices + pntcCount;
 
