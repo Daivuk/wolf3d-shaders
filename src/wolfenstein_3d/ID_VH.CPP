@@ -1,7 +1,7 @@
 // ID_VH.C
 
 #include "ID_HEADS.H"
-#include "ws_main.h"
+#include "ws.h"
 
 #define	SCREENWIDTH		80
 #define CHARWIDTH		2

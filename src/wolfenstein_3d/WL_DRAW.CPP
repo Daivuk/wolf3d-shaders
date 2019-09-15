@@ -1,7 +1,7 @@
 // WL_DRAW.C
 
 #include "WL_DEF.H"
-#include "ws_main.h"
+#include "ws.h"
 // #include <DOS.H>
 #pragma hdrstop
 
@@ -1642,7 +1642,7 @@ inline bool has_floor_at(int x, int y)
     return !num || ((num & 0x80) && !(num & 0x40));
 }
 
-void flush();
+void ws_flush();
 void WallRefresh (void)
 {
 //
@@ -1802,7 +1802,7 @@ void WallRefresh (void)
     }
 
     // Door overlays
-    flush();
+    ws_flush();
     glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
     for (int x = 1; x < 63; ++x)
@@ -1826,7 +1826,7 @@ void WallRefresh (void)
             }
         }
     }
-    flush();
+    ws_flush();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_TRUE);
 }

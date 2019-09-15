@@ -40,7 +40,7 @@
 #pragma	hdrstop
 #pragma	warn	-pia
 
-#include "ws_main.h"
+#include "ws.h"
 
 #ifdef	nil
 #undef	nil
@@ -1986,9 +1986,9 @@ SD_Startup(void)
 // 	sbNoCheck = _false;
 // 	sbNoProCheck = _false;
 // #ifndef	_MUSE_
-// 	for (i = 1;i < _argc;i++)
+// 	for (i = 1;i < ws_argc;i++)
 // 	{
-// 		switch (US_CheckParm(_argv[i],ParmStrings))
+// 		switch (US_CheckParm(ws_argv[i],ParmStrings))
 // 		{
 // 		case 0:						// No AdLib detection
 // 			alNoCheck = _true;

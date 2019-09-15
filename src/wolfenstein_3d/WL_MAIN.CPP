@@ -236,8 +236,8 @@ void Patch386 (void)
 
 // 	int16_t     i;
 
-// 	for (i = 1;i < _argc;i++)
-// 		if (US_CheckParm(_argv[i],JHParmStrings) == 0)
+// 	for (i = 1;i < ws_argc;i++)
+// 		if (US_CheckParm(ws_argv[i],JHParmStrings) == 0)
 // 		{
 // 			IsA386 = _false;
 // 			return;
@@ -819,9 +819,9 @@ _boolean MS_CheckParm (char *check)
 	int16_t             i;
 	char    *parm;
 
-	for (i = 1;i<_argc;i++)
+	for (i = 1;i<ws_argc;i++)
 	{
-		parm = _argv[i];
+		parm = ws_argv[i];
 
 		while ( !isalpha(*parm) )       // skip - / \ etc.. in front of parm
 			if (!*parm++)
@@ -1390,9 +1390,9 @@ void    DemoLoop (void)
 // 		NoWait = _true;
 // 		NewGame(1,0);
 
-// 		for (i = 1;i < _argc;i++)
+// 		for (i = 1;i < ws_argc;i++)
 // 		{
-// 			if ( (level = US_CheckParm(_argv[i],ParmStrings)) != -1)
+// 			if ( (level = US_CheckParm(ws_argv[i],ParmStrings)) != -1)
 // 			{
 // 			 gamestate.difficulty=level;
 // 			 break;

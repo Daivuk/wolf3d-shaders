@@ -109,7 +109,7 @@ add_executable(${PROJECT_NAME} WIN32
 
 # Work dir, copy your WAD files there
 set_property(TARGET ${PROJECT_NAME} PROPERTY
-    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/")
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/")
 
 # Lib/Headers
 target_include_directories(${PROJECT_NAME} ${includes})

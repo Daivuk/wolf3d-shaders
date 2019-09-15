@@ -6,7 +6,7 @@
 #include <string.h>
 #include "ID_HEADS.H"
 #include "ID_VL.H"
-#include "ws_main.h"
+#include "ws.h"
 #include <thread>
 #include <chrono>
 #pragma hdrstop
@@ -92,8 +92,8 @@ void	VL_Startup (void)
 // 	asm	cld;
 
 // 	videocard = VL_VideoID ();
-// 	for (i = 1;i < _argc;i++)
-// 		if (US_CheckParm(_argv[i],ParmStrings) == 0)
+// 	for (i = 1;i < ws_argc;i++)
+// 		if (US_CheckParm(ws_argv[i],ParmStrings) == 0)
 // 		{
 // 			videocard = 5;
 // 			break;

@@ -1277,5 +1277,5 @@ extern	void	HelpScreens(void);
 extern	void	EndText(void);
 
 // Arguments
-extern int16_t _argc;
-extern char** _argv;
+extern int16_t ws_argc;
+extern char** ws_argv;

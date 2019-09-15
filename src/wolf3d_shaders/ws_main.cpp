@@ -8,7 +8,7 @@
 #endif
 
 #include "WL_DEF.H"
-#include "ws_main.h"
+#include "ws.h"
 #include "ws_shaders.h"
 
 #include "ws_Vector3.h"
@@ -34,43 +34,33 @@ void wolf3d_init();
 void wolf3d_update();
 void wolf3d_shutdown();
 void audioCallback(void *userdata, Uint8 *stream, int len);
-void flush();
+void ws_flush();
 void drawDebugString(char *string, float x, float y);
 
-int16_t _argc; // global arguments. this is referenced a bit everywhere
-char **_argv;
-int pcCount = 0;
-int ptcCount = 0;
-int pntcCount = 0;
+int16_t ws_argc; // global arguments. this is referenced a bit everywhere
+char **ws_argv;
+
 ws_Matrix matrix2D;
 ws_Matrix matrix3D;
-int screen_w = 1024, screen_h = 640;
+int ws_screen_w = 1024, ws_screen_h = 640;
 SDL_Window *sdlWindow;
-float s_scale = 1.0f;
 int lastMouse[2] = { 0 };
 int curMouse[2] = { 0 };
 bool mouseInitialized = false;
 int16_t mouseButtons = 0;
 float dt = 0.0f;
-ws_Vector3 eyePos;
-ws_Vector3 right;
-ws_Vector3 front;
-ws_Vector3 target;
+ws_Vector3 ws_cam_eye;
+ws_Vector3 ws_cam_right;
+ws_Vector3 ws_cam_front;
+ws_Vector3 ws_cam_target;
 
-bool debugView = false;
+bool ws_debug_view_enabled = false;
 bool camControl = false;
 ws_Vector3 freecamPos(32.0f, 32.0f, 4.0f);
 float freecamAngleX = -30.0f;
 float freecamAngleZ = 45.0f;
 
 bool wasMouseRel = false;
-bool ambientOcclusionEnabled = true;
-bool texturesOn = true;
-bool spriteTexturesOn = true;
-bool spritesOn = true;
-bool wireframeOn = false;
-float AC = 0.65f;
-float AC_SIZE = 0.25f;
 
 #define KeyInt 9 // The keyboard ISR number
 
@@ -152,202 +142,11 @@ std::map<int, int> SDL2DosKeymap = {
     std::make_pair<int, int>(SDL_SCANCODE_Z, sc_Z),
 };
 
-struct RenderTarget
-{
-    GLuint handle;
-    GLuint frameBuffer;
-    GLuint depth;
-};
-
-struct Position
-{
-    float x, y;
-};
-
-struct Position3
-{
-    float x, y, z;
-};
-
-struct Normal
-{
-    float x, y, z;
-};
-
-struct Color
-{
-    float r, g, b, a;
-};
-
-struct TexCoord
-{
-    float u, v;
-};
-
-struct VertexPC
-{
-    Position position;
-    Color color;
-};
-
-struct VertexPTC
-{
-    Position position;
-    TexCoord texCoord;
-    Color color;
-};
-
-struct VertexPNTC
-{
-    Position3 position;
-    Normal normal;
-    TexCoord texCoord;
-    Color color;
-};
-
-struct Resources
-{
-    GLuint programPC;          /* Position2, Color4 */
-    GLuint programPTC;         /* Position2, TexCoord2, Color4 */
-    GLuint programPNTC;        /* Position3, Normal3, TexCoord2, Color4 */
-    GLuint vertexBuffer;       /* Dynamic version buffer used by batches */
-    VertexPC *pPCVertices;     /* Used by dynamic rendering of Position/Color */
-    VertexPTC *pPTCVertices;   /* Used by dynamic rendering of Position/TexCoord/Color */
-    VertexPNTC *pPNTCVertices; /* Used by dynamic rendering of Position/TexCoord/Color */
-    GLuint mapVB;              /* Dynamic part of the map */
-    GLuint checkerTexture;     /* Test texture to replace non-existing or corrupted data */
-    GLuint whiteTexture;       /* ... */
-    RenderTarget mainRT;       /* Main scree render target (Final image) */
-    GLuint imguiFontTexture;
-} resources;
-
-struct Pic
-{
-    int w, h;
-    GLuint tex;
-};
-
-struct BakedFont
-{
-    GLuint tex;
-    float ws[256];
-    float os[256];
-};
-
-std::map<int16_t, Pic> pics;
-std::map<int16_t, GLuint> screenRaws;
-std::map<int, BakedFont> fontTextures;
-std::map<int16_t, Pic> sprites;
-std::map<int16_t, Pic> walls;
-
-#define DRAW_MODE_PC 0
-#define DRAW_MODE_PTC 1
-#define DRAW_MODE_PNTC 2
-int drawMode = -1;
-GLenum drawModePrim = 0;
 float fade_val = 1.0f;
 bool showDebug = false;
 float debugOffset = 0.0f;
 
-#define wolf_RGB(r, g, b)                                                                                    \
-    {                                                                                                        \
-        (float)((r)*255 / 63) / 255.0f, (float)((g)*255 / 63) / 255.0f, (float)((b)*255 / 63) / 255.0f, 1.0f \
-    }
-Color palette[] = {
-#ifdef SPEAR
-#include "sodpal.inc"
-#else
-#include "wolfpal.inc"
-#endif
-};
-Color dynamic_palette[] = {
-#ifdef SPEAR
-#include "sodpal.inc"
-#else
-#include "wolfpal.inc"
-#endif
-};
-
-static void checkShader(GLuint handle)
-{
-    GLint bResult;
-    glGetShaderiv(handle, GL_COMPILE_STATUS, &bResult);
-    if (bResult == GL_FALSE)
-    {
-        GLchar infoLog[1024];
-        glGetShaderInfoLog(handle, 1023, NULL, infoLog);
-        Quit((char *)(std::string("shader compile failed: ") + infoLog).c_str());
-    }
-}
-
-GLuint createProgram(const GLchar *vs, const GLchar *ps, const std::vector<const char *> &attribs)
-{
-    const GLchar *vertex_shader_with_version[2] = {"#version 120\n", vs};
-    const GLchar *fragment_shader_with_version[2] = {"#version 120\n", ps};
-
-    auto vertHandle = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertHandle, 2, vertex_shader_with_version, NULL);
-    glCompileShader(vertHandle);
-    checkShader(vertHandle);
-
-    auto fragHandle = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragHandle, 2, fragment_shader_with_version, NULL);
-    glCompileShader(fragHandle);
-    checkShader(fragHandle);
-
-    GLuint program = glCreateProgram();
-    glAttachShader(program, vertHandle);
-    glAttachShader(program, fragHandle);
-    int i = 0;
-    for (auto attrib : attribs)
-    {
-        glBindAttribLocation(program, i, attrib);
-        ++i;
-    }
-    glLinkProgram(program);
-
-    return program;
-}
-
-// GLuint createTexture(const char *filename)
-// {
-//     int x, y, n;
-//     unsigned char *data = stbi_load(filename, &x, &y, &n, 4);
-
-//     GLuint handle;
-//     glGenTextures(1, &handle);
-//     glEnable(GL_TEXTURE_2D);
-//     glActiveTexture(GL_TEXTURE0);
-//     glBindTexture(GL_TEXTURE_2D, handle);
-//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-//     stbi_image_free(data);
-
-//     return handle;
-// }
-
-GLuint ws_create_texture(uint8_t *data, int w, int h)
-{
-    GLuint handle;
-    glGenTextures(1, &handle);
-    glEnable(GL_TEXTURE_2D);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    return handle;
-}
+ws_Resources ws_resources;
 
 GLuint createVertexBuffer()
 {
@@ -363,237 +162,6 @@ GLuint createVertexBuffer(GLsizeiptr size, const void *data)
     glBindBuffer(GL_ARRAY_BUFFER, handle);
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
     return handle;
-}
-
-static void drawPC(const VertexPC *pVertices, int count, GLenum mode)
-{
-    glBindBuffer(GL_ARRAY_BUFFER, resources.vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPC) * count, pVertices, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPC), (float *)(uintptr_t)(0));
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPC), (float *)(uintptr_t)(8));
-    glDrawArrays(mode, 0, count);
-}
-
-static void drawPTC(const VertexPTC *pVertices, int count, GLenum mode)
-{
-    glBindBuffer(GL_ARRAY_BUFFER, resources.vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPTC) * count, pVertices, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float *)(uintptr_t)(0));
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float *)(uintptr_t)(8));
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPTC), (float *)(uintptr_t)(16));
-    glDrawArrays(mode, 0, count);
-}
-
-static void drawPNTC(const VertexPNTC *pVertices, int count, GLenum mode)
-{
-    glBindBuffer(GL_ARRAY_BUFFER, resources.vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPNTC) * count, pVertices, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float *)(uintptr_t)(0));
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float *)(uintptr_t)(12));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float *)(uintptr_t)(24));
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(VertexPNTC), (float *)(uintptr_t)(32));
-    glDrawArrays(mode, 0, count);
-}
-
-void drawLines(const VertexPC *pVertices, int count)
-{
-    drawPC(pVertices, count, GL_LINES);
-}
-
-void drawPoints(const VertexPC *pVertices, int count)
-{
-    drawPC(pVertices, count, GL_POINTS);
-}
-
-void drawQuads(const VertexPC *pVertices, int count)
-{
-    drawPC(pVertices, count, GL_QUADS);
-}
-
-void prepareForPC(int prim)
-{
-    if (drawMode == DRAW_MODE_PC && prim == drawModePrim)
-        return;
-    flush();
-    drawModePrim = prim;
-    if (drawMode != DRAW_MODE_PC)
-    {
-        drawMode = DRAW_MODE_PC;
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_DEPTH_TEST);
-        glUseProgram(resources.programPC);
-        glEnableVertexAttribArray(0); // pos
-        glEnableVertexAttribArray(1); // color
-        glDisableVertexAttribArray(2);
-        glDisableVertexAttribArray(3);
-    }
-}
-
-void prepareForPTC(int prim)
-{
-    if (drawMode == DRAW_MODE_PTC && prim == drawModePrim)
-        return;
-    flush();
-    drawModePrim = prim;
-    if (drawMode != DRAW_MODE_PTC)
-    {
-        drawMode = DRAW_MODE_PTC;
-        glEnable(GL_TEXTURE_2D);
-        glDisable(GL_DEPTH_TEST);
-        glActiveTexture(GL_TEXTURE0);
-        glUseProgram(resources.programPTC);
-        glEnableVertexAttribArray(0); // pos
-        glEnableVertexAttribArray(1); // texcoord
-        glEnableVertexAttribArray(2); // color
-        glDisableVertexAttribArray(3);
-    }
-}
-
-GLuint current3DTexture = 0;
-void prepareForPNTC(int prim, GLuint texture)
-{
-    if (drawMode == DRAW_MODE_PNTC && prim == drawModePrim && current3DTexture == texture)
-        return;
-    flush();
-    drawModePrim = prim;
-    current3DTexture = texture;
-    glEnable(GL_TEXTURE_2D);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, current3DTexture);
-    if (drawMode != DRAW_MODE_PNTC)
-    {
-        drawMode = DRAW_MODE_PNTC;
-        glUseProgram(resources.programPNTC);
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
-        glEnableVertexAttribArray(0); // pos
-        glEnableVertexAttribArray(1); // normal
-        glEnableVertexAttribArray(2); // texcoord
-        glEnableVertexAttribArray(3); // color
-    }
-}
-
-void drawLines(const VertexPTC *pVertices, int count)
-{
-    drawPTC(pVertices, count, GL_LINES);
-}
-
-void drawPoints(const VertexPTC *pVertices, int count)
-{
-    drawPTC(pVertices, count, GL_POINTS);
-}
-
-void drawQuads(const VertexPTC *pVertices, int count)
-{
-    drawPTC(pVertices, count, GL_QUADS);
-}
-
-int drawRect(VertexPTC *pVertices, float x, float y, float w, float h, float u1, float v1, float u2, float v2, const Color &color)
-{
-    pVertices[0].position.x = x;
-    pVertices[0].position.y = y;
-    pVertices[0].texCoord = {u1, v1};
-    pVertices[0].color = color;
-
-    pVertices[1].position.x = x;
-    pVertices[1].position.y = y + h;
-    pVertices[1].texCoord = {u1, v2};
-    pVertices[1].color = color;
-
-    pVertices[2].position.x = x + w;
-    pVertices[2].position.y = y + h;
-    pVertices[2].texCoord = {u2, v2};
-    pVertices[2].color = color;
-
-    pVertices[3].position.x = x + w;
-    pVertices[3].position.y = y;
-    pVertices[3].texCoord = {u2, v1};
-    pVertices[3].color = color;
-    pVertices += 4;
-
-    return 4;
-}
-
-int drawRect(VertexPC *pVertices, float x, float y, float w, float h, const Color &color)
-{
-    pVertices[0].position.x = x;
-    pVertices[0].position.y = y;
-    pVertices[0].color = color;
-
-    pVertices[1].position.x = x;
-    pVertices[1].position.y = y + h;
-    pVertices[1].color = color;
-
-    pVertices[2].position.x = x + w;
-    pVertices[2].position.y = y + h;
-    pVertices[2].color = color;
-
-    pVertices[3].position.x = x + w;
-    pVertices[3].position.y = y;
-    pVertices[3].color = color;
-    pVertices += 4;
-
-    return 4;
-}
-
-int drawLine(VertexPC *pVertices, const Position &from, const Position &to, const Color &color)
-{
-    pVertices[0].position.x = from.x;
-    pVertices[0].position.y = from.y;
-    pVertices[0].color = color;
-
-    pVertices[1].position.x = to.x;
-    pVertices[1].position.y = to.y;
-    pVertices[1].color = color;
-
-    return 2;
-}
-
-RenderTarget createRT(int w, int h)
-{
-    GLuint frameBuffer;
-    glGenFramebuffers(1, &frameBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-
-    GLuint handle;
-    glGenTextures(1, &handle);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, handle, 0);
-    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-
-    GLuint rboDepthStencil;
-    glGenRenderbuffers(1, &rboDepthStencil);
-    glBindRenderbuffer(GL_RENDERBUFFER, rboDepthStencil);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboDepthStencil);
-
-    RenderTarget ret;
-    ret.handle = handle;
-    ret.frameBuffer = frameBuffer;
-    ret.depth = rboDepthStencil;
-    return ret;
-}
-
-void resizeRT(RenderTarget &rt, int w, int h)
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, rt.frameBuffer);
-
-    glActiveTexture(GL_TEXTURE0);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, rt.handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-
-    glBindRenderbuffer(GL_RENDERBUFFER, rt.depth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rt.depth);
 }
 
 #include <json/json.h>
@@ -612,8 +180,8 @@ void saveSettings()
     Json::Value jsonDocument;
 
     //-----------------------
-    jsonDocument["ao_amount"] = AC;
-    jsonDocument["ao_size"] = AC_SIZE;
+    jsonDocument["ao_amount"] = ws_ao_amount;
+    jsonDocument["ao_size"] = ws_ao_size;
     //-----------------------
 
     file << jsonDocument;
@@ -640,8 +208,8 @@ void loadSettings()
     }
 
     //-----------------------
-    AC = jsonDocument["ao_amount"].isNumeric() ? jsonDocument["ao_amount"].asFloat() : 0.65f;
-    AC_SIZE = jsonDocument["ao_size"].isNumeric() ? jsonDocument["ao_size"].asFloat() : 0.25f;
+    ws_ao_amount = jsonDocument["ao_amount"].isNumeric() ? jsonDocument["ao_amount"].asFloat() : 0.65f;
+    ws_ao_size = jsonDocument["ao_size"].isNumeric() ? jsonDocument["ao_size"].asFloat() : 0.25f;
     //-----------------------
 }
 
@@ -674,11 +242,11 @@ int CALLBACK WinMain(HINSTANCE appInstance, HINSTANCE prevInstance, LPSTR cmdLin
 int main(int argc, char **argv)
 {
 #endif
-    _argc = argc;
-    _argv = argv;
-    palette[255].a = 0.0f; // Last color is transparent
+    ws_argc = argc;
+    ws_argv = argv;
 
-    extern 	byte gamepal[256][3];
+    ws_palette[255].a = 0.0f; // Last color is transparent
+    extern byte gamepal[256][3];
     VL_GetPalette((byte*)gamepal);
 
     // Init SDL
@@ -686,7 +254,7 @@ int main(int argc, char **argv)
     sdlWindow = SDL_CreateWindow(
         "Wolf3D Shaders",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        screen_w, screen_h,
+        ws_screen_w, ws_screen_h,
         SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
     // Init OpenGL
@@ -709,20 +277,20 @@ int main(int argc, char **argv)
     }
     SDL_PauseAudio(0);
 
-    // Init main resources
-    resources.programPC = createProgram(PC_VERT, PC_FRAG, {"Position", "Color"});
-    resources.programPTC = createProgram(PTC_VERT, PTC_FRAG, {"Position", "TexCoord", "Color"});
-    resources.programPNTC = createProgram(PNTC_VERT, PNTC_FRAG, {"Position", "Normal", "TexCoord", "Color"});
-    resources.vertexBuffer = createVertexBuffer();
-    resources.pPCVertices = new VertexPC[MAX_VERTICES];
-    resources.pPTCVertices = new VertexPTC[MAX_VERTICES];
-    resources.pPNTCVertices = new VertexPNTC[MAX_VERTICES];
-    resources.mainRT = createRT(screen_w, screen_h);
+    // Init main ws_resources
+    ws_resources.programPC = ws_create_program(PC_VERT, PC_FRAG, {"ws_Vector2", "ws_Color"});
+    ws_resources.programPTC = ws_create_program(PTC_VERT, PTC_FRAG, {"ws_Vector2", "ws_TexCoord", "ws_Color"});
+    ws_resources.programPNTC = ws_create_program(PNTC_VERT, PNTC_FRAG, {"ws_Vector2", "ws_Vector3", "ws_TexCoord", "ws_Color"});
+    ws_resources.vertexBuffer = createVertexBuffer();
+    ws_resources.pPCVertices = new ws_VertexPC[MAX_VERTICES];
+    ws_resources.pPTCVertices = new ws_VertexPTC[MAX_VERTICES];
+    ws_resources.pPNTCVertices = new ws_VertexPNTC[MAX_VERTICES];
+    ws_resources.mainRT = ws_create_rt(ws_screen_w, ws_screen_h);
 
     srand(0);
     uint32_t checkerBytes[] = {0xFF880088, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF880088};
-    resources.checkerTexture = ws_create_texture((uint8_t *)checkerBytes, 2, 2);
-    resources.whiteTexture = ws_create_texture((uint8_t*)&checkerBytes[1], 1, 1);
+    ws_resources.checkerTexture = ws_create_texture((uint8_t *)checkerBytes, 2, 2);
+    ws_resources.whiteTexture = ws_create_texture((uint8_t*)&checkerBytes[1], 1, 1);
 
     // imgui
     ImGui::CreateContext();
@@ -730,8 +298,8 @@ int main(int argc, char **argv)
     uint8_t *pPixelData;
     int w, h;
     io.Fonts->GetTexDataAsRGBA32(&pPixelData, &w, &h);
-    resources.imguiFontTexture = ws_create_texture(pPixelData, w, h);
-    io.Fonts->SetTexID(&resources.imguiFontTexture);
+    ws_resources.imguiFontTexture = ws_create_texture(pPixelData, w, h);
+    io.Fonts->SetTexID(&ws_resources.imguiFontTexture);
     io.KeyMap[ImGuiKey_Tab] = (int)SDL_SCANCODE_TAB; // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array that we will update during the application lifetime.
     io.KeyMap[ImGuiKey_LeftArrow] = (int)SDL_SCANCODE_LEFT;
     io.KeyMap[ImGuiKey_RightArrow] = (int)SDL_SCANCODE_RIGHT;
@@ -789,7 +357,7 @@ void ws_update_sdl()
             exit(0);
             break;
         case SDL_KEYDOWN:
-            if (debugView)
+            if (ws_debug_view_enabled)
             {
                 auto& io = ImGui::GetIO();
                 //io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) && !camControl ? true : false;
@@ -803,7 +371,7 @@ void ws_update_sdl()
                     memset(freecamInputs, 0, sizeof(freecamInputs));
                     camControl = false;
                     SDL_SetRelativeMouseMode(wasMouseRel ? SDL_TRUE : SDL_FALSE);
-                    debugView = false;
+                    ws_debug_view_enabled = false;
                 }
                 if (camControl)
                 {
@@ -837,7 +405,7 @@ void ws_update_sdl()
                     //showDebug = true;
                     wasMouseRel = SDL_GetRelativeMouseMode() == SDL_TRUE;
                     SDL_SetRelativeMouseMode(SDL_FALSE);
-                    debugView = true;
+                    ws_debug_view_enabled = true;
                     VW_UpdateScreen();
                 }
                 else
@@ -849,7 +417,7 @@ void ws_update_sdl()
             }
             break;
         case SDL_KEYUP:
-            if (debugView)
+            if (ws_debug_view_enabled)
             {
                 auto& io = ImGui::GetIO();
                 //io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) && !camControl ? true : false;
@@ -887,7 +455,7 @@ void ws_update_sdl()
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
-            if (debugView)
+            if (ws_debug_view_enabled)
             {
                 auto& io = ImGui::GetIO();
                 //io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) && !camControl ? true : false;
@@ -916,7 +484,7 @@ void ws_update_sdl()
             }
             break;
         case SDL_MOUSEBUTTONUP:
-            if (debugView)
+            if (ws_debug_view_enabled)
             {
                 auto& io = ImGui::GetIO();
                 //io.KeyCtrl = (event.key.keysym.mod & KMOD_LCTRL) && !camControl ? true : false;
@@ -946,7 +514,7 @@ void ws_update_sdl()
             }
             break;
         case SDL_MOUSEMOTION:
-            if (debugView)
+            if (ws_debug_view_enabled)
             {
                 auto& io = ImGui::GetIO();
                 if (camControl)
@@ -978,7 +546,7 @@ void ws_update_sdl()
             }
             break;
         case SDL_MOUSEWHEEL:
-            if (debugView)
+            if (ws_debug_view_enabled)
             {
                 if (!camControl)
                 {
@@ -989,7 +557,7 @@ void ws_update_sdl()
             }
             break;
         case SDL_TEXTINPUT:
-            if (debugView && !camControl)
+            if (ws_debug_view_enabled && !camControl)
             {
                 auto& io = ImGui::GetIO();
                 auto len = strlen(event.text.text);
@@ -1005,9 +573,9 @@ void ws_update_sdl()
             {
                 case SDL_WINDOWEVENT_SIZE_CHANGED:
                 {
-                    screen_w = event.window.data1;
-                    screen_h = event.window.data2;
-                    resizeRT(resources.mainRT, screen_w, screen_h);
+                    ws_screen_w = event.window.data1;
+                    ws_screen_h = event.window.data2;
+                    ws_resize_rt(ws_resources.mainRT, ws_screen_w, ws_screen_h);
                     break;
                 }
                 default: break;
@@ -1017,7 +585,7 @@ void ws_update_sdl()
     }
     // SDL_UnlockAudio();
 
-    s_scale = (float)640 / (float)MaxY;
+    ws_ui_scale = (float)640 / (float)MaxY;
 
     // Update ticks
     static auto lastTime = std::chrono::high_resolution_clock::now();
@@ -1035,28 +603,28 @@ void ws_update_sdl()
         ++TimeCount;
     }
 
-    if (debugView && camControl)
+    if (ws_debug_view_enabled && camControl)
     {
         // Update camera crap
-        front.x = sinf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
-        front.y = cosf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
-        front.z = sinf(freecamAngleX * M_PI / 180.0f);
-        front.Normalize();
-        right = { front.y, -front.x, 0.0f };
-        right.Normalize();
-        eyePos = freecamPos;
-        target = eyePos + front;
+        ws_cam_front.x = sinf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
+        ws_cam_front.y = cosf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
+        ws_cam_front.z = sinf(freecamAngleX * M_PI / 180.0f);
+        ws_cam_front.Normalize();
+        ws_cam_right = { ws_cam_front.y, -ws_cam_front.x, 0.0f };
+        ws_cam_right.Normalize();
+        ws_cam_eye = freecamPos;
+        ws_cam_target = ws_cam_eye + ws_cam_front;
 
         float moveSpeed = (freecamInputs[6] ? 15.0f : 5.0f) * dt;
 
         if (freecamInputs[0])
-            freecamPos += front * moveSpeed;
+            freecamPos += ws_cam_front * moveSpeed;
         if (freecamInputs[1])
-            freecamPos -= right * moveSpeed;
+            freecamPos -= ws_cam_right * moveSpeed;
         if (freecamInputs[2])
-            freecamPos -= front * moveSpeed;
+            freecamPos -= ws_cam_front * moveSpeed;
         if (freecamInputs[3])
-            freecamPos += right * moveSpeed;
+            freecamPos += ws_cam_right * moveSpeed;
         if (freecamInputs[4])
             freecamPos += ws_Vector3(0, 0, 1.0f) * moveSpeed;
         if (freecamInputs[5])
@@ -1068,12 +636,12 @@ void ws_update_sdl()
 
 void VW_UpdateScreen()
 {
-    flush();
+    ws_flush();
 
     // Draw game
-    pcCount = 0;
-    ptcCount = 0;
-    pntcCount = 0;
+    ws_pc_count = 0;
+    ws_ptc_count = 0;
+    ws_pntc_count = 0;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -1082,65 +650,65 @@ void VW_UpdateScreen()
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glViewport(0, 0, screen_w, screen_h);
+    glViewport(0, 0, ws_screen_w, ws_screen_h);
 
-    matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)screen_w, (float)screen_h, 0, -999, 999);
+    matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h, 0, -999, 999);
     // matrix2D = matrix2D.Transpose();
     {
-        glUseProgram(resources.programPC);
-        auto uniform = glGetUniformLocation(resources.programPC, "ProjMtx");
+        glUseProgram(ws_resources.programPC);
+        auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
         glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
     }
     {
-        glUseProgram(resources.programPTC);
-        auto uniform = glGetUniformLocation(resources.programPTC, "ProjMtx");
+        glUseProgram(ws_resources.programPTC);
+        auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
         glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
     }
 
-    prepareForPTC(GL_QUADS);
-    ptcCount += drawRect(resources.pPTCVertices + ptcCount, 0, 0, (float)screen_w, (float)screen_h, 0, 1, 1, 0, { 1 + saveFlashAnim, 1 + saveFlashAnim, 1 + saveFlashAnim, fade_val });
+    ws_prepare_for_ptc(GL_QUADS);
+    ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)ws_screen_w, (float)ws_screen_h, 0, 1, 1, 0, { 1 + saveFlashAnim, 1 + saveFlashAnim, 1 + saveFlashAnim, fade_val });
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, resources.mainRT.handle);
-    drawPTC(resources.pPTCVertices, ptcCount, GL_QUADS);
+    glBindTexture(GL_TEXTURE_2D, ws_resources.mainRT.handle);
+    ws_draw_ptc(ws_resources.pPTCVertices, ws_ptc_count, GL_QUADS);
 
-    if (debugView)
+    if (ws_debug_view_enabled)
     {
         auto& io = ImGui::GetIO();
         io.DeltaTime = 1.0f / 60.0f; //TODO:
-        io.DisplaySize = { (float)screen_w, (float)screen_h };
+        io.DisplaySize = { (float)ws_screen_w, (float)ws_screen_h };
         ImGui::NewFrame();
 
         ImGui::Begin("Textures");
-        for (auto &kv : fontTextures)
+        for (auto &kv : ws_font_textures)
         {
             ImGui::Image(&kv.second.tex, { 128.0f, 10.0f }, { 0.0f, 0.0f }, {0.15f, 1.0f});
         }
-        for (auto &kv : screenRaws)
+        for (auto &kv : ws_screen_textures)
         {
             ImGui::Image(&kv.second, { 320.0f, 200.0f });
         }
-        for (auto &kv : pics)
+        for (auto &kv : ws_ui_textures)
         {
             ImGui::Image(&kv.second.tex, { (float)kv.second.w, (float)kv.second.h });
         }
-        for (auto &kv : sprites)
+        for (auto &kv : ws_sprite_textures)
         {
             ImGui::Image(&kv.second.tex, { (float)kv.second.w, (float)kv.second.h });
         }
-        for (auto &kv : walls)
+        for (auto &kv : ws_wall_textures)
         {
             ImGui::Image(&kv.second.tex, { (float)kv.second.w, (float)kv.second.h });
         }
         ImGui::End();
 
         ImGui::Begin("Rendering");
-        ImGui::Checkbox("Wireframe", &wireframeOn);
-        ImGui::Checkbox("Textures", &texturesOn);
-        ImGui::Checkbox("Sprite textures", &spriteTexturesOn);
-        ImGui::Checkbox("Sprites", &spritesOn);
-        ImGui::Checkbox("Ambient Occlusion", &ambientOcclusionEnabled);
-        ImGui::SliderFloat("AO Amount", &AC, 0.0f, 1.0f);
-        ImGui::SliderFloat("AO Size", &AC_SIZE, 0.0f, 0.5f);
+        ImGui::Checkbox("Wireframe", &ws_wireframe_enabled);
+        ImGui::Checkbox("Textures", &ws_texture_enabled);
+        ImGui::Checkbox("Sprite textures", &ws_sprite_texture_enabled);
+        ImGui::Checkbox("Sprites", &ws_sprite_enabled);
+        ImGui::Checkbox("Ambient Occlusion", &ws_ao_enabled);
+        ImGui::SliderFloat("AO Amount", &ws_ao_amount, 0.0f, 1.0f);
+        ImGui::SliderFloat("AO Size", &ws_ao_size, 0.0f, 0.5f);
         ImGui::End();
 
         ImGui::Render();
@@ -1165,7 +733,7 @@ void VW_UpdateScreen()
 
                 auto scissorW = (int)(pCmd->ClipRect.z - pCmd->ClipRect.x);
                 auto scissorH = (int)(pCmd->ClipRect.w - pCmd->ClipRect.y);
-                glScissor((int)pCmd->ClipRect.x, screen_h - (int)pCmd->ClipRect.y - scissorH, scissorW, scissorH);
+                glScissor((int)pCmd->ClipRect.x, ws_screen_h - (int)pCmd->ClipRect.y - scissorH, scissorW, scissorH);
 
                 if (pCmd->UserCallback)
                 {
@@ -1174,9 +742,9 @@ void VW_UpdateScreen()
                 else
                 {
                     GLuint texture = *(GLuint*)pCmd->TextureId;
-                    prepareForPTC(GL_TRIANGLES);
+                    ws_prepare_for_ptc(GL_TRIANGLES);
                     glBindTexture(GL_TEXTURE_2D, texture);
-                    auto pVertices = resources.pPTCVertices;
+                    auto pVertices = ws_resources.pPTCVertices;
                     for (int j = drawOffset; j < drawOffset + pCmd->ElemCount; ++j)
                     {
                         auto pVert = pVertexBuffer + pIndexBuffer[j];
@@ -1190,55 +758,55 @@ void VW_UpdateScreen()
                         pVertices->color.a = (float)((pVert->col >> 24) & 0xff) / 255.0f;
                         ++pVertices;
                     }
-                    ptcCount = pCmd->ElemCount;
-                    flush();
+                    ws_ptc_count = pCmd->ElemCount;
+                    ws_flush();
                 }
                 drawOffset += pCmd->ElemCount;
             }
         }
         glDisable(GL_SCISSOR_TEST);
-        glScissor(0, 0, screen_w, screen_h);
+        glScissor(0, 0, ws_screen_w, ws_screen_h);
     }
 
     // Swap buffers
     SDL_GL_SwapWindow(sdlWindow);
 
     // Go back to our 2D frame buffer
-    glBindFramebuffer(GL_FRAMEBUFFER, resources.mainRT.frameBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glViewport(0, 0, screen_w, screen_h);
+    glViewport(0, 0, ws_screen_w, ws_screen_h);
 
     matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)1024, (float)640, 0, -999, 999);
     //matrix2D = matrix2D.Transpose();
     {
-        glUseProgram(resources.programPC);
-        auto uniform = glGetUniformLocation(resources.programPC, "ProjMtx");
+        glUseProgram(ws_resources.programPC);
+        auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
         glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
     }
     {
-        glUseProgram(resources.programPTC);
-        auto uniform = glGetUniformLocation(resources.programPTC, "ProjMtx");
+        glUseProgram(ws_resources.programPTC);
+        auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
         glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
     }
 
-    pcCount = 0;
-    ptcCount = 0;
-    pntcCount = 0;
-    drawMode = -1;
-    drawModePrim = 0;
-    current3DTexture = 0;
+    ws_pc_count = 0;
+    ws_ptc_count = 0;
+    ws_pntc_count = 0;
+    ws_draw_mode = -1;
+    ws_draw_mode_prim = 0;
+    ws_current_3d_texture = 0;
 }
 
 void VGAClearScreen(void)
 {
-    auto statusLineH = (int)((float)STATUSLINES * ((float)screen_h / 200.0f));
+    auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
 
     glEnable(GL_SCISSOR_TEST);
     glClearColor(0, 0, 0, 1);
-    glScissor(0, statusLineH, screen_w, screen_h - statusLineH);
+    glScissor(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glScissor(0, 0, screen_w, screen_h);
+    glScissor(0, 0, ws_screen_w, ws_screen_h);
     glDisable(GL_SCISSOR_TEST);
 }
 
@@ -1254,7 +822,7 @@ int16_t inportb(int16_t addr)
     }
     case PEL_DATA:
     {
-        auto &col = palette[palidx / 3];
+        auto &col = ws_palette[palidx / 3];
         int16_t ret = 0;
         switch (palidx % 3)
         {
@@ -1307,510 +875,22 @@ void setvect(int16_t r_num, Interrupt interrupt)
     }
 }
 
-void flush()
-{
-    switch (drawMode)
-    {
-    case DRAW_MODE_PC:
-        if (pcCount)
-        {
-            drawPC(resources.pPCVertices, pcCount, drawModePrim);
-            pcCount = 0;
-        }
-        break;
-    case DRAW_MODE_PTC:
-        if (ptcCount)
-        {
-            drawPTC(resources.pPTCVertices, ptcCount, drawModePrim);
-            ptcCount = 0;
-        }
-        break;
-    case DRAW_MODE_PNTC:
-        if (pntcCount)
-        {
-            drawPNTC(resources.pPNTCVertices, pntcCount, drawModePrim);
-            pntcCount = 0;
-        }
-        break;
-    }
-}
-
-void VL_Bar(int16_t x, int16_t y, int16_t width, int16_t height, int16_t color)
-{
-    prepareForPC(GL_QUADS);
-    pcCount += drawRect(resources.pPCVertices + pcCount,
-                        (float)x * s_scale,
-                        (float)y * s_scale,
-                        (float)width * s_scale,
-                        (float)height * s_scale,
-                        palette[color]);
-}
-
-void VL_Hlin(uint16_t x, uint16_t y, uint16_t width, uint16_t color)
-{
-    prepareForPC(GL_QUADS);
-    pcCount += drawRect(resources.pPCVertices + pcCount,
-                        (float)x * s_scale,
-                        (float)y * s_scale,
-                        (float)width * s_scale,
-                        1 * s_scale,
-                        palette[color]);
-}
-
-void VL_Vlin(int16_t x, int16_t y, int16_t height, int16_t color)
-{
-    prepareForPC(GL_QUADS);
-    pcCount += drawRect(resources.pPCVertices + pcCount,
-                        (float)x * s_scale,
-                        (float)y * s_scale,
-                        1 * s_scale,
-                        (float)height * s_scale,
-                        palette[color]);
-}
-
-BakedFont &getBakedFont(int id)
-{
-    //fontcolor = f; backcolor
-    auto kid = id | (backcolor << 16) | (fontcolor << 24); // Generate a unique id by font color. A bit overkill, but meh...
-    auto it = fontTextures.find(kid);
-    if (it == fontTextures.end())
-    {
-        auto &bakedFont = fontTextures[kid];
-
-        // Load it
-        auto font = (fontstruct *)grsegs[id];
-        int w, h;
-        w = 0;
-        h = font->height;
-        for (int i = 0; i < 256; ++i)
-        {
-            w += font->width[i];
-        }
-        auto data = new uint8_t[w * h * 4];
-
-        auto lx = 0;
-        auto fg = palette[fontcolor];
-        auto bg = palette[backcolor];
-        bg.a = 0.0f;
-        for (int i = 0; i < 256; ++i)
-        {
-            auto cw = font->width[i];
-            bakedFont.os[i] = (float)lx / (float)w;
-            bakedFont.ws[i] = (float)cw / (float)w;
-            if (cw == 0)
-                continue;
-            auto src = ((byte *)font) + font->location[i];
-            for (int y = 0; y < h; ++y)
-            {
-                for (int x = lx; x < lx + cw; ++x)
-                {
-                    auto k = (y * w + x) * 4;
-                    Color col = bg;
-                    if (*src++)
-                        col = fg;
-                    data[k + 0] = (byte)(col.r * 255.0f);
-                    data[k + 1] = (byte)(col.g * 255.0f);
-                    data[k + 2] = (byte)(col.b * 255.0f);
-                    data[k + 3] = (byte)(col.a * 255.0f);
-                }
-            }
-            lx += cw;
-        }
-
-        bakedFont.tex = ws_create_texture(data, w, h);
-        delete[] data;
-        return bakedFont;
-    }
-    return it->second;
-}
-
-void drawDebugString(char *string, float x, float y)
-{
-    // backcolor = 0;
-    // fontcolor = 128;
-
-    fontstruct *font;
-    int16_t width, height, i;
-    byte *source, *dest, *origdest;
-    byte ch, mask;
-
-    font = (fontstruct *)grsegs[STARTFONT + 0];
-    auto &bakedFont = getBakedFont(STARTFONT + 0);
-    height = font->height;
-
-    flush();
-    prepareForPTC(GL_QUADS);
-    glBindTexture(GL_TEXTURE_2D, bakedFont.tex);
-
-    while ((ch = *string++) != 0)
-    {
-        width = font->width[ch];
-        auto os = bakedFont.os[ch];
-        ptcCount += drawRect(resources.pPTCVertices + ptcCount,
-                             x * s_scale, y * s_scale,
-                             (float)width * s_scale, (float)height * s_scale,
-                             os, 0, os + bakedFont.ws[ch], 1,
-                             {1, 1, 1, 1});
-        x += (float)width;
-    }
-
-    flush();
-}
-
-void VW_DrawPropString(char *string)
-{
-    fontstruct *font;
-    int16_t width, height, i;
-    byte *source, *dest, *origdest;
-    byte ch, mask;
-
-    font = (fontstruct *)grsegs[STARTFONT + fontnumber];
-    auto &bakedFont = getBakedFont(STARTFONT + fontnumber);
-    height = font->height;
-
-    flush();
-    prepareForPTC(GL_QUADS);
-    glBindTexture(GL_TEXTURE_2D, bakedFont.tex);
-
-    while ((ch = *string++) != 0)
-    {
-        width = font->width[ch];
-        auto os = bakedFont.os[ch];
-        ptcCount += drawRect(resources.pPTCVertices + ptcCount,
-                             (float)px * s_scale, (float)py * s_scale,
-                             (float)width * s_scale, (float)height * s_scale,
-                             os, 0, os + bakedFont.ws[ch], 1,
-                             {1, 1, 1, 1});
-        px += width;
-    }
-
-    flush();
-}
-
-void ws_draw_screen_from_raw(byte *_data, int16_t chunk)
-{
-    GLuint texture = 0;
-    auto it = screenRaws.find(chunk);
-    if (it == screenRaws.end())
-    {
-        auto data = new uint8_t[MaxX * MaxY * 4];
-
-        int k = 0;
-        for (int y = 0; y < MaxY; ++y)
-        {
-            for (int x = 0; x < MaxX; ++x)
-            {
-                auto col = palette[_data[(y * 80 + (x >> 2)) + (x & 3) * 80 * 200]];
-                data[k + 0] = (byte)(col.r * 255.0f);
-                data[k + 1] = (byte)(col.g * 255.0f);
-                data[k + 2] = (byte)(col.b * 255.0f);
-                data[k + 3] = (byte)(col.a * 255.0f);
-                k += 4;
-            }
-        }
-        texture = ws_create_texture(data, MaxX, MaxY);
-        delete[] data;
-        screenRaws[chunk] = texture;
-    }
-    else
-    {
-        texture = it->second;
-    }
-
-    flush();
-    prepareForPTC(GL_QUADS);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    ptcCount += drawRect(resources.pPTCVertices + ptcCount, (float)0, (float)0, (float)screen_w, (float)screen_h, 0, 0, 1, 1, {1, 1, 1, 1});
-    flush();
-}
-
-Pic load_pic(int16_t chunknum)
-{
-    int16_t picnum = chunknum - STARTPICS;
-
-    uint16_t width, height;
-    Pic pic;
-
-    width = pictable[picnum].width;
-    height = pictable[picnum].height;
-    auto _data = (byte *)grsegs[chunknum];
-
-    auto data = new uint8_t[width * height * 4];
-
-    int k = 0;
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            auto col = palette[_data[(y * (width >> 2) + (x >> 2)) + (x & 3) * (width >> 2) * height]];
-            data[k + 0] = (byte)(col.r * 255.0f);
-            data[k + 1] = (byte)(col.g * 255.0f);
-            data[k + 2] = (byte)(col.b * 255.0f);
-            data[k + 3] = (byte)(col.a * 255.0f);
-            k += 4;
-        }
-    }
-    auto texture = ws_create_texture(data, width, height);
-    delete[] data;
-    pic.w = width;
-    pic.h = height;
-    pic.tex = texture;
-    pics[chunknum] = pic;
-
-    return pic;
-}
-
-void ws_preload_pics()
-{
-    static bool loaded = false;
-    if (!loaded)
-    {
-        loaded = true;
-        for (int i = 0; i < NUMPICS; ++i)
-        {
-            CA_CacheGrChunk(i + STARTPICS);
-            load_pic(i + STARTPICS);
-        }
-    }
-}
-
-void LatchDrawPic(uint16_t x, uint16_t y, uint16_t picnum)
-{
-    uint16_t wide, height, source;
-
-    wide = pictable[picnum - STARTPICS].width;
-    height = pictable[picnum - STARTPICS].height;
-    source = latchpics[2 + picnum - LATCHPICS_LUMP_START];
-
-    //VL_LatchToScreen (source,wide/4,height,x*8,y);
-
-    VWB_DrawPic(x * 8, y, (int16_t)picnum, (int16_t)wide / 4, (int16_t)height);
-}
-
-void VWB_DrawPic(int16_t x, int16_t y, int16_t chunknum, int16_t w, int16_t h)
-{
-    // Load them into textures instead of doing them lazy otherwise it crashes (?)
-    ws_preload_pics();
-
-    int16_t picnum = chunknum - STARTPICS;
-    uint16_t width, height;
-    width = pictable[picnum].width;
-    height = pictable[picnum].height;
-    if (w != -1)
-        width = w;
-    if (h != -1)
-        height = h;
-    x &= ~7;
-
-    Pic pic;
-    auto it = pics.find(chunknum);
-    auto lw = 40;
-    if (it == pics.end())
-    {
-        pic = load_pic(chunknum);
-    }
-    else
-    {
-        pic = it->second;
-    }
-
-    flush();
-    prepareForPTC(GL_QUADS);
-    glBindTexture(GL_TEXTURE_2D, pic.tex);
-    ptcCount += drawRect(resources.pPTCVertices + ptcCount,
-                         (float)x * s_scale, (float)y * s_scale,
-                         (float)pic.w * s_scale, (float)pic.h * s_scale,
-                         0, 0, 1, 1, {1, 1, 1, 1});
-    flush();
-}
-
-void VL_SetPalette(byte *pal)
-{
-    for (int i = 0; i < 256; ++i)
-    {
-        auto &col = dynamic_palette[i];
-        col.r = (float)pal[i * 3 + 0] * 255.0f;
-        col.g = (float)pal[i * 3 + 1] * 255.0f;
-        col.b = (float)pal[i * 3 + 2] * 255.0f;
-        col.a = 1.0f;
-    }
-    dynamic_palette[255].a = 0.0f;
-}
-
-void VL_GetPalette (byte  *palette)
-{
-    for (int i = 0; i < 256; ++i)
-    {
-        auto &col = dynamic_palette[i];
-        palette[i * 3 + 0] = (byte)(col.r * 255.0f);
-        palette[i * 3 + 1] = (byte)(col.g * 255.0f);
-        palette[i * 3 + 2] = (byte)(col.b * 255.0f);
-    }
-}
-
-Pic load_sprite(int16_t shapenum)
-{
-    uint16_t width, height;
-    Pic pic;
-
-    width = 64;
-    height = 64;
-
-    auto _data = (byte *)PM_GetSpritePage(shapenum);
-
-    auto first_column = (word)_data[0] | (word)(_data[1]) << 8;
-    auto last_column = (word)_data[2] | (word)(_data[3]) << 8;
-    word *column_offsets = new word[last_column - first_column + 1];
-
-    for (int i = 0; i <= last_column - first_column; ++i)
-    {
-        column_offsets[i] = (word)_data[4 + 2 * i] | (word)(_data[4 + 2 * i + 1]) << 8;
-    }
-
-    auto sprdata = new byte[64 * 64];
-    memset(sprdata, 255, 64 * 64);
-
-    byte* trexel = _data + (4 + 2 * (last_column - first_column + 1));
-    word *column_offset_reader = column_offsets; // read-head that will traverse the column offsets
-    for (word column = first_column; column <= last_column; ++column)
-    {
-        word *drawing_instructions = (word *)(_data + *column_offset_reader);
-        uint32_t idx = 0;
-        while (drawing_instructions[idx] != 0)
-        {
-            for (int row = drawing_instructions[idx + 2] / 2; row < drawing_instructions[idx] / 2; ++row)
-            {
-                sprdata[column - 1 + row * 64 - 1] = *trexel++;
-            }
-            idx += 3;
-        }
-        ++column_offset_reader; // advance the read-head
-    }
-    delete[] column_offsets;
-
-    auto data = new uint8_t[width * height * 4];
-
-    int k = 0;
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            auto col = palette[sprdata[k / 4]];
-            data[k + 0] = (byte)(col.r * 255.0f);
-            data[k + 1] = (byte)(col.g * 255.0f);
-            data[k + 2] = (byte)(col.b * 255.0f);
-            data[k + 3] = (byte)(col.a * 255.0f);
-            k += 4;
-        }
-    }
-
-    delete[] sprdata;
-    auto texture = ws_create_texture(data, width, height);
-    delete[] data;
-    pic.w = width;
-    pic.h = height;
-    pic.tex = texture;
-    sprites[shapenum] = pic;
-
-    return pic;
-}
-
-Pic load_wall(int wallpic)
-{
-    uint16_t width, height;
-    Pic pic;
-
-    width = 64;
-    height = 64;
-
-    auto _data = (byte *)PM_GetPage(wallpic);
-    //auto _data2 = (byte *)PM_GetPage(wallpic + 1);
-
-    auto data = new byte[64 * 64 * 4];
-
-    for (int x = 0; x < 64; ++x)
-    {
-        for (int y = 0; y < 64; ++y)
-        {
-            auto& col = palette[*_data++];
-            auto k = (y * 64 + x) * 4;
-            data[k + 0] = (byte)(col.r * 255.0f);
-            data[k + 1] = (byte)(col.g * 255.0f);
-            data[k + 2] = (byte)(col.b * 255.0f);
-            data[k + 3] = (byte)(col.a * 255.0f);
-        }
-    }
-
-    auto texture = ws_create_texture(data, width, height);
-    delete[] data;
-    pic.w = width;
-    pic.h = height;
-    pic.tex = texture;
-    walls[wallpic] = pic;
-
-    return pic;
-}
-
-extern word PMSpriteStart, PMSoundStart;
-
-void ws_preload_sprites()
-{
-    static bool loaded = false;
-    if (!loaded)
-    {
-        loaded = true;
-        for (int i = 0; i < PMSoundStart - PMSpriteStart; ++i)
-        {
-            load_sprite(i);
-        }
-    }
-}
-
-void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
-{
-    if (debugView) return; // Don't show the gun in debug view
-
-    //ws_preload_sprites();
-    //auto offset = xcenter - viewwidth / 2;
-
-    auto it = sprites.find(shapenum);
-    Pic pic;
-    if (it == sprites.end())
-        pic = load_sprite(shapenum);
-    else
-        pic = it->second;
-
-    static const int SCALE = 2;
-
-    flush();
-    prepareForPTC(GL_QUADS);
-    glBindTexture(GL_TEXTURE_2D, pic.tex);
-    ptcCount += drawRect(
-        resources.pPTCVertices + ptcCount,
-        (float)(MaxX / 2 - pic.w / 2 * SCALE) * s_scale,
-        (float)(MaxY - SCALE - STATUSLINES - pic.h * SCALE + SCALE) * s_scale,
-        (float)(pic.w * SCALE) * s_scale,
-        (float)(pic.h * SCALE) * s_scale,
-        0, 0, 1, 1, {1, 1, 1, 1});
-    flush();
-}
-
 void ws_update_camera()
 {
-    auto statusLineH = (int)((float)STATUSLINES * ((float)screen_h / 200.0f));
+    auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
 
-    auto proj = ws_Matrix::CreatePerspectiveFieldOfView(60.0f * (float)M_PI / 180.0f, (float)screen_w / ((float)screen_h - (float)statusLineH), 0.01f, 1000.0f);
+    auto proj = ws_Matrix::CreatePerspectiveFieldOfView(60.0f * (float)M_PI / 180.0f, (float)ws_screen_w / ((float)ws_screen_h - (float)statusLineH), 0.01f, 1000.0f);
 
-    if (debugView)
+    if (ws_debug_view_enabled)
     {
-        front.x = sinf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
-        front.y = cosf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
-        front.z = sinf(freecamAngleX * M_PI / 180.0f);
-        front.Normalize();
-        right = { front.y, -front.x, 0.0f };
-        right.Normalize();
-        eyePos = freecamPos;
-        target = eyePos + front;
+        ws_cam_front.x = sinf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
+        ws_cam_front.y = cosf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
+        ws_cam_front.z = sinf(freecamAngleX * M_PI / 180.0f);
+        ws_cam_front.Normalize();
+        ws_cam_right = { ws_cam_front.y, -ws_cam_front.x, 0.0f };
+        ws_cam_right.Normalize();
+        ws_cam_eye = freecamPos;
+        ws_cam_target = ws_cam_eye + ws_cam_front;
     }
     else
     {
@@ -1819,853 +899,42 @@ void ws_update_camera()
         float px = (float)player->x / 65536.0f;
         float py = (float)player->y / 65536.0f;
 
-        front = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
-        front = ws_Vector3(vcos, vsin, 0.0f);
-        front.Normalize();
-        right = { front.y, -front.x, 0.0f };
-        right.Normalize();
-        eyePos = ws_Vector3(px, 64.0f - py, 0.5f);
-        target = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
+        ws_cam_front = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
+        ws_cam_front = ws_Vector3(vcos, vsin, 0.0f);
+        ws_cam_front.Normalize();
+        ws_cam_right = { ws_cam_front.y, -ws_cam_front.x, 0.0f };
+        ws_cam_right.Normalize();
+        ws_cam_eye = ws_Vector3(px, 64.0f - py, 0.5f);
+        ws_cam_target = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
     }
 
     auto view = ws_Matrix::CreateLookAt(
-        eyePos,
-        target,
+        ws_cam_eye,
+        ws_cam_target,
         ws_Vector3(0.0f, 0.0f, 1.0f));
     matrix3D = view * proj;
 
     {
-        glUseProgram(resources.programPNTC);
-        auto uniform = glGetUniformLocation(resources.programPNTC, "ProjMtx");
+        glUseProgram(ws_resources.programPNTC);
+        auto uniform = glGetUniformLocation(ws_resources.programPNTC, "ProjMtx");
         glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix3D._11);
     }
 
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_SCISSOR_TEST);
     glEnable(GL_CULL_FACE);
-    glPolygonMode(GL_FRONT, wireframeOn ? GL_LINE : GL_FILL);
-    glScissor(0, statusLineH, screen_w, screen_h - statusLineH);
-    glViewport(0, statusLineH, screen_w, screen_h - statusLineH);
-}
-
-void ws_draw_ceiling(int x, int y, int color, bool* neighbors)
-{
-    auto col = dynamic_palette[color];
-    if (!texturesOn) col = { 1, 1, 1, 1 };
-
-    prepareForPNTC(GL_QUADS, resources.whiteTexture);
-
-    auto xf = (float)x;
-    auto yf = 63.0f - (float)y;
-
-    auto pVertices = resources.pPNTCVertices + pntcCount;
-    if (!ambientOcclusionEnabled || !neighbors || (!neighbors[0] && !neighbors[1] && !neighbors[2] && !neighbors[3] && !neighbors[4] && !neighbors[5] && !neighbors[6] && !neighbors[7]) || !AC_SIZE)
-    {
-        pVertices[0].position.x = xf;
-        pVertices[0].position.y = yf;
-        pVertices[0].position.z = 1.0f;
-        pVertices[0].normal.x = 0;
-        pVertices[0].normal.y = 0;
-        pVertices[0].normal.z = -1;
-        pVertices[0].texCoord = { 0, 0 };
-        pVertices[0].color = col;
-
-        pVertices[1].position.x = xf;
-        pVertices[1].position.y = yf + 1.0f;
-        pVertices[1].position.z = 1.0f;
-        pVertices[1].normal.x = 0;
-        pVertices[1].normal.y = 0;
-        pVertices[1].normal.z = -1;
-        pVertices[1].texCoord = { 0, 1 };
-        pVertices[1].color = col;
-
-        pVertices[2].position.x = xf + 1.0f;
-        pVertices[2].position.y = yf + 1.0f;
-        pVertices[2].position.z = 1.0f;
-        pVertices[2].normal.x = 0;
-        pVertices[2].normal.y = 0;
-        pVertices[2].normal.z = -1;
-        pVertices[2].texCoord = { 1, 1 };
-        pVertices[2].color = col;
-
-        pVertices[3].position.x = xf + 1.0f;
-        pVertices[3].position.y = yf;
-        pVertices[3].position.z = 1.0f;
-        pVertices[3].normal.x = 0;
-        pVertices[3].normal.y = 0;
-        pVertices[3].normal.z = -1;
-        pVertices[3].texCoord = { 1, 0 };
-        pVertices[3].color = col;
-
-        pntcCount += 4;
-    }
-    else
-    {
-        Color aoCol = { col.r * AC, col.g * AC, col.b * AC, 1 };
-        auto midP = (1.0f + AC) * 0.5f;
-        Color aoMidCol = { col.r * midP, col.g * midP, col.b * midP, 1 };
-        Color nCol[] = {
-            neighbors[0] ? aoCol : col,
-            neighbors[1] ? ((neighbors[0] || neighbors[2]) ? aoCol : aoMidCol) : ((neighbors[0] || neighbors[2]) ? aoMidCol : col),
-            neighbors[2] ? aoCol : col,
-            neighbors[3] ? ((neighbors[2] || neighbors[4]) ? aoCol : aoMidCol) : ((neighbors[2] || neighbors[4]) ? aoMidCol : col),
-            neighbors[4] ? aoCol : col,
-            neighbors[5] ? ((neighbors[4] || neighbors[6]) ? aoCol : aoMidCol) : ((neighbors[4] || neighbors[6]) ? aoMidCol : col),
-            neighbors[6] ? aoCol : col,
-            neighbors[7] ? ((neighbors[6] || neighbors[0]) ? aoCol : aoMidCol) : ((neighbors[6] || neighbors[0]) ? aoMidCol : col),
-        };
-        auto invSize = 1.0f - AC_SIZE;
-        for (int i = 0; i < 4 * 9; ++i)
-        {
-            pVertices[i].normal = { 0, 0, -1 };
-            pVertices[i].texCoord = { 0, 0 }; // no textures on ceiling
-        }
-
-        pVertices[0].position = { xf + AC_SIZE, yf, 1.0f };
-        pVertices[1].position = { xf, yf, 1.0f };
-        pVertices[2].position = { xf, yf + AC_SIZE, 1.0f };
-        pVertices[3].position = { xf + AC_SIZE, yf + AC_SIZE, 1.0f };
-        pVertices[0].color = nCol[0];
-        pVertices[1].color = nCol[7];
-        pVertices[2].color = nCol[6];
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + AC_SIZE, yf, 1.0f };
-        pVertices[1].position = { xf + AC_SIZE, yf + AC_SIZE, 1.0f };
-        pVertices[2].position = { xf + invSize, yf + AC_SIZE, 1.0f };
-        pVertices[3].position = { xf + invSize, yf, 1.0f };
-        pVertices[0].color = nCol[0];
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = nCol[0];
-
-        pVertices += 4;
-        pVertices[0].position = { xf + invSize, yf, 1.0f };
-        pVertices[1].position = { xf + invSize, yf + AC_SIZE, 1.0f };
-        pVertices[2].position = { xf + 1, yf + AC_SIZE, 1.0f };
-        pVertices[3].position = { xf + 1, yf, 1.0f };
-        pVertices[0].color = nCol[0];
-        pVertices[1].color = col;
-        pVertices[2].color = nCol[2];
-        pVertices[3].color = nCol[1];
-
-        pVertices += 4;
-        pVertices[0].position = { xf, yf + AC_SIZE, 1.0f };
-        pVertices[1].position = { xf, yf + invSize, 1.0f };
-        pVertices[2].position = { xf + AC_SIZE, yf + invSize, 1.0f };
-        pVertices[3].position = { xf + AC_SIZE, yf + AC_SIZE, 1.0f };
-        pVertices[0].color = nCol[6];
-        pVertices[1].color = nCol[6];
-        pVertices[2].color = col;
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + AC_SIZE, yf + AC_SIZE, 1.0f };
-        pVertices[1].position = { xf + AC_SIZE, yf + invSize, 1.0f };
-        pVertices[2].position = { xf + invSize, yf + invSize, 1.0f };
-        pVertices[3].position = { xf + invSize, yf + AC_SIZE, 1.0f };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + invSize, yf + AC_SIZE, 1.0f };
-        pVertices[1].position = { xf + invSize, yf + invSize, 1.0f };
-        pVertices[2].position = { xf + 1, yf + invSize, 1.0f };
-        pVertices[3].position = { xf + 1, yf + AC_SIZE, 1.0f };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = nCol[2];
-        pVertices[3].color = nCol[2];
-
-        pVertices += 4;
-        pVertices[0].position = { xf, yf + invSize, 1.0f };
-        pVertices[1].position = { xf, yf + 1, 1.0f };
-        pVertices[2].position = { xf + AC_SIZE, yf + 1, 1.0f };
-        pVertices[3].position = { xf + AC_SIZE, yf + invSize, 1.0f };
-        pVertices[0].color = nCol[6];
-        pVertices[1].color = nCol[5];
-        pVertices[2].color = nCol[4];
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + AC_SIZE, yf + invSize, 1.0f };
-        pVertices[1].position = { xf + AC_SIZE, yf + 1, 1.0f };
-        pVertices[2].position = { xf + invSize, yf + 1, 1.0f };
-        pVertices[3].position = { xf + invSize, yf + invSize, 1.0f };
-        pVertices[0].color = col;
-        pVertices[1].color = nCol[4];
-        pVertices[2].color = nCol[4];
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + 1, yf + invSize, 1.0f };
-        pVertices[1].position = { xf + invSize, yf + invSize, 1.0f };
-        pVertices[2].position = { xf + invSize, yf + 1, 1.0f };
-        pVertices[3].position = { xf + 1, yf + 1, 1.0f };
-        pVertices[0].color = nCol[2];
-        pVertices[1].color = col;
-        pVertices[2].color = nCol[4];
-        pVertices[3].color = nCol[3];
-
-        pntcCount += 4 * 9;
-    }
-}
-
-void ws_draw_floor(int x, int y, int color, bool* neighbors)
-{
-    auto col = dynamic_palette[color];
-    if (!texturesOn) col = { 1, 1, 1, 1 };
-
-    prepareForPNTC(GL_QUADS, resources.whiteTexture);
-
-    auto xf = (float)x;
-    auto yf = 63.0f - (float)y;
-
-    auto pVertices = resources.pPNTCVertices + pntcCount;
-    if (!ambientOcclusionEnabled || !neighbors || (!neighbors[0] && !neighbors[1] && !neighbors[2] && !neighbors[3] && !neighbors[4] && !neighbors[5] && !neighbors[6] && !neighbors[7]) || !AC_SIZE)
-    {
-        pVertices[0].position.x = xf;
-        pVertices[0].position.y = yf + 1.0f;
-        pVertices[0].position.z = 0.0f;
-        pVertices[0].normal.x = 0;
-        pVertices[0].normal.y = 0;
-        pVertices[0].normal.z = 1;
-        pVertices[0].texCoord = { 0, 0 };
-        pVertices[0].color = col;
-
-        pVertices[1].position.x = xf;
-        pVertices[1].position.y = yf;
-        pVertices[1].position.z = 0.0f;
-        pVertices[1].normal.x = 0;
-        pVertices[1].normal.y = 0;
-        pVertices[1].normal.z = 1;
-        pVertices[1].texCoord = { 0, 1 };
-        pVertices[1].color = col;
-
-        pVertices[2].position.x = xf + 1.0f;
-        pVertices[2].position.y = yf;
-        pVertices[2].position.z = 0.0f;
-        pVertices[2].normal.x = 0;
-        pVertices[2].normal.y = 0;
-        pVertices[2].normal.z = 1;
-        pVertices[2].texCoord = { 1, 1 };
-        pVertices[2].color = col;
-
-        pVertices[3].position.x = xf + 1.0f;
-        pVertices[3].position.y = yf + 1.0f;
-        pVertices[3].position.z = 0.0f;
-        pVertices[3].normal.x = 0;
-        pVertices[3].normal.y = 0;
-        pVertices[3].normal.z = 1;
-        pVertices[3].texCoord = { 1, 0 };
-        pVertices[3].color = col;
-
-        pntcCount += 4;
-    }
-    else
-    {
-        Color aoCol = { col.r * AC, col.g * AC, col.b * AC, 1 };
-        auto midP = (1.0f + AC) * 0.5f;
-        Color aoMidCol = { col.r * midP, col.g * midP, col.b * midP, 1 };
-        Color nCol[] = {
-            neighbors[0] ? aoCol : col,
-            neighbors[1] ? ((neighbors[0] || neighbors[2]) ? aoCol : aoMidCol) : ((neighbors[0] || neighbors[2]) ? aoMidCol : col),
-            neighbors[2] ? aoCol : col,
-            neighbors[3] ? ((neighbors[2] || neighbors[4]) ? aoCol : aoMidCol) : ((neighbors[2] || neighbors[4]) ? aoMidCol : col),
-            neighbors[4] ? aoCol : col,
-            neighbors[5] ? ((neighbors[4] || neighbors[6]) ? aoCol : aoMidCol) : ((neighbors[4] || neighbors[6]) ? aoMidCol : col),
-            neighbors[6] ? aoCol : col,
-            neighbors[7] ? ((neighbors[6] || neighbors[0]) ? aoCol : aoMidCol) : ((neighbors[6] || neighbors[0]) ? aoMidCol : col),
-        };
-        auto invSize = 1.0f - AC_SIZE;
-        for (int i = 0; i < 4 * 9; ++i)
-        {
-            pVertices[i].normal = { 0, 0, 1 };
-            pVertices[i].texCoord = { 0, 0 }; // no textures on floors
-        }
-
-        pVertices[0].position = { xf + AC_SIZE, yf, 0 };
-        pVertices[1].position = { xf + AC_SIZE, yf + AC_SIZE, 0 };
-        pVertices[2].position = { xf, yf + AC_SIZE, 0 };
-        pVertices[3].position = { xf, yf, 0 };
-        pVertices[0].color = nCol[0];
-        pVertices[1].color = col;
-        pVertices[2].color = nCol[6];
-        pVertices[3].color = nCol[7];
-
-        pVertices += 4;
-        pVertices[0].position = { xf + AC_SIZE, yf + AC_SIZE, 0 };
-        pVertices[1].position = { xf + AC_SIZE, yf, 0 };
-        pVertices[2].position = { xf + invSize, yf, 0 };
-        pVertices[3].position = { xf + invSize, yf + AC_SIZE, 0 };
-        pVertices[0].color = col;
-        pVertices[1].color = nCol[0];
-        pVertices[2].color = nCol[0];
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + invSize, yf, 0 };
-        pVertices[1].position = { xf + 1, yf, 0 };
-        pVertices[2].position = { xf + 1, yf + AC_SIZE, 0 };
-        pVertices[3].position = { xf + invSize, yf + AC_SIZE, 0 };
-        pVertices[0].color = nCol[0];
-        pVertices[1].color = nCol[1];
-        pVertices[2].color = nCol[2];
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf, yf + invSize, 0 };
-        pVertices[1].position = { xf, yf + AC_SIZE, 0 };
-        pVertices[2].position = { xf + AC_SIZE, yf + AC_SIZE, 0 };
-        pVertices[3].position = { xf + AC_SIZE, yf + invSize, 0 };
-        pVertices[0].color = nCol[6];
-        pVertices[1].color = nCol[6];
-        pVertices[2].color = col;
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + AC_SIZE, yf + invSize, 0 };
-        pVertices[1].position = { xf + AC_SIZE, yf + AC_SIZE, 0 };
-        pVertices[2].position = { xf + invSize, yf + AC_SIZE, 0 };
-        pVertices[3].position = { xf + invSize, yf + invSize, 0 };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + invSize, yf + invSize, 0 };
-        pVertices[1].position = { xf + invSize, yf + AC_SIZE, 0 };
-        pVertices[2].position = { xf + 1, yf + AC_SIZE, 0 };
-        pVertices[3].position = { xf + 1, yf + invSize, 0 };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = nCol[2];
-        pVertices[3].color = nCol[2];
-
-        pVertices += 4;
-        pVertices[0].position = { xf, yf + invSize, 0 };
-        pVertices[1].position = { xf + AC_SIZE, yf + invSize, 0 };
-        pVertices[2].position = { xf + AC_SIZE, yf + 1, 0 };
-        pVertices[3].position = { xf, yf + 1, 0 };
-        pVertices[0].color = nCol[6];
-        pVertices[1].color = col;
-        pVertices[2].color = nCol[4];
-        pVertices[3].color = nCol[5];
-
-        pVertices += 4;
-        pVertices[0].position = { xf + AC_SIZE, yf + 1, 0 };
-        pVertices[1].position = { xf + AC_SIZE, yf + invSize, 0 };
-        pVertices[2].position = { xf + invSize, yf + invSize, 0 };
-        pVertices[3].position = { xf + invSize, yf + 1, 0 };
-        pVertices[0].color = nCol[4];
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = nCol[4];
-
-        pVertices += 4;
-        pVertices[0].position = { xf + 1, yf + invSize, 0 };
-        pVertices[1].position = { xf + 1, yf + 1, 0 };
-        pVertices[2].position = { xf + invSize, yf + 1, 0 };
-        pVertices[3].position = { xf + invSize, yf + invSize, 0 };
-        pVertices[0].color = nCol[2];
-        pVertices[1].color = nCol[3];
-        pVertices[2].color = nCol[4];
-        pVertices[3].color = col;
-
-        pntcCount += 4 * 9;
-    }
-}
-
-void ws_draw_door_floor(int x, int y, int color, bool* neighbors, float percent)
-{
-    if (!ambientOcclusionEnabled)
-    {
-        ws_draw_floor(x, y, color, nullptr);
-        return;
-    }
-
-    prepareForPNTC(GL_QUADS, resources.whiteTexture);
-
-    auto xf = (float)x;
-    auto yf = 63.0f - (float)y;
-    auto zf = 0.01f;
-
-    auto pVertices = resources.pPNTCVertices + pntcCount;
-    Color col = { 1, 1, 1, 1 };
-    Color aoCol = { AC, AC, AC, 1 };
-    for (int i = 0; i < 4 * 4; ++i)
-    {
-        pVertices[i].normal = { 0, 0, 1 };
-        pVertices[i].texCoord = { 0, 0 }; // no textures on floors
-    }
-
-    if (neighbors[2])
-    {
-        pVertices[0].position = { xf + percent, yf + 0.5f, zf };
-        pVertices[1].position = { xf + percent, yf + 0.5f - AC_SIZE, zf };
-        pVertices[2].position = { xf + 1.0f + percent, yf + 0.5f - AC_SIZE, zf };
-        pVertices[3].position = { xf + 1.0f + percent, yf + 0.5f, zf };
-        pVertices[0].color = aoCol;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + percent - AC_SIZE, yf + 0.5f, zf };
-        pVertices[1].position = { xf + percent - AC_SIZE, yf + 0.5f - AC_SIZE, zf };
-        pVertices[2].position = { xf + percent, yf + 0.5f - AC_SIZE, zf };
-        pVertices[3].position = { xf + percent, yf + 0.5f, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + percent, yf + 0.5f + AC_SIZE, zf };
-        pVertices[1].position = { xf + percent, yf + 0.5f, zf };
-        pVertices[2].position = { xf + 1.0f + percent, yf + 0.5f, zf };
-        pVertices[3].position = { xf + 1.0f + percent, yf + 0.5f + AC_SIZE, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = aoCol;
-        pVertices[2].color = aoCol;
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + percent, yf + 0.5f + AC_SIZE, zf };
-        pVertices[1].position = { xf + percent - AC_SIZE, yf + 0.5f + AC_SIZE, zf };
-        pVertices[2].position = { xf + percent - AC_SIZE, yf + 0.5f, zf };
-        pVertices[3].position = { xf + percent, yf + 0.5f, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pntcCount += 4 * 4;
-    }
-    else
-    {
-        pVertices[0].position = { xf + 0.5f - AC_SIZE, yf - percent, zf };
-        pVertices[1].position = { xf + 0.5f, yf - percent, zf };
-        pVertices[2].position = { xf + 0.5f, yf + 1.0f - percent, zf };
-        pVertices[3].position = { xf + 0.5f - AC_SIZE, yf + 1.0f - percent, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = aoCol;
-        pVertices[2].color = aoCol;
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + 0.5f, yf - percent + AC_SIZE + 1.0f, zf };
-        pVertices[1].position = { xf + 0.5f - AC_SIZE, yf - percent + AC_SIZE + 1.0f, zf };
-        pVertices[2].position = { xf + 0.5f - AC_SIZE, yf - percent + 1.0f, zf };
-        pVertices[3].position = { xf + 0.5f, yf - percent + 1.0f, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + 0.5f, yf - percent, zf };
-        pVertices[1].position = { xf + 0.5f + AC_SIZE, yf - percent, zf };
-        pVertices[2].position = { xf + 0.5f + AC_SIZE, yf + 1.0f - percent, zf };
-        pVertices[3].position = { xf + 0.5f, yf + 1.0f - percent, zf };
-        pVertices[0].color = aoCol;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + 0.5f + AC_SIZE, yf - percent + 1.0f, zf };
-        pVertices[1].position = { xf + 0.5f + AC_SIZE, yf - percent + AC_SIZE + 1.0f, zf };
-        pVertices[2].position = { xf + 0.5f, yf - percent + AC_SIZE + 1.0f, zf };
-        pVertices[3].position = { xf + 0.5f, yf - percent + 1.0f, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pntcCount += 4 * 4;
-    }
-}
-
-void ws_draw_door_ceiling(int x, int y, int color, bool* neighbors, float percent)
-{
-    if (!ambientOcclusionEnabled)
-    {
-        ws_draw_floor(x, y, color, nullptr);
-        return;
-    }
-
-    prepareForPNTC(GL_QUADS, resources.whiteTexture);
-
-    auto xf = (float)x;
-    auto yf = 63.0f - (float)y;
-    auto zf = 0.99f;
-
-    auto pVertices = resources.pPNTCVertices + pntcCount;
-    Color col = { 1, 1, 1, 1 };
-    Color aoCol = { AC, AC, AC, 1 };
-    for (int i = 0; i < 4 * 4; ++i)
-    {
-        pVertices[i].normal = { 0, 0, 1 };
-        pVertices[i].texCoord = { 0, 0 }; // no textures on floors
-    }
-
-    if (neighbors[2])
-    {
-        pVertices[0].position = { xf + percent, yf + 0.5f - AC_SIZE, zf };
-        pVertices[1].position = { xf + percent, yf + 0.5f, zf };
-        pVertices[2].position = { xf + 1.0f + percent, yf + 0.5f, zf };
-        pVertices[3].position = { xf + 1.0f + percent, yf + 0.5f - AC_SIZE, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = aoCol;
-        pVertices[2].color = aoCol;
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + percent, yf + 0.5f - AC_SIZE, zf };
-        pVertices[1].position = { xf + percent - AC_SIZE, yf + 0.5f - AC_SIZE, zf };
-        pVertices[2].position = { xf + percent - AC_SIZE, yf + 0.5f, zf };
-        pVertices[3].position = { xf + percent, yf + 0.5f, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + percent, yf + 0.5f, zf };
-        pVertices[1].position = { xf + percent, yf + 0.5f + AC_SIZE, zf };
-        pVertices[2].position = { xf + 1.0f + percent, yf + 0.5f + AC_SIZE, zf };
-        pVertices[3].position = { xf + 1.0f + percent, yf + 0.5f, zf };
-        pVertices[0].color = aoCol;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + percent - AC_SIZE, yf + 0.5f, zf };
-        pVertices[1].position = { xf + percent - AC_SIZE, yf + 0.5f + AC_SIZE, zf };
-        pVertices[2].position = { xf + percent, yf + 0.5f + AC_SIZE, zf };
-        pVertices[3].position = { xf + percent, yf + 0.5f, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pntcCount += 4 * 4;
-    }
-    else
-    {
-        pVertices[0].position = { xf + 0.5f, yf - percent, zf };
-        pVertices[1].position = { xf + 0.5f - AC_SIZE, yf - percent, zf };
-        pVertices[2].position = { xf + 0.5f - AC_SIZE, yf + 1.0f - percent, zf };
-        pVertices[3].position = { xf + 0.5f, yf + 1.0f - percent, zf };
-        pVertices[0].color = aoCol;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + 0.5f - AC_SIZE, yf - percent + 1.0f, zf };
-        pVertices[1].position = { xf + 0.5f - AC_SIZE, yf - percent + AC_SIZE + 1.0f, zf };
-        pVertices[2].position = { xf + 0.5f, yf - percent + AC_SIZE + 1.0f, zf };
-        pVertices[3].position = { xf + 0.5f, yf - percent + 1.0f, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + 0.5f + AC_SIZE, yf - percent, zf };
-        pVertices[1].position = { xf + 0.5f, yf - percent, zf };
-        pVertices[2].position = { xf + 0.5f, yf + 1.0f - percent, zf };
-        pVertices[3].position = { xf + 0.5f + AC_SIZE, yf + 1.0f - percent, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = aoCol;
-        pVertices[2].color = aoCol;
-        pVertices[3].color = col;
-
-        pVertices += 4;
-        pVertices[0].position = { xf + 0.5f, yf - percent + AC_SIZE + 1.0f, zf };
-        pVertices[1].position = { xf + 0.5f + AC_SIZE, yf - percent + AC_SIZE + 1.0f, zf };
-        pVertices[2].position = { xf + 0.5f + AC_SIZE, yf - percent + 1.0f, zf };
-        pVertices[3].position = { xf + 0.5f, yf - percent + 1.0f, zf };
-        pVertices[0].color = col;
-        pVertices[1].color = col;
-        pVertices[2].color = col;
-        pVertices[3].color = aoCol;
-
-        pntcCount += 4 * 4;
-    }
-}
-
-void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor)
-{
-    GLuint tex = resources.checkerTexture;
-    if (wallpic != -1)
-    {
-        auto it = walls.find(wallpic);
-        Pic pic;
-        if (it == walls.end())
-            pic = load_wall(wallpic);
-        else
-            pic = it->second;
-        tex = pic.tex;
-    }
-    if (!texturesOn) tex = resources.whiteTexture;
-
-    y = 64.0f - y;
-
-    prepareForPNTC(GL_QUADS, tex);
-    const Position DIROFS[4] = {
-        {-1.0f, 0.0f},
-        {0.0f, 1.0f},
-        {1.0f, 0.0f},
-        {0.0f, -1.0f}};
-    const Position DIRNS[4] = {
-        {0.0f, 1.0f},
-        {1.0f, 0.0f},
-        {0.0f, -1.0f},
-        {-1.0f, 0.0f} };
-    const Position DIRUVS[4] = {
-        {1.0f, 0.0f},
-        {1.0f, 0.0f},
-        {0.0f, 1.0f},
-        {0.0f, 1.0f} };
-
-    auto &ofs = DIROFS[dir];
-    auto &n = DIRNS[dir];
-    auto &uvs = DIRUVS[isDoor ? dir : 2];
-    auto pVertices = resources.pPNTCVertices + pntcCount;
-
-    if (ambientOcclusionEnabled)
-    {
-        // top
-        pVertices[0].position.x = x;
-        pVertices[0].position.y = y;
-        pVertices[0].position.z = 1.0f;
-        pVertices[0].normal.x = n.x;
-        pVertices[0].normal.y = n.y;
-        pVertices[0].normal.z = 0.0f;
-        pVertices[0].texCoord = { uvs.x, 0 };
-        pVertices[0].color = { AC, AC, AC, 1 };
-
-        pVertices[1].position.x = x;
-        pVertices[1].position.y = y;
-        pVertices[1].position.z = 1.0f - AC_SIZE;
-        pVertices[1].normal.x = n.x;
-        pVertices[1].normal.y = n.y;
-        pVertices[1].normal.z = 0.0f;
-        pVertices[1].texCoord = { uvs.x, AC_SIZE };
-        pVertices[1].color = { 1, 1, 1, 1 };
-
-        pVertices[2].position.x = x + ofs.x;
-        pVertices[2].position.y = y + ofs.y;
-        pVertices[2].position.z = 1.0f - AC_SIZE;
-        pVertices[2].normal.x = n.x;
-        pVertices[2].normal.y = n.y;
-        pVertices[2].normal.z = 0.0f;
-        pVertices[2].texCoord = { uvs.y, AC_SIZE };
-        pVertices[2].color = { 1, 1, 1, 1 };
-
-        pVertices[3].position.x = x + ofs.x;
-        pVertices[3].position.y = y + ofs.y;
-        pVertices[3].position.z = 1.0f;
-        pVertices[3].normal.x = n.x;
-        pVertices[3].normal.y = n.y;
-        pVertices[3].normal.z = 0.0f;
-        pVertices[3].texCoord = { uvs.y, 0 };
-        pVertices[3].color = { AC, AC, AC, 1 };
-
-        pntcCount += 4;
-        pVertices = resources.pPNTCVertices + pntcCount;
-
-        // middle
-        pVertices[0].position.x = x;
-        pVertices[0].position.y = y;
-        pVertices[0].position.z = 1.0f - AC_SIZE;
-        pVertices[0].normal.x = n.x;
-        pVertices[0].normal.y = n.y;
-        pVertices[0].normal.z = 0.0f;
-        pVertices[0].texCoord = { uvs.x, AC_SIZE };
-        pVertices[0].color = { 1, 1, 1, 1 };
-
-        pVertices[1].position.x = x;
-        pVertices[1].position.y = y;
-        pVertices[1].position.z = AC_SIZE;
-        pVertices[1].normal.x = n.x;
-        pVertices[1].normal.y = n.y;
-        pVertices[1].normal.z = 0.0f;
-        pVertices[1].texCoord = { uvs.x, 1.0f - AC_SIZE };
-        pVertices[1].color = { 1, 1, 1, 1 };
-
-        pVertices[2].position.x = x + ofs.x;
-        pVertices[2].position.y = y + ofs.y;
-        pVertices[2].position.z = AC_SIZE;
-        pVertices[2].normal.x = n.x;
-        pVertices[2].normal.y = n.y;
-        pVertices[2].normal.z = 0.0f;
-        pVertices[2].texCoord = { uvs.y, 1.0f - AC_SIZE };
-        pVertices[2].color = { 1, 1, 1, 1 };
-
-        pVertices[3].position.x = x + ofs.x;
-        pVertices[3].position.y = y + ofs.y;
-        pVertices[3].position.z = 1.0f - AC_SIZE;
-        pVertices[3].normal.x = n.x;
-        pVertices[3].normal.y = n.y;
-        pVertices[3].normal.z = 0.0f;
-        pVertices[3].texCoord = { uvs.y, AC_SIZE };
-        pVertices[3].color = { 1, 1, 1, 1 };
-
-        pntcCount += 4;
-        pVertices = resources.pPNTCVertices + pntcCount;
-
-        // bottom
-        pVertices[0].position.x = x;
-        pVertices[0].position.y = y;
-        pVertices[0].position.z = AC_SIZE;
-        pVertices[0].normal.x = n.x;
-        pVertices[0].normal.y = n.y;
-        pVertices[0].normal.z = 0.0f;
-        pVertices[0].texCoord = { uvs.x, 1.0f - AC_SIZE };
-        pVertices[0].color = { 1, 1, 1, 1 };
-
-        pVertices[1].position.x = x;
-        pVertices[1].position.y = y;
-        pVertices[1].position.z = 0.0f;
-        pVertices[1].normal.x = n.x;
-        pVertices[1].normal.y = n.y;
-        pVertices[1].normal.z = 0.0f;
-        pVertices[1].texCoord = { uvs.x, 1 };
-        pVertices[1].color = { AC, AC, AC, 1 };
-
-        pVertices[2].position.x = x + ofs.x;
-        pVertices[2].position.y = y + ofs.y;
-        pVertices[2].position.z = 0.0f;
-        pVertices[2].normal.x = n.x;
-        pVertices[2].normal.y = n.y;
-        pVertices[2].normal.z = 0.0f;
-        pVertices[2].texCoord = { uvs.y, 1 };
-        pVertices[2].color = { AC, AC, AC, 1 };
-
-        pVertices[3].position.x = x + ofs.x;
-        pVertices[3].position.y = y + ofs.y;
-        pVertices[3].position.z = AC_SIZE;
-        pVertices[3].normal.x = n.x;
-        pVertices[3].normal.y = n.y;
-        pVertices[3].normal.z = 0.0f;
-        pVertices[3].texCoord = { uvs.y, 1.0f - AC_SIZE };
-        pVertices[3].color = { 1, 1, 1, 1 };
-
-        pntcCount += 4;
-    }
-    else
-    {
-        pVertices[0].position.x = x;
-        pVertices[0].position.y = y;
-        pVertices[0].position.z = 1.0f;
-        pVertices[0].normal.x = n.x;
-        pVertices[0].normal.y = n.y;
-        pVertices[0].normal.z = 0.0f;
-        pVertices[0].texCoord = { uvs.x, 0};
-        pVertices[0].color = {1, 1, 1, 1};
-
-        pVertices[1].position.x = x;
-        pVertices[1].position.y = y;
-        pVertices[1].position.z = 0.0f;
-        pVertices[1].normal.x = n.x;
-        pVertices[1].normal.y = n.y;
-        pVertices[1].normal.z = 0.0f;
-        pVertices[1].texCoord = { uvs.x, 1};
-        pVertices[1].color = {1, 1, 1, 1};
-
-        pVertices[2].position.x = x + ofs.x;
-        pVertices[2].position.y = y + ofs.y;
-        pVertices[2].position.z = 0.0f;
-        pVertices[2].normal.x = n.x;
-        pVertices[2].normal.y = n.y;
-        pVertices[2].normal.z = 0.0f;
-        pVertices[2].texCoord = { uvs.y, 1};
-        pVertices[2].color = {1, 1, 1, 1};
-
-        pVertices[3].position.x = x + ofs.x;
-        pVertices[3].position.y = y + ofs.y;
-        pVertices[3].position.z = 1.0f;
-        pVertices[3].normal.x = n.x;
-        pVertices[3].normal.y = n.y;
-        pVertices[3].normal.z = 0.0f;
-        pVertices[3].texCoord = { uvs.y, 0};
-        pVertices[3].color = {1, 1, 1, 1};
-
-        pntcCount += 4;
-    }
-}
-
-void ws_draw_sprite(int x, int y, int texture)
-{
-    if (!spritesOn) return;
-
-    auto xf = (float)x / 65536.0f;
-    auto yf = 64.0f - (float)y / 65536.0f;
-
-    auto it = sprites.find(texture);
-    Pic pic;
-    if (it == sprites.end())
-        pic = load_sprite(texture);
-    else
-        pic = it->second;
-
-    prepareForPNTC(GL_QUADS, spriteTexturesOn ? pic.tex : resources.whiteTexture);
-
-    auto pVertices = resources.pPNTCVertices + pntcCount;
-
-    pVertices[0].position.x = xf - right.x * 0.5f;
-    pVertices[0].position.y = yf - right.y * 0.5f;
-    pVertices[0].position.z = 1.0f;
-    pVertices[0].normal.x = -front.x;
-    pVertices[0].normal.y = -front.y;
-    pVertices[0].normal.z = -front.z;
-    pVertices[0].texCoord = { 0, 0 };
-    pVertices[0].color = { 1, 1, 1, 1 };
-
-    pVertices[1].position.x = xf - right.x * 0.5f;
-    pVertices[1].position.y = yf - right.y * 0.5f;
-    pVertices[1].position.z = 0.0f;
-    pVertices[1].normal.x = -front.x;
-    pVertices[1].normal.y = -front.y;
-    pVertices[1].normal.z = -front.z;
-    pVertices[1].texCoord = { 0, 1 };
-    pVertices[1].color = { 1, 1, 1, 1 };
-
-    pVertices[2].position.x = xf + right.x * 0.5f;
-    pVertices[2].position.y = yf + right.y * 0.5f;
-    pVertices[2].position.z = 0.0f;
-    pVertices[2].normal.x = -front.x;
-    pVertices[2].normal.y = -front.y;
-    pVertices[2].normal.z = -front.z;
-    pVertices[2].texCoord = { 1, 1 };
-    pVertices[2].color = { 1, 1, 1, 1 };
-
-    pVertices[3].position.x = xf + right.x * 0.5f;
-    pVertices[3].position.y = yf + right.y * 0.5f;
-    pVertices[3].position.z = 1.0f;
-    pVertices[3].normal.x = -front.x;
-    pVertices[3].normal.y = -front.y;
-    pVertices[3].normal.z = -front.z;
-    pVertices[3].texCoord = { 1, 0 };
-    pVertices[3].color = { 1, 1, 1, 1 };
-
-    pntcCount += 4;
+    glPolygonMode(GL_FRONT, ws_wireframe_enabled ? GL_LINE : GL_FILL);
+    glScissor(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
+    glViewport(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
+
+    ws_flush();
 }
 
 void ws_finish_draw_3d()
 {
-    flush();
-    glScissor(0, 0, screen_w, screen_h);
-    glViewport(0, 0, screen_w, screen_h);
+    ws_flush();
+    glScissor(0, 0, ws_screen_w, ws_screen_h);
+    glViewport(0, 0, ws_screen_w, ws_screen_h);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -2701,12 +970,12 @@ void audioCallback(void *userdata, Uint8 *stream, int len)
         if (playingSound._3d)
         {
             auto sndPos = ws_Vector3(playingSound.x, playingSound.y, 0.5f);
-            auto distance = ws_Vector3::DistanceSquared(eyePos, sndPos);
+            auto distance = ws_Vector3::DistanceSquared(ws_cam_eye, sndPos);
             auto vol = 1.0f / std::max(1.0f, distance / 15.0f);
-            auto dir = sndPos - eyePos;
+            auto dir = sndPos - ws_cam_eye;
             dir.Normalize();
-            auto dot = dir.Dot(right) + 1.0f; // 0 = left, 2 = right
-            auto dotf = dir.Dot(front); // We attenuate stuff behind us
+            auto dot = dir.Dot(ws_cam_right) + 1.0f; // 0 = left, 2 = ws_cam_right
+            auto dotf = dir.Dot(ws_cam_front); // We attenuate stuff behind us
             dotf = std::max(0.75f, std::min(dotf, 0.0f) + 1.0f); // [0.75 to 1] 1 = perpenticular to camera and forward, 0.75 completely in back
             volL = vol * dotf;
             volR = vol * dotf;

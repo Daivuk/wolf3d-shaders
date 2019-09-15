@@ -189,8 +189,8 @@ USL_HardError(word errval,int16_t ax,int16_t bp,int16_t si)
 //	US_Startup() - Starts the User Mgr
 //
 ///////////////////////////////////////////////////////////////////////////
-extern int16_t _argc;
-extern char** _argv;
+extern int16_t ws_argc;
+extern char** ws_argv;
 void
 US_Startup(void)
 {
@@ -203,9 +203,9 @@ US_Startup(void)
 
 	US_InitRndT(_true);		// Initialize the random number generator
 
-	for (i = 1;i < _argc;i++)
+	for (i = 1;i < ws_argc;i++)
 	{
-		switch (US_CheckParm(_argv[i],ParmStrings2))
+		switch (US_CheckParm(ws_argv[i],ParmStrings2))
 		{
 		case 0:
 			compatability = _true;
@@ -217,13 +217,13 @@ US_Startup(void)
 	}
 
 	// Check for TED launching here
-	for (i = 1;i < _argc;i++)
+	for (i = 1;i < ws_argc;i++)
 	{
-		n = US_CheckParm(_argv[i],ParmStrings);
+		n = US_CheckParm(ws_argv[i],ParmStrings);
 		switch(n)
 		{
 		 case 0:
-		   tedlevelnum = atoi(_argv[i + 1]);
+		   tedlevelnum = atoi(ws_argv[i + 1]);
 		   if (tedlevelnum >= 0)
 		     tedlevel = _true;
 		   break;

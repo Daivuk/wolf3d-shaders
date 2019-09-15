@@ -1,7 +1,7 @@
 // WL_PLAY.C
 
 #include "WL_DEF.H"
-#include "ws_main.h"
+#include "ws.h"
 #pragma hdrstop
 
 
@@ -1412,11 +1412,11 @@ void PlayLoop (void)
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
-    extern bool debugView;
+    extern bool ws_debug_view_enabled;
 
 	do
 	{
-        if (!debugView)
+        if (!ws_debug_view_enabled)
         {
             if (virtualreality)
             {

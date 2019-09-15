@@ -1150,8 +1150,8 @@ PM_Reset(void)
 void
 PM_Startup(void)
 {
-  //  extern int16_t _argc;
-  //  extern char** _argv;
+  //  extern int16_t ws_argc;
+  //  extern char** ws_argv;
 	 //_boolean	nomain,noems,noxms;
 	 //int16_t		i;
 
@@ -1159,9 +1159,9 @@ PM_Startup(void)
 	 //	return;
 
 	 //nomain = noems = noxms = _false;
-	 //for (i = 1;i < _argc;i++)
+	 //for (i = 1;i < ws_argc;i++)
 	 //{
-	 //	switch (US_CheckParm(_argv[i],ParmStrings))
+	 //	switch (US_CheckParm(ws_argv[i],ParmStrings))
 	 //	{
 	 //	case 0:
 	 //		nomain = _true;

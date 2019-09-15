@@ -18,7 +18,7 @@
 //
 
 #include "ID_HEADS.H"
-#include "ws_main.h"
+#include "ws.h"
 #pragma	hdrstop
 
 #define	KeyInt		9	// The keyboard ISR number
@@ -596,8 +596,8 @@ INL_ShutJoy(word joy)
 //	IN_Startup() - Starts up the Input Mgr
 //
 ///////////////////////////////////////////////////////////////////////////
-extern int16_t _argc;
-extern char** _argv;
+extern int16_t ws_argc;
+extern char** ws_argv;
 void
 IN_Startup(void)
 {
@@ -609,9 +609,9 @@ IN_Startup(void)
 
 	checkjoys = _true;
 	checkmouse = _true;
-	for (i = 1;i < (word)_argc;i++)
+	for (i = 1;i < (word)ws_argc;i++)
 	{
-		switch (US_CheckParm(_argv[i],ParmStrings))
+		switch (US_CheckParm(ws_argv[i],ParmStrings))
 		{
 		case 0:
 			checkjoys = _false;

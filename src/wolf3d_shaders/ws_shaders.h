@@ -7,15 +7,15 @@
 static const char *PC_VERT = 
 "uniform mat4 ProjMtx;"
 
-"attribute vec2 Position;"
-"attribute vec4 Color;"
+"attribute vec2 ws_Vector2;"
+"attribute vec4 ws_Color;"
 
 "varying vec4 Frag_Color;"
 
 "void main()"
 "{"
-"   Frag_Color = Color;"
-"   gl_Position = ProjMtx * vec4(Position.xy, 0, 1);"
+"   Frag_Color = ws_Color;"
+"   gl_Position = ProjMtx * vec4(ws_Vector2.xy, 0, 1);"
 "}"
 ;
 
@@ -47,30 +47,30 @@ static const char *PTC_FRAG =
 static const char *PTC_VERT =
 "uniform mat4 ProjMtx;"
 
-"attribute vec2 Position;"
-"attribute vec2 TexCoord;"
-"attribute vec4 Color;"
+"attribute vec2 ws_Vector2;"
+"attribute vec2 ws_TexCoord;"
+"attribute vec4 ws_Color;"
 
 "varying vec2 Frag_TexCoord;"
 "varying vec4 Frag_Color;"
 
 "void main()"
 "{"
-"   gl_Position = ProjMtx * vec4(Position.xy, 0, 1);"
-"   Frag_TexCoord = TexCoord;"
-"   Frag_Color = Color;"
+"   gl_Position = ProjMtx * vec4(ws_Vector2.xy, 0, 1);"
+"   Frag_TexCoord = ws_TexCoord;"
+"   Frag_Color = ws_Color;"
 "}";
 
 //
-//--- Position3, Normal3, TexCoord2, Color4
+//--- ws_Vector3, Normal3, TexCoord2, Color4
 //
 static const char *PNTC_VERT =
 "uniform mat4 ProjMtx;"
 
-"attribute vec3 Position;"
-"attribute vec3 Normal;"
-"attribute vec2 TexCoord;"
-"attribute vec4 Color;"
+"attribute vec3 ws_Vector2;"
+"attribute vec3 ws_Vector3;"
+"attribute vec2 ws_TexCoord;"
+"attribute vec4 ws_Color;"
 
 "varying vec3 Frag_Normal;"
 "varying vec2 Frag_TexCoord;"
@@ -78,10 +78,10 @@ static const char *PNTC_VERT =
 
 "void main()"
 "{"
-"   gl_Position = ProjMtx * vec4(Position.xyz, 1);"
-"   Frag_Normal = Normal;"
-"   Frag_TexCoord = TexCoord;"
-"   Frag_Color = Color;"
+"   gl_Position = ProjMtx * vec4(ws_Vector2.xyz, 1);"
+"   Frag_Normal = ws_Vector3;"
+"   Frag_TexCoord = ws_TexCoord;"
+"   Frag_Color = ws_Color;"
 "}"
 ;
 
