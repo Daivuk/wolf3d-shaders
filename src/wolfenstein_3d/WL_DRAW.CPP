@@ -1637,10 +1637,12 @@ inline float door_percent(int x, int y)
 
 inline bool has_floor_at(int x, int y)
 {
+    if (pwallstate && pwallx == x && pwally == y) return true;
     byte num = tilemap[x][y];
     return !num || ((num & 0x80) && !(num & 0x40));
 }
 
+void flush();
 void WallRefresh (void)
 {
 //
@@ -1773,10 +1775,6 @@ void WallRefresh (void)
         w = vertwall[n & 63];
         ws_draw_wall((float)pwallx + 1.0f + ofs[0] * percent, (float)pwally + 1.0f + ofs[1] * percent, EAST, w);
         ws_draw_wall((float)pwallx + ofs[0] * percent, (float)pwally + ofs[1] * percent, WEST, w);
-
-        // Draw wall and celing for the push wall a bit differently
-        ws_draw_ceiling(pwallx, pwally, ceiling, nullptr);
-        ws_draw_floor(pwallx, pwally, 0x19, nullptr);
     }
 
     // Draw ceilling and floor tile by tile (We could have gone with a full map plane, but then we would be depth testing in useless places and its not
@@ -1802,6 +1800,35 @@ void WallRefresh (void)
             }
         }
     }
+
+    // Door overlays
+    flush();
+    glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    for (int x = 1; x < 63; ++x)
+    {
+        for (int y = 1; y < 63; ++y)
+        {
+            if (is_door_at(x, y))
+            {
+                neighbors[0] = !has_floor_at(x, y + 1);
+                neighbors[1] = !has_floor_at(x + 1, y + 1);
+                neighbors[2] = !has_floor_at(x + 1, y);
+                neighbors[3] = !has_floor_at(x + 1, y - 1);
+                neighbors[4] = !has_floor_at(x, y - 1);
+                neighbors[5] = !has_floor_at(x - 1, y - 1);
+                neighbors[6] = !has_floor_at(x - 1, y);
+                neighbors[7] = !has_floor_at(x - 1, y + 1);
+
+                float percent = door_percent(x, y);
+                ws_draw_door_ceiling(x, y, ceiling, neighbors, percent);
+                ws_draw_door_floor(x, y, 0x19, neighbors, percent);
+            }
+        }
+    }
+    flush();
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_TRUE);
 }
 
 //==========================================================================

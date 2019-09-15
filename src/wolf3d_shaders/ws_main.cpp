@@ -34,7 +34,7 @@ void wolf3d_init();
 void wolf3d_update();
 void wolf3d_shutdown();
 void audioCallback(void *userdata, Uint8 *stream, int len);
-static void flush();
+void flush();
 void drawDebugString(char *string, float x, float y);
 
 int16_t _argc; // global arguments. this is referenced a bit everywhere
@@ -1307,7 +1307,7 @@ void setvect(int16_t r_num, Interrupt interrupt)
     }
 }
 
-static void flush()
+void flush()
 {
     switch (drawMode)
     {
@@ -2177,6 +2177,228 @@ void ws_draw_floor(int x, int y, int color, bool* neighbors)
         pVertices[3].color = col;
 
         pntcCount += 4 * 9;
+    }
+}
+
+void ws_draw_door_floor(int x, int y, int color, bool* neighbors, float percent)
+{
+    if (!ambientOcclusionEnabled)
+    {
+        ws_draw_floor(x, y, color, nullptr);
+        return;
+    }
+
+    prepareForPNTC(GL_QUADS, resources.whiteTexture);
+
+    auto xf = (float)x;
+    auto yf = 63.0f - (float)y;
+    auto zf = 0.01f;
+
+    auto pVertices = resources.pPNTCVertices + pntcCount;
+    Color col = { 1, 1, 1, 1 };
+    Color aoCol = { AC, AC, AC, 1 };
+    for (int i = 0; i < 4 * 4; ++i)
+    {
+        pVertices[i].normal = { 0, 0, 1 };
+        pVertices[i].texCoord = { 0, 0 }; // no textures on floors
+    }
+
+    if (neighbors[2])
+    {
+        pVertices[0].position = { xf + percent, yf + 0.5f, zf };
+        pVertices[1].position = { xf + percent, yf + 0.5f - AC_SIZE, zf };
+        pVertices[2].position = { xf + 1.0f + percent, yf + 0.5f - AC_SIZE, zf };
+        pVertices[3].position = { xf + 1.0f + percent, yf + 0.5f, zf };
+        pVertices[0].color = aoCol;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + percent - AC_SIZE, yf + 0.5f, zf };
+        pVertices[1].position = { xf + percent - AC_SIZE, yf + 0.5f - AC_SIZE, zf };
+        pVertices[2].position = { xf + percent, yf + 0.5f - AC_SIZE, zf };
+        pVertices[3].position = { xf + percent, yf + 0.5f, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + percent, yf + 0.5f + AC_SIZE, zf };
+        pVertices[1].position = { xf + percent, yf + 0.5f, zf };
+        pVertices[2].position = { xf + 1.0f + percent, yf + 0.5f, zf };
+        pVertices[3].position = { xf + 1.0f + percent, yf + 0.5f + AC_SIZE, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = aoCol;
+        pVertices[2].color = aoCol;
+        pVertices[3].color = col;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + percent, yf + 0.5f + AC_SIZE, zf };
+        pVertices[1].position = { xf + percent - AC_SIZE, yf + 0.5f + AC_SIZE, zf };
+        pVertices[2].position = { xf + percent - AC_SIZE, yf + 0.5f, zf };
+        pVertices[3].position = { xf + percent, yf + 0.5f, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pntcCount += 4 * 4;
+    }
+    else
+    {
+        pVertices[0].position = { xf + 0.5f - AC_SIZE, yf - percent, zf };
+        pVertices[1].position = { xf + 0.5f, yf - percent, zf };
+        pVertices[2].position = { xf + 0.5f, yf + 1.0f - percent, zf };
+        pVertices[3].position = { xf + 0.5f - AC_SIZE, yf + 1.0f - percent, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = aoCol;
+        pVertices[2].color = aoCol;
+        pVertices[3].color = col;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + 0.5f, yf - percent + AC_SIZE + 1.0f, zf };
+        pVertices[1].position = { xf + 0.5f - AC_SIZE, yf - percent + AC_SIZE + 1.0f, zf };
+        pVertices[2].position = { xf + 0.5f - AC_SIZE, yf - percent + 1.0f, zf };
+        pVertices[3].position = { xf + 0.5f, yf - percent + 1.0f, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + 0.5f, yf - percent, zf };
+        pVertices[1].position = { xf + 0.5f + AC_SIZE, yf - percent, zf };
+        pVertices[2].position = { xf + 0.5f + AC_SIZE, yf + 1.0f - percent, zf };
+        pVertices[3].position = { xf + 0.5f, yf + 1.0f - percent, zf };
+        pVertices[0].color = aoCol;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + 0.5f + AC_SIZE, yf - percent + 1.0f, zf };
+        pVertices[1].position = { xf + 0.5f + AC_SIZE, yf - percent + AC_SIZE + 1.0f, zf };
+        pVertices[2].position = { xf + 0.5f, yf - percent + AC_SIZE + 1.0f, zf };
+        pVertices[3].position = { xf + 0.5f, yf - percent + 1.0f, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pntcCount += 4 * 4;
+    }
+}
+
+void ws_draw_door_ceiling(int x, int y, int color, bool* neighbors, float percent)
+{
+    if (!ambientOcclusionEnabled)
+    {
+        ws_draw_floor(x, y, color, nullptr);
+        return;
+    }
+
+    prepareForPNTC(GL_QUADS, resources.whiteTexture);
+
+    auto xf = (float)x;
+    auto yf = 63.0f - (float)y;
+    auto zf = 0.99f;
+
+    auto pVertices = resources.pPNTCVertices + pntcCount;
+    Color col = { 1, 1, 1, 1 };
+    Color aoCol = { AC, AC, AC, 1 };
+    for (int i = 0; i < 4 * 4; ++i)
+    {
+        pVertices[i].normal = { 0, 0, 1 };
+        pVertices[i].texCoord = { 0, 0 }; // no textures on floors
+    }
+
+    if (neighbors[2])
+    {
+        pVertices[0].position = { xf + percent, yf + 0.5f - AC_SIZE, zf };
+        pVertices[1].position = { xf + percent, yf + 0.5f, zf };
+        pVertices[2].position = { xf + 1.0f + percent, yf + 0.5f, zf };
+        pVertices[3].position = { xf + 1.0f + percent, yf + 0.5f - AC_SIZE, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = aoCol;
+        pVertices[2].color = aoCol;
+        pVertices[3].color = col;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + percent, yf + 0.5f - AC_SIZE, zf };
+        pVertices[1].position = { xf + percent - AC_SIZE, yf + 0.5f - AC_SIZE, zf };
+        pVertices[2].position = { xf + percent - AC_SIZE, yf + 0.5f, zf };
+        pVertices[3].position = { xf + percent, yf + 0.5f, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + percent, yf + 0.5f, zf };
+        pVertices[1].position = { xf + percent, yf + 0.5f + AC_SIZE, zf };
+        pVertices[2].position = { xf + 1.0f + percent, yf + 0.5f + AC_SIZE, zf };
+        pVertices[3].position = { xf + 1.0f + percent, yf + 0.5f, zf };
+        pVertices[0].color = aoCol;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + percent - AC_SIZE, yf + 0.5f, zf };
+        pVertices[1].position = { xf + percent - AC_SIZE, yf + 0.5f + AC_SIZE, zf };
+        pVertices[2].position = { xf + percent, yf + 0.5f + AC_SIZE, zf };
+        pVertices[3].position = { xf + percent, yf + 0.5f, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pntcCount += 4 * 4;
+    }
+    else
+    {
+        pVertices[0].position = { xf + 0.5f, yf - percent, zf };
+        pVertices[1].position = { xf + 0.5f - AC_SIZE, yf - percent, zf };
+        pVertices[2].position = { xf + 0.5f - AC_SIZE, yf + 1.0f - percent, zf };
+        pVertices[3].position = { xf + 0.5f, yf + 1.0f - percent, zf };
+        pVertices[0].color = aoCol;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + 0.5f - AC_SIZE, yf - percent + 1.0f, zf };
+        pVertices[1].position = { xf + 0.5f - AC_SIZE, yf - percent + AC_SIZE + 1.0f, zf };
+        pVertices[2].position = { xf + 0.5f, yf - percent + AC_SIZE + 1.0f, zf };
+        pVertices[3].position = { xf + 0.5f, yf - percent + 1.0f, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + 0.5f + AC_SIZE, yf - percent, zf };
+        pVertices[1].position = { xf + 0.5f, yf - percent, zf };
+        pVertices[2].position = { xf + 0.5f, yf + 1.0f - percent, zf };
+        pVertices[3].position = { xf + 0.5f + AC_SIZE, yf + 1.0f - percent, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = aoCol;
+        pVertices[2].color = aoCol;
+        pVertices[3].color = col;
+
+        pVertices += 4;
+        pVertices[0].position = { xf + 0.5f, yf - percent + AC_SIZE + 1.0f, zf };
+        pVertices[1].position = { xf + 0.5f + AC_SIZE, yf - percent + AC_SIZE + 1.0f, zf };
+        pVertices[2].position = { xf + 0.5f + AC_SIZE, yf - percent + 1.0f, zf };
+        pVertices[3].position = { xf + 0.5f, yf - percent + 1.0f, zf };
+        pVertices[0].color = col;
+        pVertices[1].color = col;
+        pVertices[2].color = col;
+        pVertices[3].color = aoCol;
+
+        pntcCount += 4 * 4;
     }
 }
 

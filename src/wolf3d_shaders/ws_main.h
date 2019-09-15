@@ -30,6 +30,8 @@ void ws_finish_draw_3d();
 void ws_update_camera();
 void ws_draw_ceiling(int x, int y, int color, bool* neighbors);
 void ws_draw_floor(int x, int y, int color, bool* neighbors);
+void ws_draw_door_floor(int x, int y, int color, bool* neighbors, float percent);
+void ws_draw_door_ceiling(int x, int y, int color, bool* neighbors, float percent);
 void ws_draw_sprite(int x, int y, int texture);
 void Mouse(int16_t x);
 
