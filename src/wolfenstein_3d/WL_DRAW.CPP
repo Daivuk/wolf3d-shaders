@@ -1742,12 +1742,10 @@ void WallRefresh (void)
         }
     }
 
+    extern uint16_t vgaCeiling[];
+    int ceiling = vgaCeiling[gamestate.episode*10+mapon] & 0xFF;
+
     // Push walls
-    //pwallx = checkx;
-    //pwally = checky;
-    //pwalldir = dir;
-    //pwallstate = 1;
-    //pwallpos = 0;
     if (pwallstate)
     {
         float percent = (float)pwallpos / 64.0f;
@@ -1769,15 +1767,25 @@ void WallRefresh (void)
         w = vertwall[n & 63];
         ws_draw_wall((float)pwallx + 1.0f + ofs[0] * percent, (float)pwally + 1.0f + ofs[1] * percent, EAST, w);
         ws_draw_wall((float)pwallx + ofs[0] * percent, (float)pwally + ofs[1] * percent, WEST, w);
+
+        // Draw wall and celing for the push wall a bit differently
+        ws_draw_ceiling(pwallx, pwally, ceiling);
+        ws_draw_floor(pwallx, pwally, 0x19);
     }
 
-    // Draw ceilling
-    extern uint16_t vgaCeiling[];
-    uint16_t ceiling = vgaCeiling[gamestate.episode*10+mapon];
-    ws_draw_ceiling(ceiling & 0xFF);
-
-    // Draw floor
-    ws_draw_floor(0x19);
+    // Draw ceilling and floor tile by tile (We could have gone with a full map plane, but then we would be depth testing in useless places and its not
+    // as nice to look at in freecam. + we need the AO to be done per tile
+    for (int x = 1; x < 63; ++x)
+    {
+        for (int y = 1; y < 63; ++y)
+        {
+            if (!tilemap[x][y] || is_door_at(x, y))
+            {
+                ws_draw_ceiling(x, y, ceiling);
+                ws_draw_floor(x, y, 0x19);
+            }
+        }
+    }
 }
 
 //==========================================================================

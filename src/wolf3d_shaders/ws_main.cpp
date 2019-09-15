@@ -152,6 +152,7 @@ struct RenderTarget
 {
     GLuint handle;
     GLuint frameBuffer;
+    GLuint depth;
 };
 
 struct Position
@@ -573,7 +574,22 @@ RenderTarget createRT(int w, int h)
     RenderTarget ret;
     ret.handle = handle;
     ret.frameBuffer = frameBuffer;
+    ret.depth = rboDepthStencil;
     return ret;
+}
+
+void resizeRT(RenderTarget &rt, int w, int h)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, rt.frameBuffer);
+
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, rt.handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, rt.depth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rt.depth);
 }
 
 #if defined(WIN32)
@@ -618,7 +634,7 @@ int main(int argc, char **argv)
         "Wolf3D Shaders",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         screen_w, screen_h,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
     // Init OpenGL
     auto glContext = SDL_GL_CreateContext(sdlWindow);
@@ -851,6 +867,7 @@ void ws_update_sdl()
                     io.MouseDown[1] = false;
                 else if (event.button.button == SDL_BUTTON_MIDDLE)
                 {
+                    memset(freecamInputs, 0, sizeof(freecamInputs));
                     io.MouseDown[2] = false;
                     camControl = false;
                     SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -921,12 +938,24 @@ void ws_update_sdl()
                 }
                 break;
             }
+        case SDL_WINDOWEVENT:
+            switch (event.window.event)
+            {
+                case SDL_WINDOWEVENT_SIZE_CHANGED:
+                {
+                    screen_w = event.window.data1;
+                    screen_h = event.window.data2;
+                    resizeRT(resources.mainRT, screen_w, screen_h);
+                    break;
+                }
+                default: break;
+            }
+            break;
         }
     }
-
     // SDL_UnlockAudio();
 
-    s_scale = (float)screen_h / (float)MaxY;
+    s_scale = (float)640 / (float)MaxY;
 
     // Update ticks
     static auto lastTime = std::chrono::high_resolution_clock::now();
@@ -1114,7 +1143,7 @@ void VW_UpdateScreen()
     glDisable(GL_CULL_FACE);
     glViewport(0, 0, screen_w, screen_h);
 
-    matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)screen_w, (float)screen_h, 0, -999, 999);
+    matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)1024, (float)640, 0, -999, 999);
     //matrix2D = matrix2D.Transpose();
     {
         glUseProgram(resources.programPC);
@@ -1137,9 +1166,11 @@ void VW_UpdateScreen()
 
 void VGAClearScreen(void)
 {
+    auto statusLineH = (int)((float)STATUSLINES * ((float)screen_h / 200.0f));
+
     glEnable(GL_SCISSOR_TEST);
     glClearColor(0, 0, 0, 1);
-    glScissor(0, (int)(float)(STATUSLINES * s_scale), screen_w, screen_h - (int)(float)(STATUSLINES * s_scale));
+    glScissor(0, statusLineH, screen_w, screen_h - statusLineH);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glScissor(0, 0, screen_w, screen_h);
     glDisable(GL_SCISSOR_TEST);
@@ -1700,7 +1731,9 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
 
 void ws_update_camera()
 {
-    auto proj = ws_Matrix::CreatePerspectiveFieldOfView(60.0f * (float)M_PI / 180.0f, (float)screen_w / ((float)screen_h - (float)STATUSLINES * s_scale), 0.01f, 1000.0f);
+    auto statusLineH = (int)((float)STATUSLINES * ((float)screen_h / 200.0f));
+
+    auto proj = ws_Matrix::CreatePerspectiveFieldOfView(60.0f * (float)M_PI / 180.0f, (float)screen_w / ((float)screen_h - (float)statusLineH), 0.01f, 1000.0f);
 
     if (debugView)
     {
@@ -1744,11 +1777,11 @@ void ws_update_camera()
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_SCISSOR_TEST);
     glEnable(GL_CULL_FACE);
-    glScissor(0, (int)(float)(STATUSLINES * s_scale), screen_w, screen_h - (int)(float)(STATUSLINES * s_scale));
-    glViewport(0, (int)(float)(STATUSLINES * s_scale), screen_w, screen_h - (int)(float)(STATUSLINES * s_scale));
+    glScissor(0, statusLineH, screen_w, screen_h - statusLineH);
+    glViewport(0, statusLineH, screen_w, screen_h - statusLineH);
 }
 
-void ws_draw_ceiling(int color)
+void ws_draw_ceiling(int x, int y, int color)
 {
     auto col = dynamic_palette[color];
     if (!texturesOn) col = { 1, 1, 1, 1 };
@@ -1756,8 +1789,11 @@ void ws_draw_ceiling(int color)
     prepareForPNTC(GL_QUADS, resources.whiteTexture);
     auto pVertices = resources.pPNTCVertices + pntcCount;
 
-    pVertices[0].position.x = 1.0f;
-    pVertices[0].position.y = 1.0f;
+    auto xf = (float)x;
+    auto yf = 63.0f - (float)y;
+
+    pVertices[0].position.x = xf;
+    pVertices[0].position.y = yf;
     pVertices[0].position.z = 1.0f;
     pVertices[0].normal.x = 0;
     pVertices[0].normal.y = 0;
@@ -1765,8 +1801,8 @@ void ws_draw_ceiling(int color)
     pVertices[0].texCoord = {0, 0};
     pVertices[0].color = col;
 
-    pVertices[1].position.x = 1.0f;
-    pVertices[1].position.y = 63.0f;
+    pVertices[1].position.x = xf;
+    pVertices[1].position.y = yf + 1.0f;
     pVertices[1].position.z = 1.0f;
     pVertices[1].normal.x = 0;
     pVertices[1].normal.y = 0;
@@ -1774,8 +1810,8 @@ void ws_draw_ceiling(int color)
     pVertices[1].texCoord = {0, 1};
     pVertices[1].color = col;
 
-    pVertices[2].position.x = 63.0f;
-    pVertices[2].position.y = 63.0f;
+    pVertices[2].position.x = xf + 1.0f;
+    pVertices[2].position.y = yf + 1.0f;
     pVertices[2].position.z = 1.0f;
     pVertices[2].normal.x = 0;
     pVertices[2].normal.y = 0;
@@ -1783,8 +1819,8 @@ void ws_draw_ceiling(int color)
     pVertices[2].texCoord = {1, 1};
     pVertices[2].color = col;
 
-    pVertices[3].position.x = 63.0f;
-    pVertices[3].position.y = 1.0f;;
+    pVertices[3].position.x = xf + 1.0f;
+    pVertices[3].position.y = yf;
     pVertices[3].position.z = 1.0f;
     pVertices[3].normal.x = 0;
     pVertices[3].normal.y = 0;
@@ -1795,7 +1831,7 @@ void ws_draw_ceiling(int color)
     pntcCount += 4;
 }
 
-void ws_draw_floor(int color)
+void ws_draw_floor(int x, int y, int color)
 {
     auto& col = dynamic_palette[color];
     if (!texturesOn) col = { 1, 1, 1, 1 };
@@ -1803,8 +1839,11 @@ void ws_draw_floor(int color)
     prepareForPNTC(GL_QUADS, resources.whiteTexture);
     auto pVertices = resources.pPNTCVertices + pntcCount;
 
-    pVertices[0].position.x = 1.0f;
-    pVertices[0].position.y = 63.0f;
+    auto xf = (float)x;
+    auto yf = 63.0f - (float)y;
+
+    pVertices[0].position.x = xf;
+    pVertices[0].position.y = yf + 1.0f;
     pVertices[0].position.z = 0.0f;
     pVertices[0].normal.x = 0;
     pVertices[0].normal.y = 0;
@@ -1812,8 +1851,8 @@ void ws_draw_floor(int color)
     pVertices[0].texCoord = {0, 0};
     pVertices[0].color = col;
 
-    pVertices[1].position.x = 1.0f;
-    pVertices[1].position.y = 1.0f;
+    pVertices[1].position.x = xf;
+    pVertices[1].position.y = yf;
     pVertices[1].position.z = 0.0f;
     pVertices[1].normal.x = 0;
     pVertices[1].normal.y = 0;
@@ -1821,8 +1860,8 @@ void ws_draw_floor(int color)
     pVertices[1].texCoord = {0, 1};
     pVertices[1].color = col;
 
-    pVertices[2].position.x = 63.0f;
-    pVertices[2].position.y = 1.0f;
+    pVertices[2].position.x = xf + 1.0f;
+    pVertices[2].position.y = yf;
     pVertices[2].position.z = 0.0f;
     pVertices[2].normal.x = 0;
     pVertices[2].normal.y = 0;
@@ -1830,8 +1869,8 @@ void ws_draw_floor(int color)
     pVertices[2].texCoord = {1, 1};
     pVertices[2].color = col;
 
-    pVertices[3].position.x = 63.0f;
-    pVertices[3].position.y = 63.0f;;
+    pVertices[3].position.x = xf + 1.0f;
+    pVertices[3].position.y = yf + 1.0f;
     pVertices[3].position.z = 0.0f;
     pVertices[3].normal.x = 0;
     pVertices[3].normal.y = 0;
