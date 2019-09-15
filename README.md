@@ -1,7 +1,7 @@
 # wolf3d-shaders
 Wolfenstein 3D source port with shaders. Current version is very bare bone and none of the cool shaders has been implemented yet. But it is in a working state.
 
-![](screenshots/screenshot1.png)
+![](screenshots/screenshot1.jpg)
 
 ## How to build
 ### Prerequisites
