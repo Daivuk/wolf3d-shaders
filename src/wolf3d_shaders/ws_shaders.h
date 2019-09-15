@@ -7,15 +7,15 @@
 static const char *PC_VERT = 
 "uniform mat4 ProjMtx;"
 
-"attribute vec2 ws_Vector2;"
-"attribute vec4 ws_Color;"
+"attribute vec2 Position;"
+"attribute vec4 Color;"
 
 "varying vec4 Frag_Color;"
 
 "void main()"
 "{"
-"   Frag_Color = ws_Color;"
-"   gl_Position = ProjMtx * vec4(ws_Vector2.xy, 0, 1);"
+"   Frag_Color = Color;"
+"   gl_Position = ProjMtx * vec4(Position.xy, 0, 1);"
 "}"
 ;
 
@@ -47,30 +47,30 @@ static const char *PTC_FRAG =
 static const char *PTC_VERT =
 "uniform mat4 ProjMtx;"
 
-"attribute vec2 ws_Vector2;"
-"attribute vec2 ws_TexCoord;"
-"attribute vec4 ws_Color;"
+"attribute vec2 Position;"
+"attribute vec2 TexCoord;"
+"attribute vec4 Color;"
 
 "varying vec2 Frag_TexCoord;"
 "varying vec4 Frag_Color;"
 
 "void main()"
 "{"
-"   gl_Position = ProjMtx * vec4(ws_Vector2.xy, 0, 1);"
-"   Frag_TexCoord = ws_TexCoord;"
-"   Frag_Color = ws_Color;"
+"   gl_Position = ProjMtx * vec4(Position.xy, 0, 1);"
+"   Frag_TexCoord = TexCoord;"
+"   Frag_Color = Color;"
 "}";
 
 //
-//--- ws_Vector3, Normal3, TexCoord2, Color4
+//--- Position3, Normal3, TexCoord2, Color4
 //
 static const char *PNTC_VERT =
 "uniform mat4 ProjMtx;"
 
-"attribute vec3 ws_Vector2;"
-"attribute vec3 ws_Vector3;"
-"attribute vec2 ws_TexCoord;"
-"attribute vec4 ws_Color;"
+"attribute vec3 Position;"
+"attribute vec3 Normal;"
+"attribute vec2 TexCoord;"
+"attribute vec4 Color;"
 
 "varying vec3 Frag_Normal;"
 "varying vec2 Frag_TexCoord;"
@@ -78,10 +78,10 @@ static const char *PNTC_VERT =
 
 "void main()"
 "{"
-"   gl_Position = ProjMtx * vec4(ws_Vector2.xyz, 1);"
-"   Frag_Normal = ws_Vector3;"
-"   Frag_TexCoord = ws_TexCoord;"
-"   Frag_Color = ws_Color;"
+"   gl_Position = ProjMtx * vec4(Position.xyz, 1);"
+"   Frag_Normal = Normal;"
+"   Frag_TexCoord = TexCoord;"
+"   Frag_Color = Color;"
 "}"
 ;
 
@@ -97,6 +97,113 @@ static const char *PNTC_FRAG =
 "   vec4 diffuse = texture2D(Texture, Frag_TexCoord);"
 "   if (diffuse.a < .3) discard;"
 "   gl_FragColor = diffuse * Frag_Color;"
+"}"
+;
+
+//
+//--- Position3, Normal3, TexCoord2, Color4 but for g-buffer
+//
+static const char *PNTC_GBUFFER_VERT =
+"uniform mat4 ProjMtx;"
+
+"attribute vec3 Position;"
+"attribute vec3 Normal;"
+"attribute vec2 TexCoord;"
+"attribute vec4 Color;"
+
+"varying vec3 Frag_Normal;"
+"varying vec2 Frag_TexCoord;"
+"varying vec4 Frag_Color;"
+"varying vec2 Frag_Depth;"
+
+"void main()"
+"{"
+"   gl_Position = ProjMtx * vec4(Position.xyz, 1);"
+"   Frag_Normal = Normal;"
+"   Frag_TexCoord = TexCoord;"
+"   Frag_Color = Color;"
+"   Frag_Depth = gl_Position.zw;"
+"}"
+;
+
+static const char *PNTC_GBUFFER_FRAG =
+"varying vec3 Frag_Normal;"
+"varying vec2 Frag_TexCoord;"
+"varying vec4 Frag_Color;"
+"varying vec2 Frag_Depth;"
+
+"uniform sampler2D Texture;"
+
+"void main()"
+"{"
+"   vec4 diffuse = texture2D(Texture, Frag_TexCoord);"
+"   if (diffuse.a < .3) discard;"
+"   gl_FragData[0] = diffuse * Frag_Color;"
+"   gl_FragData[1] = vec4(normalize(Frag_Normal) * 0.5 + 0.5, 1);"
+"   gl_FragData[2] = vec4(Frag_Depth.x / Frag_Depth.y, 0, 0, 1);"
+"}"
+;
+
+//
+//--- Position2, TexCoord2, Color4 - Point Light
+//
+static const char *PTC_POINTLIGHT_VERT =
+"uniform mat4 ProjMtx;"
+
+"attribute vec2 Position;"
+"attribute vec2 TexCoord;"
+"attribute vec4 Color;"
+
+"varying vec2 Frag_TexCoord;"
+"varying vec4 Frag_Color;"
+
+"void main()"
+"{"
+"   gl_Position = ProjMtx * vec4(Position.xy, 0, 1);"
+"   Frag_TexCoord = TexCoord;"
+"   Frag_Color = Color;"
+"}"
+;
+
+static const char *PTC_POINTLIGHT_FRAG =
+"uniform sampler2D AlbeoTexture;"
+"uniform sampler2D NormalTexture;"
+"uniform sampler2D DepthTexture;"
+
+"uniform mat4 InvProjMtx;"
+"uniform vec3 LightPosition;"
+"uniform float LightRadius;"
+"uniform float LightIntensity;"
+
+"varying vec2 Frag_TexCoord;"
+"varying vec4 Frag_Color;"
+
+"void main()"
+"{"
+"   vec4 gAlbeo = texture2D(AlbeoTexture, Frag_TexCoord);"
+"   vec4 gNormal = texture2D(NormalTexture, Frag_TexCoord);"
+"   vec4 gDepth = texture2D(DepthTexture, Frag_TexCoord);"
+
+// Position
+"   vec4 position = vec4(Frag_TexCoord.x * 2 - 1, (Frag_TexCoord.y * 2 - 1), gDepth.r, 1);"
+"   position = InvProjMtx * position;"
+"   position /= position.w;"
+
+// Normal
+"   vec3 normal = gNormal.xyz * 2 - 1;"
+"   vec3 dir = LightPosition - position.xyz;"
+
+// Attenuation stuff
+"   float dis = length(dir);"
+"   float disSqr = dis * dis;"
+"   disSqr /= LightRadius * LightRadius;"
+"   float dotNormal = dot(normal, dir) / dis;"
+"   dotNormal = 1 - (1 - dotNormal) * (1 - dotNormal);"
+"   float intensity = clamp(1 - disSqr, 0, 1);"
+"   dotNormal = clamp(dotNormal, 0, 1);"
+"   intensity *= dotNormal;"
+
+"   gl_FragColor = gAlbeo * Frag_Color * intensity * LightIntensity;"
 "}"
 ;
 

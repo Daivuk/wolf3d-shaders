@@ -21,36 +21,28 @@ void ws_draw_sprite(int x, int y, int texture)
     pVertices[0].position.x = xf - ws_cam_right.x * 0.5f;
     pVertices[0].position.y = yf - ws_cam_right.y * 0.5f;
     pVertices[0].position.z = 1.0f;
-    pVertices[0].normal.x = -ws_cam_front.x;
-    pVertices[0].normal.y = -ws_cam_front.y;
-    pVertices[0].normal.z = -ws_cam_front.z;
+    pVertices[0].normal = -ws_cam_front - ws_cam_right + ws_Vector3::UnitZ;
     pVertices[0].texCoord = { 0, 0 };
     pVertices[0].color = { 1, 1, 1, 1 };
 
     pVertices[1].position.x = xf - ws_cam_right.x * 0.5f;
     pVertices[1].position.y = yf - ws_cam_right.y * 0.5f;
     pVertices[1].position.z = 0.0f;
-    pVertices[1].normal.x = -ws_cam_front.x;
-    pVertices[1].normal.y = -ws_cam_front.y;
-    pVertices[1].normal.z = -ws_cam_front.z;
+    pVertices[1].normal = -ws_cam_front - ws_cam_right - ws_Vector3::UnitZ * .1f;
     pVertices[1].texCoord = { 0, 1 };
     pVertices[1].color = { 1, 1, 1, 1 };
 
     pVertices[2].position.x = xf + ws_cam_right.x * 0.5f;
     pVertices[2].position.y = yf + ws_cam_right.y * 0.5f;
     pVertices[2].position.z = 0.0f;
-    pVertices[2].normal.x = -ws_cam_front.x;
-    pVertices[2].normal.y = -ws_cam_front.y;
-    pVertices[2].normal.z = -ws_cam_front.z;
+    pVertices[2].normal = -ws_cam_front + ws_cam_right - ws_Vector3::UnitZ * .1f;
     pVertices[2].texCoord = { 1, 1 };
     pVertices[2].color = { 1, 1, 1, 1 };
 
     pVertices[3].position.x = xf + ws_cam_right.x * 0.5f;
     pVertices[3].position.y = yf + ws_cam_right.y * 0.5f;
     pVertices[3].position.z = 1.0f;
-    pVertices[3].normal.x = -ws_cam_front.x;
-    pVertices[3].normal.y = -ws_cam_front.y;
-    pVertices[3].normal.z = -ws_cam_front.z;
+    pVertices[3].normal = -ws_cam_front + ws_cam_right + ws_Vector3::UnitZ;
     pVertices[3].texCoord = { 1, 0 };
     pVertices[3].color = { 1, 1, 1, 1 };
 

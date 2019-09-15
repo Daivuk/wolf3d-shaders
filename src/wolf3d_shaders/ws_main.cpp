@@ -168,6 +168,27 @@ GLuint createVertexBuffer(GLsizeiptr size, const void *data)
 #include <fstream>
 #include <tinyfiledialogs.h>
 static float saveFlashAnim = 0.0f;
+
+Json::Value color_to_json(const ws_Color& col)
+{
+    Json::Value ret;
+    ret["r"] = col.r;
+    ret["g"] = col.g;
+    ret["b"] = col.b;
+    ret["a"] = col.a;
+    return ret;
+}
+
+ws_Color json_to_color(const Json::Value& json)
+{
+    ws_Color ret;
+    ret.r = json["r"].isNumeric() ? json["r"].asFloat() : 1.0f;
+    ret.g = json["g"].isNumeric() ? json["g"].asFloat() : 1.0f;
+    ret.b = json["b"].isNumeric() ? json["b"].asFloat() : 1.0f;
+    ret.a = json["a"].isNumeric() ? json["a"].asFloat() : 1.0f;
+    return ret;
+}
+
 void saveSettings()
 {
     std::ofstream file(ws_global_settings_filename);
@@ -182,6 +203,10 @@ void saveSettings()
     //-----------------------
     jsonDocument["ao_amount"] = ws_ao_amount;
     jsonDocument["ao_size"] = ws_ao_size;
+    jsonDocument["ambient_color"] = color_to_json(ws_ambient_color);
+    jsonDocument["player_light_color"] = color_to_json(ws_player_light_color);
+    jsonDocument["player_light_radius"] = ws_player_light_radius;
+    jsonDocument["player_light_intensity"] = ws_player_light_intensity;
     //-----------------------
 
     file << jsonDocument;
@@ -210,6 +235,10 @@ void loadSettings()
     //-----------------------
     ws_ao_amount = jsonDocument["ao_amount"].isNumeric() ? jsonDocument["ao_amount"].asFloat() : 0.65f;
     ws_ao_size = jsonDocument["ao_size"].isNumeric() ? jsonDocument["ao_size"].asFloat() : 0.25f;
+    ws_ambient_color = json_to_color(jsonDocument["ambient_color"]);
+    ws_player_light_color = json_to_color(jsonDocument["player_light_color"]);
+    ws_player_light_radius = jsonDocument["player_light_radius"].isNumeric() ? jsonDocument["player_light_radius"].asFloat() : 5.0f;
+    ws_player_light_intensity = jsonDocument["player_light_intensity"].isNumeric() ? jsonDocument["player_light_intensity"].asFloat() : 1.3f;
     //-----------------------
 }
 
@@ -255,7 +284,7 @@ int main(int argc, char **argv)
         "Wolf3D Shaders",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         ws_screen_w, ws_screen_h,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
 
     // Init OpenGL
     auto glContext = SDL_GL_CreateContext(sdlWindow);
@@ -278,14 +307,17 @@ int main(int argc, char **argv)
     SDL_PauseAudio(0);
 
     // Init main ws_resources
-    ws_resources.programPC = ws_create_program(PC_VERT, PC_FRAG, {"ws_Vector2", "ws_Color"});
-    ws_resources.programPTC = ws_create_program(PTC_VERT, PTC_FRAG, {"ws_Vector2", "ws_TexCoord", "ws_Color"});
-    ws_resources.programPNTC = ws_create_program(PNTC_VERT, PNTC_FRAG, {"ws_Vector2", "ws_Vector3", "ws_TexCoord", "ws_Color"});
+    ws_resources.programPC = ws_create_program(PC_VERT, PC_FRAG, {"Position", "Color"});
+    ws_resources.programPTC = ws_create_program(PTC_VERT, PTC_FRAG, {"Position", "TexCoord", "Color"});
+    ws_resources.programPNTC = ws_create_program(PNTC_VERT, PNTC_FRAG, {"Position", "Normal", "TexCoord", "Color"});
+    ws_resources.programGBufferPNTC = ws_create_program(PNTC_GBUFFER_VERT, PNTC_GBUFFER_FRAG, {"Position", "Normal", "TexCoord", "Color"});
+    ws_resources.programPointlightPTC = ws_create_program(PTC_POINTLIGHT_VERT, PTC_POINTLIGHT_FRAG, {"Position", "TexCoord", "Color"});
     ws_resources.vertexBuffer = createVertexBuffer();
     ws_resources.pPCVertices = new ws_VertexPC[MAX_VERTICES];
     ws_resources.pPTCVertices = new ws_VertexPTC[MAX_VERTICES];
     ws_resources.pPNTCVertices = new ws_VertexPNTC[MAX_VERTICES];
     ws_resources.mainRT = ws_create_rt(ws_screen_w, ws_screen_h);
+    ws_gbuffer = ws_create_gbuffer(ws_screen_w, ws_screen_h);
 
     srand(0);
     uint32_t checkerBytes[] = {0xFF880088, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF880088};
@@ -576,6 +608,7 @@ void ws_update_sdl()
                     ws_screen_w = event.window.data1;
                     ws_screen_h = event.window.data2;
                     ws_resize_rt(ws_resources.mainRT, ws_screen_w, ws_screen_h);
+                    ws_resize_gbuffer(ws_gbuffer, ws_screen_w, ws_screen_h);
                     break;
                 }
                 default: break;
@@ -707,8 +740,19 @@ void VW_UpdateScreen()
         ImGui::Checkbox("Sprite textures", &ws_sprite_texture_enabled);
         ImGui::Checkbox("Sprites", &ws_sprite_enabled);
         ImGui::Checkbox("Ambient Occlusion", &ws_ao_enabled);
+        ImGui::Checkbox("Deferred Shading", &ws_deferred_enabled);
         ImGui::SliderFloat("AO Amount", &ws_ao_amount, 0.0f, 1.0f);
         ImGui::SliderFloat("AO Size", &ws_ao_size, 0.0f, 0.5f);
+        ImGui::ColorEdit3("Ambient Color", &ws_ambient_color.r);
+        ImGui::ColorEdit3("Player Light Color", &ws_player_light_color.r);
+        ImGui::DragFloat("Player Light Radius", &ws_player_light_radius, 0.1f, 0.0f, 1000.0f);
+        ImGui::DragFloat("Player Light Intensity", &ws_player_light_intensity, 0.01f, 0.0f, 100.0f);
+        ImGui::End();
+
+        ImGui::Begin("G-Buffer");
+        ImGui::Image(&ws_gbuffer.albeoHandle, { (float)320, (float)200 }, { 0, 1 }, { 1, 0 });
+        ImGui::Image(&ws_gbuffer.normalHandle, { (float)320, (float)200 }, { 0, 1 }, { 1, 0 });
+        ImGui::Image(&ws_gbuffer.depthHandle, { (float)320, (float)200 }, { 0, 1 }, { 1, 0 });
         ImGui::End();
 
         ImGui::Render();
@@ -914,20 +958,33 @@ void ws_update_camera()
         ws_Vector3(0.0f, 0.0f, 1.0f));
     matrix3D = view * proj;
 
+    ws_flush();
+
+    if (ws_deferred_enabled)
     {
+        glBindFramebuffer(GL_FRAMEBUFFER, ws_gbuffer.frameBuffer);
+        GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+        glDrawBuffers(3, buffers);
+        glUseProgram(ws_resources.programGBufferPNTC);
+        auto uniform = glGetUniformLocation(ws_resources.programGBufferPNTC, "ProjMtx");
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix3D._11);
+    }
+    else
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
         glUseProgram(ws_resources.programPNTC);
         auto uniform = glGetUniformLocation(ws_resources.programPNTC, "ProjMtx");
         glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix3D._11);
     }
 
-    glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_SCISSOR_TEST);
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT, ws_wireframe_enabled ? GL_LINE : GL_FILL);
     glScissor(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
     glViewport(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
-
-    ws_flush();
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0, 0, 0, 1);
 }
 
 void ws_finish_draw_3d()
@@ -939,6 +996,86 @@ void ws_finish_draw_3d()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT, GL_FILL);
+    glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
+
+    // Post process into mainRT
+    if (ws_deferred_enabled)
+    {
+        matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h, 0, -999, 999);
+        {
+            glUseProgram(ws_resources.programPTC);
+            auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
+            glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
+        }
+
+        ws_prepare_for_ptc(GL_QUADS);
+        glEnable(GL_TEXTURE_2D);
+        glDisable(GL_BLEND);
+        glDisable(GL_DEPTH_TEST);
+
+        // Ambient
+        glBindTexture(GL_TEXTURE_2D, ws_gbuffer.albeoHandle);
+        ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h, 0, 1, 1, 0, ws_ambient_color);
+        ws_draw_ptc(ws_resources.pPTCVertices, 4, GL_QUADS);
+
+        // Player light
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glDisable(GL_TEXTURE_2D);
+        glUseProgram(ws_resources.programPointlightPTC);
+        auto InvProjMtx = matrix3D.Invert();
+        {
+            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "InvProjMtx");
+            glUniformMatrix4fv(uniform, 1, GL_FALSE, &InvProjMtx._11);
+        }
+        {
+            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "AlbeoTexture");
+            glUniform1i(uniform, 0);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, ws_gbuffer.albeoHandle);
+        }
+        {
+            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "NormalTexture");
+            glUniform1i(uniform, 1);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, ws_gbuffer.normalHandle);
+        }
+        {
+            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "DepthTexture");
+            glUniform1i(uniform, 2);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, ws_gbuffer.depthHandle);
+        }
+
+        glUniformMatrix4fv(glGetUniformLocation(ws_resources.programPointlightPTC, "ProjMtx"), 1, GL_FALSE, &matrix2D._11);
+        ws_draw_pointlight(ws_cam_eye, ws_player_light_color, ws_player_light_radius, ws_player_light_intensity);
+
+        // We still have 2D crap to render like the gun, revert to previous matrix
+        {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_TEXTURE_2D);
+
+            matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)1024, (float)640, 0, -999, 999);
+            {
+                glUseProgram(ws_resources.programPC);
+                auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
+                glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
+            }
+            {
+                glUseProgram(ws_resources.programPTC);
+                auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
+                glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
+            }
+            glEnable(GL_TEXTURE_2D);
+            glDisable(GL_DEPTH_TEST);
+            glActiveTexture(GL_TEXTURE0);
+            glUseProgram(ws_resources.programPTC);
+            glEnableVertexAttribArray(0); // pos
+            glEnableVertexAttribArray(1); // texcoord
+            glEnableVertexAttribArray(2); // color
+            glDisableVertexAttribArray(3);
+        }
+    }
 }
 
 struct PlayingSound

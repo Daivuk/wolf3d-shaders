@@ -111,7 +111,7 @@ void ws_prepare_for_pntc(int prim, GLuint texture)
     if (ws_draw_mode != DRAW_MODE_PNTC)
     {
         ws_draw_mode = DRAW_MODE_PNTC;
-        glUseProgram(ws_resources.programPNTC);
+        glUseProgram(ws_deferred_enabled ? ws_resources.programGBufferPNTC : ws_resources.programPNTC);
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
         glEnableVertexAttribArray(0); // pos

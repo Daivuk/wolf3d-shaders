@@ -26,6 +26,15 @@ struct ws_RenderTarget
     GLuint depth;
 };
 
+struct ws_GBuffer
+{
+    GLuint frameBuffer;
+    GLuint albeoHandle;
+    GLuint normalHandle;
+    GLuint depthHandle;
+    GLuint depth;
+};
+
 struct ws_Color
 {
     float r, g, b, a;
@@ -62,6 +71,8 @@ struct ws_Resources
     GLuint programPC;          /* Position2, Color4 */
     GLuint programPTC;         /* Position2, TexCoord2, Color4 */
     GLuint programPNTC;        /* ws_Vector3, Normal3, TexCoord2, Color4 */
+    GLuint programGBufferPNTC; /* ws_Vector3, Normal3, TexCoord2, Color4 */
+    GLuint programPointlightPTC; /* Position2, TexCoord2, Color4 */
     GLuint vertexBuffer;       /* Dynamic version buffer used by batches */
     ws_VertexPC *pPCVertices;     /* Used by dynamic rendering of ws_Vector2/ws_Color */
     ws_VertexPTC *pPTCVertices;   /* Used by dynamic rendering of ws_Vector2/ws_TexCoord/ws_Color */
@@ -69,8 +80,8 @@ struct ws_Resources
     GLuint mapVB;              /* ws_Vector3art of the map */
     GLuint checkerTexture;     /* Test texture to replace non-existing or corrupted data */
     GLuint whiteTexture;       /* ... */
-    ws_RenderTarget mainRT;       /* Main scree render ws_cam_target (Final image) */
     GLuint imguiFontTexture;
+    ws_RenderTarget mainRT;       /* Main scree render ws_cam_target (Final image) */
 };
 
 struct ws_Texture
@@ -112,6 +123,7 @@ extern GLuint ws_current_3d_texture;
 
 // ws_Resources
 extern ws_Resources ws_resources;
+extern ws_GBuffer ws_gbuffer;
 extern std::map<int16_t, ws_Texture> ws_ui_textures;
 extern std::map<int16_t, GLuint> ws_screen_textures;
 extern std::map<int, ws_Font> ws_font_textures;
@@ -124,8 +136,13 @@ extern bool ws_texture_enabled;
 extern bool ws_sprite_texture_enabled;
 extern bool ws_sprite_enabled;
 extern bool ws_wireframe_enabled;
+extern bool ws_deferred_enabled;
 extern float ws_ao_amount;
 extern float ws_ao_size;
+extern ws_Color ws_ambient_color;
+extern ws_Color ws_player_light_color;
+extern float ws_player_light_radius;
+extern float ws_player_light_intensity;
 
 // Dos function emulations
 int16_t inportb(int16_t addr);
@@ -138,12 +155,14 @@ void Mouse(int16_t x);
 GLuint ws_create_texture(uint8_t *data, int w, int h);
 ws_RenderTarget ws_create_rt(int w, int h);
 void ws_resize_rt(ws_RenderTarget &rt, int w, int h);
+void ws_resize_gbuffer(ws_GBuffer &gbuffer, int w, int h);
 GLuint ws_create_program(const GLchar *vs, const GLchar *ps, const std::vector<const char *> &attribs);
 ws_Texture ws_load_ui_texture(int16_t chunknum);
 void ws_preload_ui_textures();
 ws_Texture ws_load_sprite_texture(int16_t shapenum);
 ws_Texture ws_load_wall_texture(int wallpic);
 ws_Font &ws_get_font(int id);
+ws_GBuffer ws_create_gbuffer(int w, int h);
 
 void ws_update_sdl();
 void ws_play_sound(float* data, int len, float x, float y, bool _3d = false);
@@ -174,5 +193,7 @@ void ws_draw_quads(const ws_VertexPTC *pVertices, int count);
 int ws_draw_rect(ws_VertexPTC *pVertices, float x, float y, float w, float h, float u1, float v1, float u2, float v2, const ws_Color &color);
 int ws_draw_rect(ws_VertexPC *pVertices, float x, float y, float w, float h, const ws_Color &color);
 int ws_draw_line(ws_VertexPC *pVertices, const ws_Vector2 &from, const ws_Vector2 &to, const ws_Color &color);
+
+void ws_draw_pointlight(const ws_Vector3& pos, const ws_Color& col, float radius, float intensity);
 
 #endif

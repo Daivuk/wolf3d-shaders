@@ -1809,34 +1809,34 @@ void WallRefresh (void)
         }
     }
 
-    // Door overlays
+    // Door overlays - not now
     ws_flush();
-    glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE);
-    for (int x = 1; x < 63; ++x)
-    {
-        for (int y = 1; y < 63; ++y)
-        {
-            if (is_door_at(x, y))
-            {
-                neighbors[0] = !has_floor_at(x, y + 1);
-                neighbors[1] = !has_floor_at(x + 1, y + 1);
-                neighbors[2] = !has_floor_at(x + 1, y);
-                neighbors[3] = !has_floor_at(x + 1, y - 1);
-                neighbors[4] = !has_floor_at(x, y - 1);
-                neighbors[5] = !has_floor_at(x - 1, y - 1);
-                neighbors[6] = !has_floor_at(x - 1, y);
-                neighbors[7] = !has_floor_at(x - 1, y + 1);
+    //glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
+    //glDepthMask(GL_FALSE);
+    //for (int x = 1; x < 63; ++x)
+    //{
+    //    for (int y = 1; y < 63; ++y)
+    //    {
+    //        if (is_door_at(x, y))
+    //        {
+    //            neighbors[0] = !has_floor_at(x, y + 1);
+    //            neighbors[1] = !has_floor_at(x + 1, y + 1);
+    //            neighbors[2] = !has_floor_at(x + 1, y);
+    //            neighbors[3] = !has_floor_at(x + 1, y - 1);
+    //            neighbors[4] = !has_floor_at(x, y - 1);
+    //            neighbors[5] = !has_floor_at(x - 1, y - 1);
+    //            neighbors[6] = !has_floor_at(x - 1, y);
+    //            neighbors[7] = !has_floor_at(x - 1, y + 1);
 
-                float percent = door_percent(x, y);
-                ws_draw_door_ceiling(x, y, ceiling, neighbors, percent);
-                ws_draw_door_floor(x, y, 0x19, neighbors, percent);
-            }
-        }
-    }
-    ws_flush();
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_TRUE);
+    //            float percent = door_percent(x, y);
+    //            ws_draw_door_ceiling(x, y, ceiling, neighbors, percent);
+    //            ws_draw_door_floor(x, y, 0x19, neighbors, percent);
+    //        }
+    //    }
+    //}
+    //ws_flush();
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glDepthMask(GL_TRUE);
 }
 
 //==========================================================================
