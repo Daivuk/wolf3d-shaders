@@ -49,7 +49,7 @@ The Math classes are taken from the opensource engine onut: https://github.com/D
 
 ## Tools
 Integrated tools for seting up lighting. Press F1 while in game to activate the tool. Middle mouse to move camera. (Or ~ key to toggle freecam.)
-![](screenshots/tools.png)
+![](screenshots/tools2.png)
 
 ## License
 Find the original Wolfenstein 3D license bellow.
