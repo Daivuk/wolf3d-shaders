@@ -343,7 +343,7 @@ void	LatchNumber (int16_t x, int16_t y, int16_t width, int32_t number)
     strcpy(str, _str.c_str());
 	// ltoa (number,str,10);
 
-	length = strlen (str);
+	length = (uint16_t)strlen (str);
 
 	while (length<width)
 	{
@@ -1105,7 +1105,7 @@ void SpawnPlayer (int16_t tilex, int16_t tiley, int16_t dir)
 	player->active = (activetype)_true;
 	player->tilex = tilex;
 	player->tiley = tiley;
-	player->areanumber =
+	player->areanumber = (byte)
 		*(mapsegs[0] + farmapylookup[player->tiley]+player->tilex);
 	player->x = ((int32_t)tilex<<TILESHIFT)+TILEGLOBAL/2;
 	player->y = ((int32_t)tiley<<TILESHIFT)+TILEGLOBAL/2;

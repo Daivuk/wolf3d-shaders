@@ -1,7 +1,7 @@
 # wolf3d-shaders
 Wolfenstein 3D source port with shaders. Current version is very bare bone and none of the cool shaders has been implemented yet. But it is in a working state.
 
-![](screenshots/screenshot1.jpg)
+![](screenshots/screenshot.png)
 
 ## How to build
 ### Prerequisites
@@ -46,6 +46,10 @@ The Math classes are taken from the opensource engine onut: https://github.com/D
 * dirent
 * imgui
 * jsoncpp
+
+## Tools
+Integrated tools for seting up lighting. Press F1 while in game to activate the tool. Middle mouse to move camera. (Or ~ key to toggle freecam.)
+![](screenshots/tools.png)
 
 ## License
 Find the original Wolfenstein 3D license bellow.

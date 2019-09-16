@@ -3,6 +3,7 @@
 #include "WL_DEF.H"
 
 ws_GBuffer ws_gbuffer;
+std::vector<ws_PointLight> ws_active_lights;
 
 ws_GBuffer ws_create_gbuffer(int w, int h)
 {
@@ -83,7 +84,7 @@ void ws_resize_gbuffer(ws_GBuffer &gbuffer, int w, int h)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 }
 
-void ws_draw_pointlight(const ws_Vector3& pos, const ws_Color& col, float radius, float intensity)
+void ws_draw_pointlight(const ws_PointLight& pointLight)
 {
     auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
     float v = (float)(ws_screen_h - statusLineH) / (float)ws_screen_h;
@@ -91,10 +92,10 @@ void ws_draw_pointlight(const ws_Vector3& pos, const ws_Color& col, float radius
     static auto LightPosition_uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "LightPosition");
     static auto LightRadius_uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "LightRadius");
     static auto LightIntensity_uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "LightIntensity");
-    glUniform3fv(LightPosition_uniform, 1, &pos.x);
-    glUniform1f(LightRadius_uniform, radius);
-    glUniform1f(LightIntensity_uniform, intensity);
+    glUniform3fv(LightPosition_uniform, 1, &pointLight.position.x);
+    glUniform1f(LightRadius_uniform, pointLight.radius);
+    glUniform1f(LightIntensity_uniform, pointLight.intensity);
 
-    ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, 1, 1, 1 - v, col);
+    ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, 1, 1, 1 - v, pointLight.color);
     ws_draw_ptc(ws_resources.pPTCVertices, 4, GL_QUADS);
 }

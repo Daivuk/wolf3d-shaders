@@ -151,7 +151,7 @@ INL_KeyService(void)
  				temp;
  		int16_t		i;
 
- 	k = inportb(0x60);	// Get the scan code
+ 	k = (byte)inportb(0x60);	// Get the scan code
 
  	// Tell the XT keyboard controller to clear the key
  	//outportb(0x61,(temp = inportb(0x61)) | 0x80);
@@ -986,7 +986,7 @@ byte	IN_MouseButtons (void)
 	if (MousePresent)
 	{
 		 Mouse(MButtons);
-		 return _BX;
+		 return (byte)_BX;
 	}
 	else
 		return 0;
@@ -1009,7 +1009,7 @@ byte	IN_JoyButtons (void)
 	// joybits >>= 4;				// only the high bits are useful
 	// joybits ^= 15;				// return with 1=pressed
 
-	return joybits;
+	return (byte)joybits;
 }
 
 

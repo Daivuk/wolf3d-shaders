@@ -576,7 +576,7 @@ void VL_TestPaletteSet (void)
 	 int16_t	i;
 
 	 for (i=0;i<768;i++)
-	 	palette1[0][i] = i;
+	 	palette1[0][i] = (byte)i;
 
 	 fastpalette = _true;
 	 VL_SetPalette (&palette1[0][0]);

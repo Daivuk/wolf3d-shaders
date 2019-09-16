@@ -505,7 +505,7 @@ void PageLayout (_boolean shownumber)
 		VWB_DrawPropString (str);
 	}
 
-	fontcolor = oldfontcolor;
+	fontcolor = (byte)oldfontcolor;
 }
 
 //===========================================================================

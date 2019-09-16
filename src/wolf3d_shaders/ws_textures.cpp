@@ -57,6 +57,37 @@ ws_RenderTarget ws_create_rt(int w, int h)
     return ret;
 }
 
+ws_RenderTarget ws_create_hdr_rt(int w, int h)
+{
+    ws_RenderTarget ret;
+
+    glGenFramebuffers(1, &ret.frameBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, ret.frameBuffer);
+
+    glGenTextures(1, &ret.handle);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, ret.handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ret.handle, 0);
+
+    // Attach the main depth buffer
+    {
+        glBindRenderbuffer(GL_RENDERBUFFER, ws_resources.mainRT.depth);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, ws_resources.mainRT.depth);
+    }
+
+    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+    return ret;
+}
+
 void ws_resize_rt(ws_RenderTarget &rt, int w, int h)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, rt.frameBuffer);
@@ -69,6 +100,16 @@ void ws_resize_rt(ws_RenderTarget &rt, int w, int h)
     glBindRenderbuffer(GL_RENDERBUFFER, rt.depth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rt.depth);
+}
+
+void ws_resize_hdr_rt(ws_RenderTarget &rt, int w, int h)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, rt.frameBuffer);
+
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, rt.handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 }
 
 ws_Texture ws_load_ui_texture(int16_t chunknum)

@@ -232,17 +232,17 @@ void Victory (void)
 
     auto _str = std::to_string(kr);
     strcpy(tempstr, _str.c_str());
-	x=RATIOX+24-strlen(tempstr)*2;
+	x=(int16_t)(RATIOX+24-strlen(tempstr)*2);
 	Write(x,RATIOY,tempstr);
 
     _str = std::to_string(sr);
     strcpy(tempstr, _str.c_str());
-	x=RATIOX+24-strlen(tempstr)*2;
+	x= (int16_t)(RATIOX+24-strlen(tempstr)*2);
 	Write(x,RATIOY+2,tempstr);
 
     _str = std::to_string(tr);
     strcpy(tempstr, _str.c_str());
-	x=RATIOX+24-strlen(tempstr)*2;
+	x= (int16_t)(RATIOX+24-strlen(tempstr)*2);
 	Write(x,RATIOY+4,tempstr);
 
 
@@ -675,7 +675,7 @@ void LevelCompleted (void)
          _str = std::to_string((int32_t)i*PAR_AMOUNT);
         strcpy(tempstr, _str.c_str());
 	//    ltoa((int32_t)i*PAR_AMOUNT,tempstr,10);
-	   x=36-strlen(tempstr)*2;
+	   x=36-(int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   if (!(i%(PAR_AMOUNT/10)))
 		 SD_PlaySound(ENDBONUS1SND);
@@ -707,7 +707,7 @@ void LevelCompleted (void)
          _str = std::to_string(i);
         strcpy(tempstr, _str.c_str());
 	//   itoa(i,tempstr,10);
-	  x=RATIOXX-strlen(tempstr)*2;
+	  x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	  Write(x,14,tempstr);
 	  if (!(i%10))
 		SD_PlaySound(ENDBONUS1SND);
@@ -726,7 +726,7 @@ void LevelCompleted (void)
          _str = std::to_string(bonus);
         strcpy(tempstr, _str.c_str());
 	//    ltoa(bonus,tempstr,10);
-	   x=(RATIOXX-1)-strlen(tempstr)*2;
+	   x=(RATIOXX-1)- (int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
 	   SD_PlaySound(PERCENT100SND);
@@ -755,7 +755,7 @@ void LevelCompleted (void)
          _str = std::to_string(i);
         strcpy(tempstr, _str.c_str());
 	//   itoa(i,tempstr,10);
-	  x=RATIOXX-strlen(tempstr)*2;
+	  x=RATIOXX- (int16_t)strlen(tempstr)*2;
 	  Write(x,16,tempstr);
 	  if (!(i%10))
 		SD_PlaySound(ENDBONUS1SND);
@@ -775,7 +775,7 @@ void LevelCompleted (void)
          _str = std::to_string(bonus);
         strcpy(tempstr, _str.c_str());
 	//    ltoa(bonus,tempstr,10);
-	   x=(RATIOXX-1)-strlen(tempstr)*2;
+	   x=(RATIOXX-1)-(int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
 	   SD_PlaySound(PERCENT100SND);
@@ -803,7 +803,7 @@ void LevelCompleted (void)
          _str = std::to_string(i);
         strcpy(tempstr, _str.c_str());
 	//   itoa(i,tempstr,10);
-	  x=RATIOXX-strlen(tempstr)*2;
+	  x=RATIOXX- (int16_t)strlen(tempstr)*2;
 	  Write(x,18,tempstr);
 	  if (!(i%10))
 		SD_PlaySound(ENDBONUS1SND);
@@ -821,7 +821,7 @@ void LevelCompleted (void)
          _str = std::to_string(bonus);
         strcpy(tempstr, _str.c_str());
 	//    ltoa(bonus,tempstr,10);
-	   x=(RATIOXX-1)-strlen(tempstr)*2;
+	   x=(RATIOXX-1)- (int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
 	   SD_PlaySound(PERCENT100SND);
@@ -848,19 +848,19 @@ void LevelCompleted (void)
          _str = std::to_string(kr);
         strcpy(tempstr, _str.c_str());
 	//  itoa(kr,tempstr,10);
-	 x=RATIOXX-strlen(tempstr)*2;
+	 x=RATIOXX- (int16_t)strlen(tempstr)*2;
 	 Write(x,14,tempstr);
 
          _str = std::to_string(sr);
         strcpy(tempstr, _str.c_str());
 	//  itoa(sr,tempcstr,10);
-	 x=RATIOXX-strlen(tempstr)*2;
+	 x=RATIOXX- (int16_t)strlen(tempstr)*2;
 	 Write(x,16,tempstr);
 
          _str = std::to_string(tr);
         strcpy(tempstr, _str.c_str());
 	//  itoa(tr,tempstr,10);
-	 x=RATIOXX-strlen(tempstr)*2;
+	 x=RATIOXX- (int16_t)strlen(tempstr)*2;
 	 Write(x,18,tempstr);
 
 	 bonus=(int32_t)timeleft*PAR_AMOUNT+
@@ -872,7 +872,7 @@ void LevelCompleted (void)
     _str = std::to_string(bonus);
     strcpy(tempstr, _str.c_str());
 	//  ltoa(bonus,tempstr,10);
-	 x=36-strlen(tempstr)*2;
+	 x=36- (int16_t)strlen(tempstr)*2;
 	 Write(x,7,tempstr);
 
 	 //

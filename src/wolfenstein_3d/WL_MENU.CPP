@@ -843,7 +843,7 @@ int16_t CP_CheckQuick(uint16_t scancode)
 				// SHUT-UP THE ADLIB
 				//
 				for (i=1;i<=0xf5;i++)
-					alOut(i,0);
+					alOut((byte)i,0);
 				Quit(NULL);
 			}
 
@@ -1516,7 +1516,7 @@ void DrawLoadSaveScreen(int16_t loadsave)
 //
 void PrintLSEntry(int16_t w,int16_t color)
 {
-	SETFONTCOLOR(color,BKGDCOLOR);
+	SETFONTCOLOR((byte)color,BKGDCOLOR);
 	DrawOutline(LSM_X+LSItems.indent,LSM_Y+w*13,LSM_W-LSItems.indent-15,11,color,color);
 	PrintX=LSM_X+LSItems.indent+2;
 	PrintY=LSM_Y+w*13+1;
@@ -2642,7 +2642,7 @@ void DrawCustMouse(int16_t hilight)
 	color=TEXTCOLOR;
 	if (hilight)
 		color=HIGHLIGHT;
-	SETFONTCOLOR(color,BKGDCOLOR);
+	SETFONTCOLOR((byte)color,BKGDCOLOR);
 
 	if (!mouseenabled)
 	{
@@ -2678,7 +2678,7 @@ void DrawCustJoy(int16_t hilight)
 	color=TEXTCOLOR;
 	if (hilight)
 		color=HIGHLIGHT;
-	SETFONTCOLOR(color,BKGDCOLOR);
+	SETFONTCOLOR((byte)color,BKGDCOLOR);
 
 	if (!joystickenabled)
 	{
@@ -2697,7 +2697,7 @@ void DrawCustJoy(int16_t hilight)
 void PrintCustKeybd(int16_t i)
 {
 	PrintX=CST_START+CST_SPC*i;
-	US_Print((char*)IN_GetScanName(buttonscan[order[i]]));
+	US_Print((char*)IN_GetScanName((ScanCode)buttonscan[order[i]]));
 }
 
 void DrawCustKeybd(int16_t hilight)
@@ -2708,7 +2708,7 @@ void DrawCustKeybd(int16_t hilight)
 	color=TEXTCOLOR;
 	if (hilight)
 		color=HIGHLIGHT;
-	SETFONTCOLOR(color,BKGDCOLOR);
+	SETFONTCOLOR((byte)color,BKGDCOLOR);
 
 	PrintY=CST_Y+13*8;
 	for (i=0;i<4;i++)
@@ -2718,7 +2718,7 @@ void DrawCustKeybd(int16_t hilight)
 void PrintCustKeys(int16_t i)
 {
 	PrintX=CST_START+CST_SPC*i;
-	US_Print((char*)IN_GetScanName(dirscan[moveorder[i]]));
+	US_Print((char*)IN_GetScanName((ScanCode)dirscan[moveorder[i]]));
 }
 
 void DrawCustKeys(int16_t hilight)
@@ -2729,7 +2729,7 @@ void DrawCustKeys(int16_t hilight)
 	color=TEXTCOLOR;
 	if (hilight)
 		color=HIGHLIGHT;
-	SETFONTCOLOR(color,BKGDCOLOR);
+	SETFONTCOLOR((byte)color,BKGDCOLOR);
 
 	PrintY=CST_Y+13*10;
 	for (i=0;i<4;i++)
@@ -2876,7 +2876,7 @@ void CP_Quit(void)
 		// SHUT-UP THE ADLIB
 		//
 		for (i=1;i<=0xf5;i++)
-			alOut(i,0);
+			alOut((byte)i,0);
 		Quit(NULL);
 	}
 
@@ -3477,9 +3477,9 @@ void DrawMenu(CP_iteminfo *item_i,CP_itemtype *items)
 void SetTextColor(CP_itemtype *items,int16_t hlight)
 {
 	if (hlight)
-		{SETFONTCOLOR(color_hlite[items->active],BKGDCOLOR);}
+		{SETFONTCOLOR((byte)color_hlite[items->active],BKGDCOLOR);}
 	else
-		{SETFONTCOLOR(color_norml[items->active],BKGDCOLOR);}
+		{SETFONTCOLOR((byte)color_norml[items->active],BKGDCOLOR);}
 }
 
 

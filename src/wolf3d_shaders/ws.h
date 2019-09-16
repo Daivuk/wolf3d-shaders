@@ -82,6 +82,7 @@ struct ws_Resources
     GLuint whiteTexture;       /* ... */
     GLuint imguiFontTexture;
     ws_RenderTarget mainRT;       /* Main scree render ws_cam_target (Final image) */
+    ws_RenderTarget hdrRT;        /* Used for high dynamic range */
 };
 
 struct ws_Texture
@@ -97,6 +98,25 @@ struct ws_Font
     float os[256];
 };
 
+struct ws_PointLight
+{
+    ws_Vector3 position;
+    ws_Color color;
+    float radius;
+    float intensity;
+    bool cast_shadow;
+};
+
+struct ws_SpriteSettings
+{
+    int id;
+    bool emit_light;
+    float self_illumination;
+    ws_PointLight light;
+    int clip[4];
+};
+const ws_SpriteSettings WS_DEFAULT_SPRITE_SETTINGS = { 0, false, 0.0f, { {0,0,0.5f},{1,1,1,1},5,1.3f }, {0,0,64,64} };
+
 extern _boolean sdl_keystates[NumCodes];
 extern ws_Color ws_palette[];
 extern ws_Color ws_dynamic_palette[];
@@ -104,11 +124,13 @@ extern int16_t ws_argc;
 extern char **ws_argv;
 extern int ws_screen_w;
 extern int ws_screen_h;
+extern bool ws_audio_on;
 
 // Camera
 extern ws_Vector3 ws_cam_eye;
 extern ws_Vector3 ws_cam_right;
 extern ws_Vector3 ws_cam_front;
+extern ws_Vector3 ws_cam_front_flat;
 extern ws_Vector3 ws_cam_target;
 extern bool ws_debug_view_enabled;
 
@@ -120,6 +142,7 @@ extern int ws_draw_mode;
 extern float ws_ui_scale;
 extern GLenum ws_draw_mode_prim;
 extern GLuint ws_current_3d_texture;
+extern std::vector<ws_PointLight> ws_active_lights;
 
 // ws_Resources
 extern ws_Resources ws_resources;
@@ -140,9 +163,13 @@ extern bool ws_deferred_enabled;
 extern float ws_ao_amount;
 extern float ws_ao_size;
 extern ws_Color ws_ambient_color;
-extern ws_Color ws_player_light_color;
-extern float ws_player_light_radius;
-extern float ws_player_light_intensity;
+extern ws_PointLight ws_player_light;
+extern float ws_save_flash_anim;
+extern int ws_gbuffer_tool_scale;
+extern std::map<int, ws_SpriteSettings> ws_sprite_settings;
+
+// Tools
+extern int ws_selected_sprite;
 
 // Dos function emulations
 int16_t inportb(int16_t addr);
@@ -152,9 +179,15 @@ Interrupt getvect(int16_t r_num);
 void setvect(int16_t r_num, Interrupt interrupt);
 void Mouse(int16_t x);
 
+void ws_save_settings();
+void ws_load_settings();
+void ws_do_tools();
+
 GLuint ws_create_texture(uint8_t *data, int w, int h);
 ws_RenderTarget ws_create_rt(int w, int h);
+ws_RenderTarget ws_create_hdr_rt(int w, int h);
 void ws_resize_rt(ws_RenderTarget &rt, int w, int h);
+void ws_resize_hdr_rt(ws_RenderTarget &rt, int w, int h);
 void ws_resize_gbuffer(ws_GBuffer &gbuffer, int w, int h);
 GLuint ws_create_program(const GLchar *vs, const GLchar *ps, const std::vector<const char *> &attribs);
 ws_Texture ws_load_ui_texture(int16_t chunknum);
@@ -166,6 +199,7 @@ ws_GBuffer ws_create_gbuffer(int w, int h);
 
 void ws_update_sdl();
 void ws_play_sound(float* data, int len, float x, float y, bool _3d = false);
+void ws_audio_callback(void *userdata, Uint8 *stream, int len);
 
 void ws_update_camera();
 void ws_finish_draw_3d();
@@ -194,6 +228,6 @@ int ws_draw_rect(ws_VertexPTC *pVertices, float x, float y, float w, float h, fl
 int ws_draw_rect(ws_VertexPC *pVertices, float x, float y, float w, float h, const ws_Color &color);
 int ws_draw_line(ws_VertexPC *pVertices, const ws_Vector2 &from, const ws_Vector2 &to, const ws_Color &color);
 
-void ws_draw_pointlight(const ws_Vector3& pos, const ws_Color& col, float radius, float intensity);
+void ws_draw_pointlight(const ws_PointLight& pointLight);
 
 #endif

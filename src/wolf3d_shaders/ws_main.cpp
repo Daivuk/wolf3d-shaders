@@ -23,8 +23,6 @@
 
 #include <imgui.h>
 
-std::string ws_global_settings_filename = "global_settings.json";
-
 // That's for 2D
 static const int MAX_VERTICES = 100000;
 
@@ -33,9 +31,6 @@ void Quit(char *error);
 void wolf3d_init();
 void wolf3d_update();
 void wolf3d_shutdown();
-void audioCallback(void *userdata, Uint8 *stream, int len);
-void ws_flush();
-void drawDebugString(char *string, float x, float y);
 
 int16_t ws_argc; // global arguments. this is referenced a bit everywhere
 char **ws_argv;
@@ -52,6 +47,7 @@ float dt = 0.0f;
 ws_Vector3 ws_cam_eye;
 ws_Vector3 ws_cam_right;
 ws_Vector3 ws_cam_front;
+ws_Vector3 ws_cam_front_flat;
 ws_Vector3 ws_cam_target;
 
 bool ws_debug_view_enabled = false;
@@ -164,84 +160,6 @@ GLuint createVertexBuffer(GLsizeiptr size, const void *data)
     return handle;
 }
 
-#include <json/json.h>
-#include <fstream>
-#include <tinyfiledialogs.h>
-static float saveFlashAnim = 0.0f;
-
-Json::Value color_to_json(const ws_Color& col)
-{
-    Json::Value ret;
-    ret["r"] = col.r;
-    ret["g"] = col.g;
-    ret["b"] = col.b;
-    ret["a"] = col.a;
-    return ret;
-}
-
-ws_Color json_to_color(const Json::Value& json)
-{
-    ws_Color ret;
-    ret.r = json["r"].isNumeric() ? json["r"].asFloat() : 1.0f;
-    ret.g = json["g"].isNumeric() ? json["g"].asFloat() : 1.0f;
-    ret.b = json["b"].isNumeric() ? json["b"].asFloat() : 1.0f;
-    ret.a = json["a"].isNumeric() ? json["a"].asFloat() : 1.0f;
-    return ret;
-}
-
-void saveSettings()
-{
-    std::ofstream file(ws_global_settings_filename);
-    if (!file.is_open())
-    {
-        tinyfd_messageBox("Open", ("Failed to open/create file:\n" + ws_global_settings_filename).c_str(), "ok", "error", 0);
-        return;
-    }
-
-    Json::Value jsonDocument;
-
-    //-----------------------
-    jsonDocument["ao_amount"] = ws_ao_amount;
-    jsonDocument["ao_size"] = ws_ao_size;
-    jsonDocument["ambient_color"] = color_to_json(ws_ambient_color);
-    jsonDocument["player_light_color"] = color_to_json(ws_player_light_color);
-    jsonDocument["player_light_radius"] = ws_player_light_radius;
-    jsonDocument["player_light_intensity"] = ws_player_light_intensity;
-    //-----------------------
-
-    file << jsonDocument;
-    saveFlashAnim = 1.0f;
-}
-
-void loadSettings()
-{
-    std::ifstream file(ws_global_settings_filename);
-    if (!file.is_open())
-    {
-        tinyfd_messageBox("Open", ("Failed to open file:\n" + ws_global_settings_filename).c_str(), "ok", "error", 0);
-        return;
-    }
-    Json::Value jsonDocument;
-    try
-    {
-        file >> jsonDocument;
-    }
-    catch (...)
-    {
-        tinyfd_messageBox("Open", ("Failed to open file:\n" + ws_global_settings_filename + "\nIt is corrupted.").c_str(), "ok", "error", 0);
-        return;
-    }
-
-    //-----------------------
-    ws_ao_amount = jsonDocument["ao_amount"].isNumeric() ? jsonDocument["ao_amount"].asFloat() : 0.65f;
-    ws_ao_size = jsonDocument["ao_size"].isNumeric() ? jsonDocument["ao_size"].asFloat() : 0.25f;
-    ws_ambient_color = json_to_color(jsonDocument["ambient_color"]);
-    ws_player_light_color = json_to_color(jsonDocument["player_light_color"]);
-    ws_player_light_radius = jsonDocument["player_light_radius"].isNumeric() ? jsonDocument["player_light_radius"].asFloat() : 5.0f;
-    ws_player_light_intensity = jsonDocument["player_light_intensity"].isNumeric() ? jsonDocument["player_light_intensity"].asFloat() : 1.3f;
-    //-----------------------
-}
-
 #if defined(WIN32)
 int CALLBACK WinMain(HINSTANCE appInstance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdCount)
 {
@@ -284,7 +202,7 @@ int main(int argc, char **argv)
         "Wolf3D Shaders",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         ws_screen_w, ws_screen_h,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE /*| SDL_WINDOW_MAXIMIZED*/);
 
     // Init OpenGL
     auto glContext = SDL_GL_CreateContext(sdlWindow);
@@ -296,14 +214,11 @@ int main(int argc, char **argv)
     memset(&audioSpec, 0, sizeof(SDL_AudioSpec));
     audioSpec.freq = 44100;//6896;
     audioSpec.format = AUDIO_F32;
-    audioSpec.callback = audioCallback;
+    audioSpec.callback = ws_audio_callback;
     audioSpec.channels = 2;
     audioSpec.samples = 512;
     audioSpec.userdata = nullptr;
-    if (SDL_OpenAudio(&audioSpec, NULL) < 0)
-    {
-        assert(false);
-    }
+    ws_audio_on = SDL_OpenAudio(&audioSpec, NULL) >= 0;
     SDL_PauseAudio(0);
 
     // Init main ws_resources
@@ -317,6 +232,7 @@ int main(int argc, char **argv)
     ws_resources.pPTCVertices = new ws_VertexPTC[MAX_VERTICES];
     ws_resources.pPNTCVertices = new ws_VertexPNTC[MAX_VERTICES];
     ws_resources.mainRT = ws_create_rt(ws_screen_w, ws_screen_h);
+    ws_resources.hdrRT = ws_create_hdr_rt(ws_screen_w, ws_screen_h);
     ws_gbuffer = ws_create_gbuffer(ws_screen_w, ws_screen_h);
 
     srand(0);
@@ -352,7 +268,7 @@ int main(int argc, char **argv)
     io.KeyMap[ImGuiKey_Y] = (int)SDL_SCANCODE_Y;
     io.KeyMap[ImGuiKey_Z] = (int)SDL_SCANCODE_Z;
 
-    loadSettings();
+    ws_load_settings();
 
     ws_update_sdl();
     VW_UpdateScreen();
@@ -431,7 +347,7 @@ void ws_update_sdl()
                 {
                     if (event.key.keysym.scancode == SDL_SCANCODE_S && event.key.keysym.mod & KMOD_LCTRL)
                     {
-                        saveSettings();
+                        ws_save_settings();
                     }
                 }
             }
@@ -588,8 +504,8 @@ void ws_update_sdl()
                 if (!camControl)
                 {
                     auto& io = ImGui::GetIO();
-                    io.MouseWheel = event.wheel.y;
-                    io.MouseWheelH = event.wheel.x;
+                    io.MouseWheel = (float)event.wheel.y;
+                    io.MouseWheelH = (float)event.wheel.x;
                 }
             }
             break;
@@ -613,6 +529,7 @@ void ws_update_sdl()
                     ws_screen_w = event.window.data1;
                     ws_screen_h = event.window.data2;
                     ws_resize_rt(ws_resources.mainRT, ws_screen_w, ws_screen_h);
+                    ws_resize_hdr_rt(ws_resources.hdrRT, ws_screen_w, ws_screen_h);
                     ws_resize_gbuffer(ws_gbuffer, ws_screen_w, ws_screen_h);
                     break;
                 }
@@ -644,14 +561,17 @@ void ws_update_sdl()
     if (ws_debug_view_enabled && camControl)
     {
         // Update camera crap
-        ws_cam_front.x = sinf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
-        ws_cam_front.y = cosf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
-        ws_cam_front.z = sinf(freecamAngleX * M_PI / 180.0f);
+        ws_cam_front.x = sinf(freecamAngleZ * (float)M_PI / 180.0f) * cosf(freecamAngleX * (float)M_PI / 180.0f);
+        ws_cam_front.y = cosf(freecamAngleZ * (float)M_PI / 180.0f) * cosf(freecamAngleX * (float)M_PI / 180.0f);
+        ws_cam_front.z = sinf(freecamAngleX * (float)M_PI / 180.0f);
         ws_cam_front.Normalize();
         ws_cam_right = { ws_cam_front.y, -ws_cam_front.x, 0.0f };
         ws_cam_right.Normalize();
         ws_cam_eye = freecamPos;
         ws_cam_target = ws_cam_eye + ws_cam_front;
+        ws_cam_front_flat = ws_cam_front;
+        ws_cam_front_flat.z = 0;
+        ws_cam_front_flat.Normalize();
 
         float moveSpeed = (freecamInputs[6] ? 15.0f : 5.0f) * dt;
 
@@ -669,7 +589,7 @@ void ws_update_sdl()
             freecamPos -= ws_Vector3(0, 0, 1.0f) * moveSpeed;
     }
 
-    saveFlashAnim = std::max(0.0f, saveFlashAnim - dt * 2.0f);
+    ws_save_flash_anim = std::max(0.0f, ws_save_flash_anim - dt * 2.0f);
 }
 
 void VW_UpdateScreen()
@@ -691,7 +611,6 @@ void VW_UpdateScreen()
     glViewport(0, 0, ws_screen_w, ws_screen_h);
 
     matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h, 0, -999, 999);
-    // matrix2D = matrix2D.Transpose();
     {
         glUseProgram(ws_resources.programPC);
         auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
@@ -704,117 +623,14 @@ void VW_UpdateScreen()
     }
 
     ws_prepare_for_ptc(GL_QUADS);
-    ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)ws_screen_w, (float)ws_screen_h, 0, 1, 1, 0, { 1 + saveFlashAnim, 1 + saveFlashAnim, 1 + saveFlashAnim, fade_val });
+    ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)ws_screen_w, (float)ws_screen_h, 0, 1, 1, 0, { 1 + ws_save_flash_anim, 1 + ws_save_flash_anim, 1 + ws_save_flash_anim, fade_val });
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, ws_resources.mainRT.handle);
     ws_draw_ptc(ws_resources.pPTCVertices, ws_ptc_count, GL_QUADS);
 
     if (ws_debug_view_enabled)
     {
-        auto& io = ImGui::GetIO();
-        io.DeltaTime = 1.0f / 60.0f; //TODO:
-        io.DisplaySize = { (float)ws_screen_w, (float)ws_screen_h };
-        ImGui::NewFrame();
-
-        ImGui::Begin("Textures");
-        for (auto &kv : ws_font_textures)
-        {
-            ImGui::Image(&kv.second.tex, { 128.0f, 10.0f }, { 0.0f, 0.0f }, {0.15f, 1.0f});
-        }
-        for (auto &kv : ws_screen_textures)
-        {
-            ImGui::Image(&kv.second, { 320.0f, 200.0f });
-        }
-        for (auto &kv : ws_ui_textures)
-        {
-            ImGui::Image(&kv.second.tex, { (float)kv.second.w, (float)kv.second.h });
-        }
-        for (auto &kv : ws_sprite_textures)
-        {
-            ImGui::Image(&kv.second.tex, { (float)kv.second.w, (float)kv.second.h });
-        }
-        for (auto &kv : ws_wall_textures)
-        {
-            ImGui::Image(&kv.second.tex, { (float)kv.second.w, (float)kv.second.h });
-        }
-        ImGui::End();
-
-        ImGui::Begin("Rendering");
-        ImGui::Checkbox("Wireframe", &ws_wireframe_enabled);
-        ImGui::Checkbox("Textures", &ws_texture_enabled);
-        ImGui::Checkbox("Sprite textures", &ws_sprite_texture_enabled);
-        ImGui::Checkbox("Sprites", &ws_sprite_enabled);
-        ImGui::Checkbox("Ambient Occlusion", &ws_ao_enabled);
-        ImGui::Checkbox("Deferred Shading", &ws_deferred_enabled);
-        ImGui::SliderFloat("AO Amount", &ws_ao_amount, 0.0f, 1.0f);
-        ImGui::SliderFloat("AO Size", &ws_ao_size, 0.0f, 0.5f);
-        ImGui::ColorEdit3("Ambient Color", &ws_ambient_color.r);
-        ImGui::ColorEdit3("Player Light Color", &ws_player_light_color.r);
-        ImGui::DragFloat("Player Light Radius", &ws_player_light_radius, 0.1f, 0.0f, 1000.0f);
-        ImGui::DragFloat("Player Light Intensity", &ws_player_light_intensity, 0.01f, 0.0f, 100.0f);
-        ImGui::End();
-
-        ImGui::Begin("G-Buffer");
-        ImGui::Image(&ws_gbuffer.albeoHandle, { (float)320, (float)200 }, { 0, 1 }, { 1, 0 });
-        ImGui::Image(&ws_gbuffer.normalHandle, { (float)320, (float)200 }, { 0, 1 }, { 1, 0 });
-        ImGui::Image(&ws_gbuffer.depthHandle, { (float)320, (float)200 }, { 0, 1 }, { 1, 0 });
-        ImGui::End();
-
-        ImGui::Render();
-        auto pDrawData = ImGui::GetDrawData();
-        auto cmdListCount = pDrawData->CmdListsCount;
-        glEnable(GL_SCISSOR_TEST);
-        for (int i = 0; i < cmdListCount; ++i)
-        {
-            auto pCmdList = pDrawData->CmdLists[i];
-            auto pIndexBuffer = pCmdList->IdxBuffer.Data;
-            auto pVertexBuffer = pCmdList->VtxBuffer.Data;
-
-            auto vertCount = pCmdList->VtxBuffer.size();
-            auto indexCount = pCmdList->IdxBuffer.size();
-            int drawOffset = 0;
-
-            // Loop sub meshes
-            auto cmdBufferCount = pCmdList->CmdBuffer.size();
-            for (int k = 0; k < cmdBufferCount; ++k)
-            {
-                auto pCmd = pCmdList->CmdBuffer.Data + k;
-
-                auto scissorW = (int)(pCmd->ClipRect.z - pCmd->ClipRect.x);
-                auto scissorH = (int)(pCmd->ClipRect.w - pCmd->ClipRect.y);
-                glScissor((int)pCmd->ClipRect.x, ws_screen_h - (int)pCmd->ClipRect.y - scissorH, scissorW, scissorH);
-
-                if (pCmd->UserCallback)
-                {
-                    pCmd->UserCallback(pCmdList, pCmd);
-                }
-                else
-                {
-                    GLuint texture = *(GLuint*)pCmd->TextureId;
-                    ws_prepare_for_ptc(GL_TRIANGLES);
-                    glBindTexture(GL_TEXTURE_2D, texture);
-                    auto pVertices = ws_resources.pPTCVertices;
-                    for (int j = drawOffset; j < drawOffset + pCmd->ElemCount; ++j)
-                    {
-                        auto pVert = pVertexBuffer + pIndexBuffer[j];
-                        pVertices->position.x = pVert->pos.x;
-                        pVertices->position.y = pVert->pos.y;
-                        pVertices->texCoord.u = pVert->uv.x;
-                        pVertices->texCoord.v = pVert->uv.y;
-                        pVertices->color.r = (float)((pVert->col) & 0xff) / 255.0f;
-                        pVertices->color.g = (float)((pVert->col >> 8) & 0xff) / 255.0f;
-                        pVertices->color.b = (float)((pVert->col >> 16) & 0xff) / 255.0f;
-                        pVertices->color.a = (float)((pVert->col >> 24) & 0xff) / 255.0f;
-                        ++pVertices;
-                    }
-                    ws_ptc_count = pCmd->ElemCount;
-                    ws_flush();
-                }
-                drawOffset += pCmd->ElemCount;
-            }
-        }
-        glDisable(GL_SCISSOR_TEST);
-        glScissor(0, 0, ws_screen_w, ws_screen_h);
+        ws_do_tools();
     }
 
     // Swap buffers
@@ -827,7 +643,6 @@ void VW_UpdateScreen()
     glViewport(0, 0, ws_screen_w, ws_screen_h);
 
     matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)1024, (float)640, 0, -999, 999);
-    //matrix2D = matrix2D.Transpose();
     {
         glUseProgram(ws_resources.programPC);
         auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
@@ -896,11 +711,11 @@ void outportb(int16_t addr, char val)
 {
     switch (addr)
     {
-    case PEL_READ_ADR:
-    {
-        palidx = 0;
-        break;
-    }
+        case PEL_READ_ADR:
+        {
+            palidx = 0;
+            break;
+        }
     }
 }
 
@@ -908,8 +723,8 @@ Interrupt getvect(int16_t r_num)
 {
     switch (r_num)
     {
-    case KeyInt:
-        return KeyInt_in;
+        case KeyInt:
+            return KeyInt_in;
     }
     return nullptr;
 }
@@ -918,9 +733,9 @@ void setvect(int16_t r_num, Interrupt interrupt)
 {
     switch (r_num)
     {
-    case KeyInt:
-        KeyInt_in = interrupt;
-        break;
+        case KeyInt:
+            KeyInt_in = interrupt;
+            break;
     }
 }
 
@@ -932,9 +747,9 @@ void ws_update_camera()
 
     if (ws_debug_view_enabled)
     {
-        ws_cam_front.x = sinf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
-        ws_cam_front.y = cosf(freecamAngleZ * M_PI / 180.0f) * cosf(freecamAngleX * M_PI / 180.0f);
-        ws_cam_front.z = sinf(freecamAngleX * M_PI / 180.0f);
+        ws_cam_front.x = sinf(freecamAngleZ * (float)M_PI / 180.0f) * cosf(freecamAngleX * (float)M_PI / 180.0f);
+        ws_cam_front.y = cosf(freecamAngleZ * (float)M_PI / 180.0f) * cosf(freecamAngleX * (float)M_PI / 180.0f);
+        ws_cam_front.z = sinf(freecamAngleX * (float)M_PI / 180.0f);
         ws_cam_front.Normalize();
         ws_cam_right = { ws_cam_front.y, -ws_cam_front.x, 0.0f };
         ws_cam_right.Normalize();
@@ -943,8 +758,8 @@ void ws_update_camera()
     }
     else
     {
-        auto vsin = sinf((float)player->angle * M_PI / 180.0f);
-        auto vcos = cosf((float)player->angle * M_PI / 180.0f);
+        auto vsin = sinf((float)player->angle * (float)M_PI / 180.0f);
+        auto vcos = cosf((float)player->angle * (float)M_PI / 180.0f);
         float px = (float)player->x / 65536.0f;
         float py = (float)player->y / 65536.0f;
 
@@ -956,6 +771,10 @@ void ws_update_camera()
         ws_cam_eye = ws_Vector3(px, 64.0f - py, 0.5f);
         ws_cam_target = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
     }
+
+    ws_cam_front_flat = ws_cam_front;
+    ws_cam_front_flat.z = 0;
+    ws_cam_front_flat.Normalize();
 
     auto view = ws_Matrix::CreateLookAt(
         ws_cam_eye,
@@ -973,6 +792,7 @@ void ws_update_camera()
         glUseProgram(ws_resources.programGBufferPNTC);
         auto uniform = glGetUniformLocation(ws_resources.programGBufferPNTC, "ProjMtx");
         glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix3D._11);
+        ws_active_lights.clear();
     }
     else
     {
@@ -1057,8 +877,14 @@ void ws_finish_draw_3d()
         }
 
         glUniformMatrix4fv(glGetUniformLocation(ws_resources.programPointlightPTC, "ProjMtx"), 1, GL_FALSE, &matrix2D._11);
-        ws_draw_pointlight({(float)player->x / 65536.f, 64.0f - (float)player->y / 65536.f, 0.5f}, 
-            ws_player_light_color, ws_player_light_radius, ws_player_light_intensity);
+        ws_player_light.position = { (float)player->x / 65536.f, 64.0f - (float)player->y / 65536.f, 0.5f };
+        ws_draw_pointlight(ws_player_light);
+
+        // Other lights
+        for (auto& light : ws_active_lights)
+        {
+            ws_draw_pointlight(light);
+        }
 
         // We still have 2D crap to render like the gun, revert to previous matrix
         {
@@ -1086,71 +912,6 @@ void ws_finish_draw_3d()
             glDisableVertexAttribArray(3);
             glViewport(0, 0, ws_screen_w, ws_screen_h);
         }
-    }
-}
-
-struct PlayingSound
-{
-    float *data;
-    int len;
-    float x, y;
-    bool _3d;
-};
-static std::vector<PlayingSound> playingSounds;
-
-void ws_play_sound(float *data, int len, float x, float y, bool _3d)
-{
-    playingSounds.push_back({ data, len, x, 64.0f - y, _3d });
-}
-
-void audioCallback(void *userdata, Uint8 *stream, int len)
-{
-    memset(stream, 0, len);
-
-    len /= 8; // float * 2 channels
-    float *pOut = (float*)stream;
-    float volL, volR;
-
-    for (auto it = playingSounds.begin(); it != playingSounds.end();)
-    {
-        auto& playingSound = *it;
-
-        if (playingSound._3d)
-        {
-            auto sndPos = ws_Vector3(playingSound.x, playingSound.y, 0.5f);
-            auto distance = ws_Vector3::DistanceSquared(ws_cam_eye, sndPos);
-            auto vol = 1.0f / std::max(1.0f, distance / 15.0f);
-            auto dir = sndPos - ws_cam_eye;
-            dir.Normalize();
-            auto dot = dir.Dot(ws_cam_right) + 1.0f; // 0 = left, 2 = ws_cam_right
-            auto dotf = dir.Dot(ws_cam_front); // We attenuate stuff behind us
-            dotf = std::max(0.75f, std::min(dotf, 0.0f) + 1.0f); // [0.75 to 1] 1 = perpenticular to camera and forward, 0.75 completely in back
-            volL = vol * dotf;
-            volR = vol * dotf;
-            volL *= std::min(1.0f, (2.0f - dot));
-            volR *= std::min(1.0f, dot);
-        }
-        else
-        {
-            volL = 1.0f;
-            volR = 1.0f;
-        }
-
-        auto len1 = std::min(len, playingSound.len);
-        for (int i = 0; i < len1; ++i)
-        {
-            auto sample = playingSound.data[i];
-            pOut[i * 2 + 0] += sample * volL;
-            pOut[i * 2 + 1] += sample * volR;
-        }
-        playingSound.data += len1;
-        playingSound.len -= len1;
-        if (playingSound.len <= 0)
-        {
-            it = playingSounds.erase(it);
-            continue;
-        }
-        ++it;
     }
 }
 

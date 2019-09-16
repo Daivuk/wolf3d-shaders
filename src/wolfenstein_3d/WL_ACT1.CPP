@@ -139,8 +139,8 @@ void InitStaticList (void)
 void SpawnStatic (int16_t tilex, int16_t tiley, int16_t type)
 {
 	laststatobj->shapenum = statinfo[type].picnum;
-	laststatobj->tilex = tilex;
-	laststatobj->tiley = tiley;
+	laststatobj->tilex = (byte)tilex;
+	laststatobj->tiley = (byte)tiley;
 	laststatobj->visspot = &spotvis[tilex][tiley];
 
 	switch (statinfo[type].type)
@@ -233,8 +233,8 @@ void PlaceItemType (int16_t itemtype, int16_t tilex, int16_t tiley)
 // place it
 //
 	spot->shapenum = statinfo[type].picnum;
-	spot->tilex = tilex;
-	spot->tiley = tiley;
+	spot->tilex = (byte)tilex;
+	spot->tiley = (byte)tiley;
 	spot->visspot = &spotvis[tilex][tiley];
 	spot->flags = FL_BONUS;
 	spot->itemnumber = statinfo[type].type;
@@ -357,10 +357,10 @@ void SpawnDoor (int16_t tilex, int16_t tiley, _boolean vertical, int16_t lock)
 		Quit ((char*)"64+ doors on level!");
 
 	doorposition[doornum] = 0;		// doors start out fully closed
-	lastdoorobj->tilex = tilex;
-	lastdoorobj->tiley = tiley;
+	lastdoorobj->tilex = (byte)tilex;
+	lastdoorobj->tiley = (byte)tiley;
 	lastdoorobj->vertical = vertical;
-	lastdoorobj->lock = lock;
+	lastdoorobj->lock = (byte)lock;
 	lastdoorobj->action = doorobj_t::dr_closed;
 
 	actorat[tilex][tiley] = (objtype*)(uintptr_t)(doornum | 0x80);	// consider it a solid wall

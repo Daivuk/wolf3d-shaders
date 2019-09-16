@@ -10,3 +10,4 @@ CTestTestfile.cmake
 build/
 *.WL6
 *.WL1
+.DS_Store

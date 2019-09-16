@@ -923,7 +923,7 @@ void StartDemoRecord (int16_t levelnumber)
 	demoptr = (char  *)demobuffer;
 	lastdemoptr = demoptr+MAXDEMOSIZE;
 
-	*demoptr = levelnumber;
+	*demoptr = (char)levelnumber;
 	demoptr += 4;				// leave space for length
 	demorecord = _true;
 }

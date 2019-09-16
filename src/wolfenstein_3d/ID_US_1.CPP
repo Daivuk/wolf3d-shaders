@@ -596,7 +596,7 @@ USL_XORICursor(int16_t x,int16_t y,char *s,word cursor)
 		temp = fontcolor;
 		fontcolor = backcolor;
 		USL_DrawString((char*)"\x80");
-		fontcolor = temp;
+		fontcolor = (byte)temp;
 	}
 
 }
@@ -632,7 +632,7 @@ US_LineInput(int16_t x,int16_t y,char *buf,char *def,_boolean escok,
 	else
 		*s = '\0';
 	*olds = '\0';
-	cursor = strlen(s);
+	cursor = (word)strlen(s);
 	cursormoved = redraw = _true;
 
 	cursorvis = done = _false;
@@ -675,7 +675,7 @@ US_LineInput(int16_t x,int16_t y,char *buf,char *def,_boolean escok,
 			cursormoved = _true;
 			break;
 		case sc_End:
-			cursor = strlen(s);
+			cursor = (word)strlen(s);
 			c = key_None;
 			cursormoved = _true;
 			break;
@@ -727,7 +727,7 @@ US_LineInput(int16_t x,int16_t y,char *buf,char *def,_boolean escok,
 
 		if (c)
 		{
-			len = strlen(s);
+			len = (word)strlen(s);
 			USL_MeasureString(s,&w,&h);
 
 			if
@@ -752,7 +752,7 @@ US_LineInput(int16_t x,int16_t y,char *buf,char *def,_boolean escok,
 			temp = fontcolor;
 			fontcolor = backcolor;
 			USL_DrawString(olds);
-			fontcolor = temp;
+			fontcolor = (byte)temp;
 			strcpy(olds,s);
 
 			px = x;
