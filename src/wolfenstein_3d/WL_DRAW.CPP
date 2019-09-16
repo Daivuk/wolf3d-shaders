@@ -1672,6 +1672,9 @@ void WallRefresh (void)
 
     ws_update_camera();
 
+    auto hwalls = horizwall;
+    auto vwalls = (ws_ao_enabled || ws_deferred_enabled) ? horizwall : vertwall;
+
     //TODO: Batch this for static walls
     for (int x = 1; x < 63; ++x)
     {
@@ -1684,7 +1687,7 @@ void WallRefresh (void)
                     if (is_door_at(x, y))
                         w = DOORWALL + 3;
                     else
-                        w = horizwall[w & 63];
+                        w = hwalls[w & 63];
                     ws_draw_wall((float)x, (float)y, SOUTH, w, false, 
                         wall_at(x - 1, y) ? 1 : (wall_at(x - 1, y - 1) ? 0 : -1), 
                         wall_at(x + 1, y) ? 1 : (wall_at(x + 1, y - 1) ? 0 : -1));
@@ -1694,7 +1697,7 @@ void WallRefresh (void)
                     if (is_door_at(x, y))
                         w = DOORWALL + 2;
                     else
-                        w = vertwall[w & 63];
+                        w = vwalls[w & 63];
                     ws_draw_wall((float)x, (float)y + 1.0f, EAST, w, false,
                         wall_at(x, y + 1) ? 1 : (wall_at(x - 1, y + 1) ? 0 : -1),
                         wall_at(x, y - 1) ? 1 : (wall_at(x - 1, y - 1) ? 0 : -1));
@@ -1704,7 +1707,7 @@ void WallRefresh (void)
                     if (is_door_at(x, y))
                         w = DOORWALL + 3;
                     else
-                        w = horizwall[w & 63];
+                        w = hwalls[w & 63];
                     ws_draw_wall((float)x + 1.0f, (float)y + 1.0f, NORTH, w, false,
                         wall_at(x + 1, y) ? 1 : (wall_at(x + 1, y + 1) ? 0 : -1),
                         wall_at(x - 1, y) ? 1 : (wall_at(x - 1, y + 1) ? 0 : -1));
@@ -1714,7 +1717,7 @@ void WallRefresh (void)
                     if (is_door_at(x, y))
                         w = DOORWALL + 2;
                     else
-                        w = vertwall[w & 63];
+                        w = vwalls[w & 63];
                     ws_draw_wall((float)x + 1.0f, (float)y, WEST, w, false,
                         wall_at(x, y - 1) ? 1 : (wall_at(x + 1, y - 1) ? 0 : -1),
                         wall_at(x, y + 1) ? 1 : (wall_at(x + 1, y + 1) ? 0 : -1));
@@ -1777,10 +1780,10 @@ void WallRefresh (void)
             {-1, -0} };
         auto &ofs = DIROFS[pwalldir];
         int n = wall_at(pwallx + DIROFSi[pwalldir][0], pwally + DIROFSi[pwalldir][1]);
-        int w = horizwall[n & 63];
+        int w = hwalls[n & 63];
         ws_draw_wall((float)pwallx + ofs[0] * percent, (float)pwally + 1.0f + ofs[1] * percent, SOUTH, w);
         ws_draw_wall((float)pwallx + 1.0f + ofs[0] * percent, (float)pwally + ofs[1] * percent, NORTH, w);
-        w = vertwall[n & 63];
+        w = vwalls[n & 63];
         ws_draw_wall((float)pwallx + 1.0f + ofs[0] * percent, (float)pwally + 1.0f + ofs[1] * percent, EAST, w);
         ws_draw_wall((float)pwallx + ofs[0] * percent, (float)pwally + ofs[1] * percent, WEST, w);
     }

@@ -154,12 +154,14 @@ static const char *PTC_POINTLIGHT_VERT =
 "attribute vec2 TexCoord;"
 "attribute vec4 Color;"
 
+"varying vec2 Frag_Position;"
 "varying vec2 Frag_TexCoord;"
 "varying vec4 Frag_Color;"
 
 "void main()"
 "{"
 "   gl_Position = ProjMtx * vec4(Position.xy, 0, 1);"
+"   Frag_Position = gl_Position.xy;"
 "   Frag_TexCoord = TexCoord;"
 "   Frag_Color = Color;"
 "}"
@@ -175,6 +177,7 @@ static const char *PTC_POINTLIGHT_FRAG =
 "uniform float LightRadius;"
 "uniform float LightIntensity;"
 
+"varying vec2 Frag_Position;"
 "varying vec2 Frag_TexCoord;"
 "varying vec4 Frag_Color;"
 
@@ -185,8 +188,8 @@ static const char *PTC_POINTLIGHT_FRAG =
 "   vec4 gDepth = texture2D(DepthTexture, Frag_TexCoord);"
 
 // Position
-"   vec4 position = vec4(Frag_TexCoord.x * 2 - 1, (Frag_TexCoord.y * 2 - 1), gDepth.r, 1);"
-"   position = InvProjMtx * position;"
+"   vec4 position = vec4(Frag_Position, gDepth.r, 1);"
+"   position = position * InvProjMtx;"
 "   position /= position.w;"
 
 // Normal

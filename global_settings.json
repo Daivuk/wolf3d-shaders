@@ -11,10 +11,10 @@
 	"player_light_color" : 
 	{
 		"a" : 1.0,
-		"b" : 1.0,
-		"g" : 1.0,
-		"r" : 1.0
+		"b" : 0.84928536415100098,
+		"g" : 0.73296988010406494,
+		"r" : 0.62721771001815796
 	},
-	"player_light_intensity" : 1.0,
-	"player_light_radius" : 9.3000001907348633
+	"player_light_intensity" : 1.1000000238418579,
+	"player_light_radius" : 8.1999998092651367
 }

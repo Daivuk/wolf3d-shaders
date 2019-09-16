@@ -405,6 +405,11 @@ void ws_update_sdl()
                     SDL_SetRelativeMouseMode(wasMouseRel ? SDL_TRUE : SDL_FALSE);
                     ws_debug_view_enabled = false;
                 }
+                if (event.key.keysym.scancode == SDL_SCANCODE_GRAVE)
+                {
+                    camControl = !camControl;
+                    SDL_SetRelativeMouseMode(camControl ? SDL_TRUE : SDL_FALSE);
+                }
                 if (camControl)
                 {
                     if (event.key.keysym.scancode == SDL_SCANCODE_W)
@@ -1001,12 +1006,16 @@ void ws_finish_draw_3d()
     // Post process into mainRT
     if (ws_deferred_enabled)
     {
-        matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h, 0, -999, 999);
+        auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
+        float v = (float)(ws_screen_h - statusLineH) / (float)ws_screen_h;
+
+        matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, -999, 999);
         {
             glUseProgram(ws_resources.programPTC);
             auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
             glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
         }
+        glViewport(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
 
         ws_prepare_for_ptc(GL_QUADS);
         glEnable(GL_TEXTURE_2D);
@@ -1015,7 +1024,7 @@ void ws_finish_draw_3d()
 
         // Ambient
         glBindTexture(GL_TEXTURE_2D, ws_gbuffer.albeoHandle);
-        ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h, 0, 1, 1, 0, ws_ambient_color);
+        ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, 1, 1, 1 - v, ws_ambient_color);
         ws_draw_ptc(ws_resources.pPTCVertices, 4, GL_QUADS);
 
         // Player light
@@ -1023,7 +1032,7 @@ void ws_finish_draw_3d()
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         glDisable(GL_TEXTURE_2D);
         glUseProgram(ws_resources.programPointlightPTC);
-        auto InvProjMtx = matrix3D.Invert();
+        auto InvProjMtx = matrix3D.Invert().Transpose();
         {
             static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "InvProjMtx");
             glUniformMatrix4fv(uniform, 1, GL_FALSE, &InvProjMtx._11);
@@ -1048,7 +1057,8 @@ void ws_finish_draw_3d()
         }
 
         glUniformMatrix4fv(glGetUniformLocation(ws_resources.programPointlightPTC, "ProjMtx"), 1, GL_FALSE, &matrix2D._11);
-        ws_draw_pointlight(ws_cam_eye, ws_player_light_color, ws_player_light_radius, ws_player_light_intensity);
+        ws_draw_pointlight({(float)player->x / 65536.f, 64.0f - (float)player->y / 65536.f, 0.5f}, 
+            ws_player_light_color, ws_player_light_radius, ws_player_light_intensity);
 
         // We still have 2D crap to render like the gun, revert to previous matrix
         {
@@ -1074,6 +1084,7 @@ void ws_finish_draw_3d()
             glEnableVertexAttribArray(1); // texcoord
             glEnableVertexAttribArray(2); // color
             glDisableVertexAttribArray(3);
+            glViewport(0, 0, ws_screen_w, ws_screen_h);
         }
     }
 }
