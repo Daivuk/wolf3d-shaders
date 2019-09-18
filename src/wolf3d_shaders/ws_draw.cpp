@@ -368,7 +368,7 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     glBindTexture(GL_TEXTURE_2D, pic.tex);
     ws_ptc_count += ws_draw_rect(
         ws_resources.pPTCVertices + ws_ptc_count,
-        (float)(MaxX / 2 - pic.w / 2 * SCALE) * ws_ui_scale,
+        (float)(MaxX / 2 - pic.w / 2 * SCALE) * ws_ui_scale + 9.0f, // The +9 pixel here is to make sure the gun is centered in the screen
         (float)(MaxY - SCALE - STATUSLINES - pic.h * SCALE + SCALE) * ws_ui_scale,
         (float)(pic.w * SCALE) * ws_ui_scale,
         (float)(pic.h * SCALE) * ws_ui_scale,

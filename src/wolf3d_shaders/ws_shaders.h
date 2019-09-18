@@ -210,4 +210,62 @@ static const char *PTC_POINTLIGHT_FRAG =
 "}"
 ;
 
+//
+//--- Position2, TexCoord2, Color4 - HDR
+//
+static const char *PTC_HDR_VERT =
+"uniform mat4 ProjMtx;"
+
+"attribute vec2 Position;"
+"attribute vec2 TexCoord;"
+"attribute vec4 Color;"
+
+"varying vec2 Frag_Position;"
+"varying vec2 Frag_TexCoord;"
+"varying vec4 Frag_Color;"
+
+"void main()"
+"{"
+"   gl_Position = ProjMtx * vec4(Position.xy, 0, 1);"
+"   Frag_Position = gl_Position.xy;"
+"   Frag_TexCoord = TexCoord;"
+"   Frag_Color = Color;"
+"}"
+;
+
+static const char *PTC_HDR_FRAG =
+"uniform sampler2D HDRTexture;"
+
+"uniform float LumMultiplier;"
+
+"varying vec2 Frag_Position;"
+"varying vec2 Frag_TexCoord;"
+"varying vec4 Frag_Color;"
+
+"void main()"
+"{"
+"   vec4 hdr = texture2D(HDRTexture, Frag_TexCoord);"
+
+"   hdr.rgb = pow(hdr.rgb, vec3(1.1));"
+"   hdr.rgb = hdr.rgb * LumMultiplier;"
+
+"   gl_FragColor = hdr;"
+"}"
+;
+
+
+//"static const vec3 LUM_CONVERT = vec3(0.299, 0.587, 0.114);"
+//
+//"float lumFromRGB(vec3 rgb)"
+//"{"
+//"   return dot(rgb, LUM_CONVERT);"
+//"}"
+
+
+//float4 PixelShaderHDR(VertexShaderOutput input) : COLOR0
+//{
+//    float4 gColor = tex2D(sampler0, input.TexCoord.xy);
+//    return gColor;
+//}
+
 #endif

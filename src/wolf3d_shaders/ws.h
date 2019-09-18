@@ -68,21 +68,23 @@ struct ws_VertexPNTC
 
 struct ws_Resources
 {
-    GLuint programPC;          /* Position2, Color4 */
-    GLuint programPTC;         /* Position2, TexCoord2, Color4 */
-    GLuint programPNTC;        /* ws_Vector3, Normal3, TexCoord2, Color4 */
-    GLuint programGBufferPNTC; /* ws_Vector3, Normal3, TexCoord2, Color4 */
-    GLuint programPointlightPTC; /* Position2, TexCoord2, Color4 */
-    GLuint vertexBuffer;       /* Dynamic version buffer used by batches */
-    ws_VertexPC *pPCVertices;     /* Used by dynamic rendering of ws_Vector2/ws_Color */
-    ws_VertexPTC *pPTCVertices;   /* Used by dynamic rendering of ws_Vector2/ws_TexCoord/ws_Color */
-    ws_VertexPNTC *pPNTCVertices; /* Used by dynamic rendering of ws_Vector2/ws_TexCoord/ws_Color */
-    GLuint mapVB;              /* ws_Vector3art of the map */
-    GLuint checkerTexture;     /* Test texture to replace non-existing or corrupted data */
-    GLuint whiteTexture;       /* ... */
+    GLuint programPC;               /* Position2, Color4 */
+    GLuint programPTC;              /* Position2, TexCoord2, Color4 */
+    GLuint programPNTC;             /* ws_Vector3, Normal3, TexCoord2, Color4 */
+    GLuint programGBufferPNTC;      /* ws_Vector3, Normal3, TexCoord2, Color4 */
+    GLuint programPointlightPTC;    /* Position2, TexCoord2, Color4 */
+    GLuint programHDRPTC;           /* Position2, TexCoord2, Color4 */
+    GLuint vertexBuffer;            /* Dynamic version buffer used by batches */
+    ws_VertexPC *pPCVertices;       /* Used by dynamic rendering of ws_Vector2/ws_Color */
+    ws_VertexPTC *pPTCVertices;     /* Used by dynamic rendering of ws_Vector2/ws_TexCoord/ws_Color */
+    ws_VertexPNTC *pPNTCVertices;   /* Used by dynamic rendering of ws_Vector2/ws_TexCoord/ws_Color */
+    GLuint mapVB;                   /* ws_Vector3art of the map */
+    GLuint checkerTexture;          /* Test texture to replace non-existing or corrupted data */
+    GLuint whiteTexture;            /* ... */
     GLuint imguiFontTexture;
-    ws_RenderTarget mainRT;       /* Main scree render ws_cam_target (Final image) */
-    ws_RenderTarget hdrRT;        /* Used for high dynamic range */
+    ws_RenderTarget mainRT;         /* Main scree render ws_cam_target (Final image) */
+    ws_RenderTarget hdrRT;          /* Used for high dynamic range */
+    ws_RenderTarget lastFrameRT;    /* Miniature of last frame 4x4 pixels to calculate HDR multiplier */
 };
 
 struct ws_Texture
@@ -125,6 +127,9 @@ extern char **ws_argv;
 extern int ws_screen_w;
 extern int ws_screen_h;
 extern bool ws_audio_on;
+extern float ws_dt;
+extern float ws_rdt; // Render dt
+extern float ws_hdr_multiplier;
 
 // Camera
 extern ws_Vector3 ws_cam_eye;
@@ -132,6 +137,8 @@ extern ws_Vector3 ws_cam_right;
 extern ws_Vector3 ws_cam_front;
 extern ws_Vector3 ws_cam_front_flat;
 extern ws_Vector3 ws_cam_target;
+extern ws_Matrix ws_matrix2D;
+extern ws_Matrix ws_matrix3D;
 extern bool ws_debug_view_enabled;
 
 // Draw stuff
@@ -185,8 +192,10 @@ void ws_do_tools();
 
 GLuint ws_create_texture(uint8_t *data, int w, int h);
 ws_RenderTarget ws_create_rt(int w, int h);
+ws_RenderTarget ws_create_main_rt(int w, int h);
 ws_RenderTarget ws_create_hdr_rt(int w, int h);
 void ws_resize_rt(ws_RenderTarget &rt, int w, int h);
+void ws_resize_main_rt(ws_RenderTarget &rt, int w, int h);
 void ws_resize_hdr_rt(ws_RenderTarget &rt, int w, int h);
 void ws_resize_gbuffer(ws_GBuffer &gbuffer, int w, int h);
 GLuint ws_create_program(const GLchar *vs, const GLchar *ps, const std::vector<const char *> &attribs);

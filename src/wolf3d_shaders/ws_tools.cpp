@@ -169,9 +169,9 @@ static void tool_sprites()
     ImGui::End();
 }
 
-static void tool_gbuffer()
+static void tool_buffers()
 {
-    ImGui::Begin("G-Buffer");
+    ImGui::Begin("Buffers");
     ImGui::SliderInt("Scale", &ws_gbuffer_tool_scale, 0, TOOL_GBUFFER_SCALES_COUNT - 1);
     auto scale = TOOL_GBUFFER_SCALES[ws_gbuffer_tool_scale];
     auto w = ImGui::GetWindowWidth();
@@ -181,14 +181,28 @@ static void tool_gbuffer()
     x = ImGui::GetCursorPosX();
     ImGui::Image(&ws_gbuffer.normalHandle, { scale.x, scale.y }, { 0, 1 }, { 1, 0 });
     if (x + scale.x < w - scale.x) ImGui::SameLine();
+    x = ImGui::GetCursorPosX();
     ImGui::Image(&ws_gbuffer.depthHandle, { scale.x, scale.y }, { 0, 1 }, { 1, 0 });
+    if (x + scale.x < w - scale.x) ImGui::SameLine();
+    x = ImGui::GetCursorPosX();
+    ImGui::Image(&ws_resources.hdrRT.handle, { scale.x, scale.y }, { 0, 1 }, { 1, 0 });
+    if (x + scale.x < w - scale.x) ImGui::SameLine();
+    ImGui::Image(&ws_resources.lastFrameRT.handle, { scale.x, scale.y }, { 0, 1 }, { 1, 0 });
+    ImGui::End();
+}
+
+static void tool_stats()
+{
+    ImGui::Begin("Stats");
+    ImGui::Text("Delta Time: %.3f", ws_rdt);
+    ImGui::Text("HDR Multiplier: %.3f", ws_hdr_multiplier);
     ImGui::End();
 }
 
 void ws_do_tools()
 {
     auto& io = ImGui::GetIO();
-    io.DeltaTime = 1.0f / 60.0f; //TODO:
+    io.DeltaTime = ws_rdt;
     io.DisplaySize = { (float)ws_screen_w, (float)ws_screen_h };
     ImGui::NewFrame();
 
@@ -197,8 +211,9 @@ void ws_do_tools()
     tool_uiTextures();
     tool_walls();
     tool_rendering();
-    tool_gbuffer();
+    tool_buffers();
     tool_sprites();
+    tool_stats();
 
     ImGui::Render();
     auto pDrawData = ImGui::GetDrawData();

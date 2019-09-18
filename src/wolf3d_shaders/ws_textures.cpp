@@ -24,7 +24,7 @@ GLuint ws_create_texture(uint8_t *data, int w, int h)
     return handle;
 }
 
-ws_RenderTarget ws_create_rt(int w, int h)
+ws_RenderTarget ws_create_main_rt(int w, int h)
 {
     GLuint frameBuffer;
     glGenFramebuffers(1, &frameBuffer);
@@ -54,6 +54,33 @@ ws_RenderTarget ws_create_rt(int w, int h)
     ret.handle = handle;
     ret.frameBuffer = frameBuffer;
     ret.depth = rboDepthStencil;
+    return ret;
+}
+
+ws_RenderTarget ws_create_rt(int w, int h)
+{
+    GLuint frameBuffer;
+    glGenFramebuffers(1, &frameBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+    GLuint handle;
+    glGenTextures(1, &handle);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, handle, 0);
+    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+    ws_RenderTarget ret;
+    ret.handle = handle;
+    ret.frameBuffer = frameBuffer;
+    ret.depth = 0;
     return ret;
 }
 
@@ -89,6 +116,16 @@ ws_RenderTarget ws_create_hdr_rt(int w, int h)
 }
 
 void ws_resize_rt(ws_RenderTarget &rt, int w, int h)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, rt.frameBuffer);
+
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, rt.handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+}
+
+void ws_resize_main_rt(ws_RenderTarget &rt, int w, int h)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, rt.frameBuffer);
 

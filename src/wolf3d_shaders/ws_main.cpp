@@ -35,15 +35,16 @@ void wolf3d_shutdown();
 int16_t ws_argc; // global arguments. this is referenced a bit everywhere
 char **ws_argv;
 
-ws_Matrix matrix2D;
-ws_Matrix matrix3D;
 int ws_screen_w = 1024, ws_screen_h = 640;
 SDL_Window *sdlWindow;
 int lastMouse[2] = { 0 };
 int curMouse[2] = { 0 };
 bool mouseInitialized = false;
 int16_t mouseButtons = 0;
-float dt = 0.0f;
+float ws_dt = 0.0f;
+float ws_rdt = 0.0f;
+ws_Matrix ws_matrix2D;
+ws_Matrix ws_matrix3D;
 ws_Vector3 ws_cam_eye;
 ws_Vector3 ws_cam_right;
 ws_Vector3 ws_cam_front;
@@ -227,12 +228,14 @@ int main(int argc, char **argv)
     ws_resources.programPNTC = ws_create_program(PNTC_VERT, PNTC_FRAG, {"Position", "Normal", "TexCoord", "Color"});
     ws_resources.programGBufferPNTC = ws_create_program(PNTC_GBUFFER_VERT, PNTC_GBUFFER_FRAG, {"Position", "Normal", "TexCoord", "Color"});
     ws_resources.programPointlightPTC = ws_create_program(PTC_POINTLIGHT_VERT, PTC_POINTLIGHT_FRAG, {"Position", "TexCoord", "Color"});
+    ws_resources.programHDRPTC = ws_create_program(PTC_HDR_VERT, PTC_HDR_FRAG, {"Position", "TexCoord", "Color"});
     ws_resources.vertexBuffer = createVertexBuffer();
     ws_resources.pPCVertices = new ws_VertexPC[MAX_VERTICES];
     ws_resources.pPTCVertices = new ws_VertexPTC[MAX_VERTICES];
     ws_resources.pPNTCVertices = new ws_VertexPNTC[MAX_VERTICES];
-    ws_resources.mainRT = ws_create_rt(ws_screen_w, ws_screen_h);
+    ws_resources.mainRT = ws_create_main_rt(ws_screen_w, ws_screen_h);
     ws_resources.hdrRT = ws_create_hdr_rt(ws_screen_w, ws_screen_h);
+    ws_resources.lastFrameRT = ws_create_rt(4, 4);
     ws_gbuffer = ws_create_gbuffer(ws_screen_w, ws_screen_h);
 
     srand(0);
@@ -359,7 +362,8 @@ void ws_update_sdl()
                     wasMouseRel = SDL_GetRelativeMouseMode() == SDL_TRUE;
                     SDL_SetRelativeMouseMode(SDL_FALSE);
                     ws_debug_view_enabled = true;
-                    VW_UpdateScreen();
+                    //VW_UpdateScreen(); // Why?
+                    freecamPos = ws_cam_eye;
                 }
                 else
                 {
@@ -416,7 +420,67 @@ void ws_update_sdl()
                 //io.KeyAlt = (event.key.keysym.mod & KMOD_LALT) && !camControl ? true : false;
                 //io.KeySuper = (event.key.keysym.mod & KMOD_LGUI) && !camControl ? true : false;
                 if (event.button.button == SDL_BUTTON_LEFT && !camControl)
+                {
                     io.MouseDown[0] = true;
+                    // Select items in the world
+                    if (!io.WantCaptureMouse)
+                    {
+                        // Mouse pick sprites
+                        auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
+
+                        auto invTransform = ws_matrix3D.Invert();
+                        ws_Vector3 from(io.MousePos.x / (float)ws_screen_w * 2.0f - 1.0f, 
+                                        -(io.MousePos.y / (float)(ws_screen_h - statusLineH) * 2.0f - 1.0f), 0.0f);
+                        ws_Vector3 to(from.x, from.y, 1.0f);
+                        from = ws_Vector3::Transform(from, invTransform);
+                        to = ws_Vector3::Transform(to, invTransform);
+                        auto dir = to - from;
+                        dir.Normalize();
+
+                        int16_t closest = -1;
+                        float closestDist = 10000;
+
+                        for (auto statptr = &statobjlist[0]; statptr != laststatobj; statptr++)
+                        {
+                            if (statptr->shapenum == -1)
+                                continue;						// object has been deleted
+
+                            ws_Vector3 center((float)statptr->tilex + 0.5f, 64.0f - ((float)statptr->tiley + 0.5f), 0.5f);
+                            auto dist = ws_Vector3::DistanceSquared(center, from);
+                            if (dist > closestDist) continue;
+
+                            // Ray distance to sphere
+                            auto rayDist = dir.Cross(center - from).LengthSquared();
+                            if (rayDist < 0.5f * 0.5f)
+                            {
+                                closestDist = dist;
+                                closest = statptr->shapenum;
+                            }
+                        }
+
+                        for (obj = player->next;obj;obj = obj->next)
+                        {
+                            if (!obj->state->shapenum) continue;
+                            
+                            ws_Vector3 center((float)obj->x / 65536.0f, 64.0f - (float)obj->y / 65536.0f, 0.5f);
+                            auto dist = ws_Vector3::DistanceSquared(center, from);
+                            if (dist > closestDist) continue;
+
+                            // Ray distance to sphere
+                            auto rayDist = dir.Cross(center - from).LengthSquared();
+                            if (rayDist < 0.5f * 0.5f)
+                            {
+                                closestDist = dist;
+                                closest = obj->state->shapenum;
+                            }
+                        }
+
+                        if (closest != -1)
+                        {
+                            ws_selected_sprite = closest;
+                        }
+                    }
+                }
                 else if (event.button.button == SDL_BUTTON_RIGHT && !camControl)
                     io.MouseDown[1] = true;
                 else if (event.button.button == SDL_BUTTON_MIDDLE && !camControl)
@@ -528,7 +592,7 @@ void ws_update_sdl()
                 {
                     ws_screen_w = event.window.data1;
                     ws_screen_h = event.window.data2;
-                    ws_resize_rt(ws_resources.mainRT, ws_screen_w, ws_screen_h);
+                    ws_resize_main_rt(ws_resources.mainRT, ws_screen_w, ws_screen_h);
                     ws_resize_hdr_rt(ws_resources.hdrRT, ws_screen_w, ws_screen_h);
                     ws_resize_gbuffer(ws_gbuffer, ws_screen_w, ws_screen_h);
                     break;
@@ -546,7 +610,7 @@ void ws_update_sdl()
     static auto lastTime = std::chrono::high_resolution_clock::now();
     auto curTime = std::chrono::high_resolution_clock::now();
     auto elapsed = curTime - lastTime;
-    dt = (float)((double)std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0);
+    ws_dt = (float)((double)std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0);
     static const long long TARGET_FPS = 1000000 / 70;
     static long long curStep = 0;
     curStep += std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
@@ -573,7 +637,7 @@ void ws_update_sdl()
         ws_cam_front_flat.z = 0;
         ws_cam_front_flat.Normalize();
 
-        float moveSpeed = (freecamInputs[6] ? 15.0f : 5.0f) * dt;
+        float moveSpeed = (freecamInputs[6] ? 15.0f : 5.0f) * ws_dt;
 
         if (freecamInputs[0])
             freecamPos += ws_cam_front * moveSpeed;
@@ -589,7 +653,7 @@ void ws_update_sdl()
             freecamPos -= ws_Vector3(0, 0, 1.0f) * moveSpeed;
     }
 
-    ws_save_flash_anim = std::max(0.0f, ws_save_flash_anim - dt * 2.0f);
+    ws_save_flash_anim = std::max(0.0f, ws_save_flash_anim - ws_dt * 2.0f);
 }
 
 void VW_UpdateScreen()
@@ -610,16 +674,16 @@ void VW_UpdateScreen()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glViewport(0, 0, ws_screen_w, ws_screen_h);
 
-    matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h, 0, -999, 999);
+    ws_matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h, 0, -999, 999);
     {
         glUseProgram(ws_resources.programPC);
         auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
     }
     {
         glUseProgram(ws_resources.programPTC);
         auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
     }
 
     ws_prepare_for_ptc(GL_QUADS);
@@ -642,16 +706,16 @@ void VW_UpdateScreen()
     glDisable(GL_CULL_FACE);
     glViewport(0, 0, ws_screen_w, ws_screen_h);
 
-    matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)1024, (float)640, 0, -999, 999);
+    ws_matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)1024, (float)640, 0, -999, 999);
     {
         glUseProgram(ws_resources.programPC);
         auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
     }
     {
         glUseProgram(ws_resources.programPTC);
         auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
     }
 
     ws_pc_count = 0;
@@ -770,6 +834,11 @@ void ws_update_camera()
         ws_cam_right.Normalize();
         ws_cam_eye = ws_Vector3(px, 64.0f - py, 0.5f);
         ws_cam_target = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
+
+        // Update freecam so if we switch we're at the player's position
+        freecamPos = ws_cam_eye;
+        freecamAngleX = 0.0f;
+        freecamAngleZ = -(float)player->angle + 90.0f;
     }
 
     ws_cam_front_flat = ws_cam_front;
@@ -780,7 +849,7 @@ void ws_update_camera()
         ws_cam_eye,
         ws_cam_target,
         ws_Vector3(0.0f, 0.0f, 1.0f));
-    matrix3D = view * proj;
+    ws_matrix3D = view * proj;
 
     ws_flush();
 
@@ -791,7 +860,7 @@ void ws_update_camera()
         glDrawBuffers(3, buffers);
         glUseProgram(ws_resources.programGBufferPNTC);
         auto uniform = glGetUniformLocation(ws_resources.programGBufferPNTC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix3D._11);
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix3D._11);
         ws_active_lights.clear();
     }
     else
@@ -799,7 +868,7 @@ void ws_update_camera()
         glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
         glUseProgram(ws_resources.programPNTC);
         auto uniform = glGetUniformLocation(ws_resources.programPNTC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix3D._11);
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix3D._11);
     }
 
     glEnable(GL_SCISSOR_TEST);
@@ -810,109 +879,6 @@ void ws_update_camera()
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0, 0, 0, 1);
-}
-
-void ws_finish_draw_3d()
-{
-    ws_flush();
-    glScissor(0, 0, ws_screen_w, ws_screen_h);
-    glViewport(0, 0, ws_screen_w, ws_screen_h);
-    glDisable(GL_SCISSOR_TEST);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    glPolygonMode(GL_FRONT, GL_FILL);
-    glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
-
-    // Post process into mainRT
-    if (ws_deferred_enabled)
-    {
-        auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
-        float v = (float)(ws_screen_h - statusLineH) / (float)ws_screen_h;
-
-        matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, -999, 999);
-        {
-            glUseProgram(ws_resources.programPTC);
-            auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
-            glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
-        }
-        glViewport(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
-
-        ws_prepare_for_ptc(GL_QUADS);
-        glEnable(GL_TEXTURE_2D);
-        glDisable(GL_BLEND);
-        glDisable(GL_DEPTH_TEST);
-
-        // Ambient
-        glBindTexture(GL_TEXTURE_2D, ws_gbuffer.albeoHandle);
-        ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, 1, 1, 1 - v, ws_ambient_color);
-        ws_draw_ptc(ws_resources.pPTCVertices, 4, GL_QUADS);
-
-        // Player light
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        glDisable(GL_TEXTURE_2D);
-        glUseProgram(ws_resources.programPointlightPTC);
-        auto InvProjMtx = matrix3D.Invert().Transpose();
-        {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "InvProjMtx");
-            glUniformMatrix4fv(uniform, 1, GL_FALSE, &InvProjMtx._11);
-        }
-        {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "AlbeoTexture");
-            glUniform1i(uniform, 0);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, ws_gbuffer.albeoHandle);
-        }
-        {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "NormalTexture");
-            glUniform1i(uniform, 1);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, ws_gbuffer.normalHandle);
-        }
-        {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "DepthTexture");
-            glUniform1i(uniform, 2);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, ws_gbuffer.depthHandle);
-        }
-
-        glUniformMatrix4fv(glGetUniformLocation(ws_resources.programPointlightPTC, "ProjMtx"), 1, GL_FALSE, &matrix2D._11);
-        ws_player_light.position = { (float)player->x / 65536.f, 64.0f - (float)player->y / 65536.f, 0.5f };
-        ws_draw_pointlight(ws_player_light);
-
-        // Other lights
-        for (auto& light : ws_active_lights)
-        {
-            ws_draw_pointlight(light);
-        }
-
-        // We still have 2D crap to render like the gun, revert to previous matrix
-        {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_TEXTURE_2D);
-
-            matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)1024, (float)640, 0, -999, 999);
-            {
-                glUseProgram(ws_resources.programPC);
-                auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
-                glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
-            }
-            {
-                glUseProgram(ws_resources.programPTC);
-                auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
-                glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix2D._11);
-            }
-            glEnable(GL_TEXTURE_2D);
-            glDisable(GL_DEPTH_TEST);
-            glActiveTexture(GL_TEXTURE0);
-            glUseProgram(ws_resources.programPTC);
-            glEnableVertexAttribArray(0); // pos
-            glEnableVertexAttribArray(1); // texcoord
-            glEnableVertexAttribArray(2); // color
-            glDisableVertexAttribArray(3);
-            glViewport(0, 0, ws_screen_w, ws_screen_h);
-        }
-    }
 }
 
 void Mouse(int16_t x)
