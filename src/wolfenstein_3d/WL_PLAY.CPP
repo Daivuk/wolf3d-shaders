@@ -1166,6 +1166,7 @@ void ClearPaletteShifts (void)
 void StartBonusFlash (void)
 {
 	bonuscount = NUMWHITESHIFTS*WHITETICS;		// white shift palette
+    ws_bonus_flash = 1.0f;
 }
 
 
@@ -1180,6 +1181,7 @@ void StartBonusFlash (void)
 void StartDamageFlash (int16_t damage)
 {
 	damagecount += damage;
+    ws_damage_flash = 1.0f;
 }
 
 
@@ -1463,15 +1465,6 @@ void PlayLoop (void)
 
         // // UNCACHEGRCHUNK (STATUSBARPIC);
 
-        // DrawFace ();
-        // DrawHealth ();
-        // DrawLives ();
-        // DrawLevel ();
-        // DrawAmmo ();
-        // DrawKeys ();
-        // DrawWeapon ();
-        // DrawScore ();
-
 
 		//
 		// MAKE FUNNY FACE IF BJ DOESN'T MOVE FOR AWHILE
@@ -1523,6 +1516,16 @@ void PlayLoop (void)
 			if (player->angle < 0)
 				player->angle += ANGLES;
 		}
+
+
+        DrawFace();
+        DrawHealth();
+        DrawLives();
+        DrawLevel();
+        DrawAmmo();
+        DrawKeys();
+        DrawWeapon();
+        DrawScore();
 
         VW_UpdateScreen();
 

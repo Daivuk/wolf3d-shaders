@@ -17,6 +17,8 @@ ws_PointLight ws_player_light = { {0,0,0}, { 1.0f, 1.0f, 1.0f, 1.0f }, 5.0f, 1.3
 std::map<int, ws_SpriteSettings> ws_sprite_settings;
 
 float ws_save_flash_anim = 0.0f;
+float ws_bonus_flash = 0.0f;
+float ws_damage_flash = 0.0f;
 
 static const std::string GLOBAL_SETTINGS_FILENAME = "global_settings.json";
 

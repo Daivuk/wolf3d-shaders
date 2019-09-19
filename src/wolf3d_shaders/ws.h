@@ -150,6 +150,8 @@ extern float ws_ui_scale;
 extern GLenum ws_draw_mode_prim;
 extern GLuint ws_current_3d_texture;
 extern std::vector<ws_PointLight> ws_active_lights;
+extern int ws_culled_rect[4];
+extern bool ws_visible_tiles[64][64];
 
 // ws_Resources
 extern ws_Resources ws_resources;
@@ -172,6 +174,8 @@ extern float ws_ao_size;
 extern ws_Color ws_ambient_color;
 extern ws_PointLight ws_player_light;
 extern float ws_save_flash_anim;
+extern float ws_bonus_flash;
+extern float ws_damage_flash;
 extern int ws_gbuffer_tool_scale;
 extern std::map<int, ws_SpriteSettings> ws_sprite_settings;
 
@@ -211,6 +215,8 @@ void ws_play_sound(float* data, int len, float x, float y, bool _3d = false);
 void ws_audio_callback(void *userdata, Uint8 *stream, int len);
 
 void ws_update_camera();
+void ws_draw_walls();
+void ws_update_culling();
 void ws_finish_draw_3d();
 void ws_draw_wall(float x, float y, int dir, int texture, bool isDoor=false, int wallLeft = 0, int wallRight = 0);
 void ws_draw_ceiling(int x, int y, int color, bool* neighbors);

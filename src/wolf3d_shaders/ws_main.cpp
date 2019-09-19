@@ -654,6 +654,8 @@ void ws_update_sdl()
     }
 
     ws_save_flash_anim = std::max(0.0f, ws_save_flash_anim - ws_dt * 2.0f);
+    ws_bonus_flash = std::max(0.0f, ws_bonus_flash - ws_dt * 2.0f);
+    ws_damage_flash = std::max(0.0f, ws_damage_flash - ws_dt * 2.0f);
 }
 
 void VW_UpdateScreen()
@@ -687,7 +689,12 @@ void VW_UpdateScreen()
     }
 
     ws_prepare_for_ptc(GL_QUADS);
-    ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)ws_screen_w, (float)ws_screen_h, 0, 1, 1, 0, { 1 + ws_save_flash_anim, 1 + ws_save_flash_anim, 1 + ws_save_flash_anim, fade_val });
+    auto bonusFlash = fabsf(sinf(ws_bonus_flash * 5.0f)) / (3.0f - ws_bonus_flash * 3.0f + 1.0f);
+    ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)ws_screen_w, (float)ws_screen_h, 0, 1, 1, 0,
+        { (1 + ws_save_flash_anim + bonusFlash * 0.75f) * (1.0f - ws_damage_flash) + ws_damage_flash,
+          (1 + ws_save_flash_anim + bonusFlash * 1.0f) * (1.0f - ws_damage_flash),
+          (1 + ws_save_flash_anim + bonusFlash * 1.25f) * (1.0f - ws_damage_flash),
+          fade_val });
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, ws_resources.mainRT.handle);
     ws_draw_ptc(ws_resources.pPTCVertices, ws_ptc_count, GL_QUADS);

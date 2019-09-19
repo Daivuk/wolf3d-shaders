@@ -207,6 +207,24 @@ void ws_finish_draw_3d()
                 }
             }
         }
+
+        // Go back to our 2D frame buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        glViewport(0, 0, ws_screen_w, ws_screen_h);
+
+        ws_matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)1024, (float)640, 0, -999, 999);
+        {
+            glUseProgram(ws_resources.programPC);
+            auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
+            glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
+        }
+        {
+            glUseProgram(ws_resources.programPTC);
+            auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
+            glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
+        }
     }
     else
     {

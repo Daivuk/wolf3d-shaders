@@ -1359,19 +1359,11 @@ void Pickups(void)
 
  	visptr = &vislist[0];
 
- //
- // place static objects
- //
  	for (statptr = &statobjlist[0] ; statptr !=laststatobj ; statptr++)
  	{
  		if ((visptr->shapenum = statptr->shapenum) == -1)
- 			continue;						// object has been deleted
+ 			continue;
 
- 		// if (!*statptr->visspot)
- 		// 	continue;						// not visable
-
- 		//if (TransformTile (statptr->tilex,statptr->tiley
- 		//	,&visptr->viewx,&visptr->viewheight) && statptr->flags & FL_BONUS)
         if (player->tilex == statptr->tilex && 
             player->tiley == statptr->tiley && 
             statptr->flags & FL_BONUS)
@@ -1403,18 +1395,8 @@ void DrawScaleds (void)
  		if ((visptr->shapenum = statptr->shapenum) == -1)
  			continue;						// object has been deleted
 
- 		// if (!*statptr->visspot)
- 		// 	continue;						// not visable
-
- 		if (TransformTile (statptr->tilex,statptr->tiley
- 			,&visptr->viewx,&visptr->viewheight) && statptr->flags & FL_BONUS)
- 		{
- 			// GetBonus (statptr);
- 			// continue;
- 		}
-
- 		// if (!visptr->viewheight)
- 		// 	continue;						// to close to the object
+        if (!ws_visible_tiles[statptr->tilex][statptr->tiley])
+            continue;
 
         visptr->x = (fixed)statptr->tilex * 65536 + 32768;
         visptr->y = (fixed)statptr->tiley * 65536 + 32768;
@@ -1431,44 +1413,25 @@ void DrawScaleds (void)
  		if (!(visptr->shapenum = obj->state->shapenum))
  			continue;						// no shape
 
- 		spotloc = (obj->tilex<<6)+obj->tiley;	// optimize: keep in struct?
- 		visspot = &spotvis[0][0]+spotloc;
- 		tilespot = &tilemap[0][0]+spotloc;
+        if (!ws_visible_tiles[obj->tilex][obj->tiley]) 
+            continue;
 
- 		/*
- 		 could be in any of the nine surrounding tiles
- 		*/
- 		// if (*visspot
- 		// || ( *(visspot-1) && !*(tilespot-1) )
- 		// || ( *(visspot+1) && !*(tilespot+1) )
- 		// || ( *(visspot-65) && !*(tilespot-65) )
- 		// || ( *(visspot-64) && !*(tilespot-64) )
- 		// || ( *(visspot-63) && !*(tilespot-63) )
- 		// || ( *(visspot+65) && !*(tilespot+65) )
- 		// || ( *(visspot+64) && !*(tilespot+64) )
- 		// || ( *(visspot+63) && !*(tilespot+63) ) )
- 		{
- 			obj->active = (activetype)_true;
- 			TransformActor (obj);
- 			// if (!obj->viewheight)
- 			// 	continue;						// too close or  away
+ 		obj->active = (activetype)_true;
+ 		TransformActor (obj);
 
-            visptr->x = obj->x;
-            visptr->y = obj->y;
- 			visptr->viewx = obj->viewx;
- 			visptr->viewheight = obj->viewheight;
- 			if (visptr->shapenum == -1)
- 				visptr->shapenum = obj->temp1;	// special shape
+        visptr->x = obj->x;
+        visptr->y = obj->y;
+ 		visptr->viewx = obj->viewx;
+ 		visptr->viewheight = obj->viewheight;
+ 		if (visptr->shapenum == -1)
+ 			visptr->shapenum = obj->temp1;	// special shape
 
- 			if (obj->state->rotate)
- 				visptr->shapenum += CalcRotate (obj);
+ 		if (obj->state->rotate)
+ 			visptr->shapenum += CalcRotate (obj);
 
- 			if (visptr < &vislist[MAXVISABLE-1])	// don't let it overflow
- 				visptr++;
- 			obj->flags |= FL_VISABLE;
- 		}
- 		// else
- 		// 	obj->flags &= ~FL_VISABLE;
+ 		if (visptr < &vislist[MAXVISABLE-1])	// don't let it overflow
+ 			visptr++;
+ 		obj->flags |= FL_VISABLE;
  	}
 
  //
@@ -1482,24 +1445,8 @@ void DrawScaleds (void)
 
  	for (i = 0; i<numvisable; i++)
  	{
- 		// least = 32000;
- 		// for (visstep=&vislist[0] ; visstep<visptr ; visstep++)
- 		// {
- 		// 	height = visstep->viewheight;
- 		// 	if (height < least)
- 		// 	{
- 		// 		least = height;
- 		// 		farthest = visstep;
- 		// 	}
- 		// }
- 		//
- 		// draw farthest
- 		//
- 		//ScaleShape(farthest->viewx,farthest->shapenum,farthest->viewheight);
         auto s = vislist + i;
         ws_draw_sprite(s->x, s->y, s->shapenum);
-
- 		// farthest->viewheight = 32000;
  	}
 }
 
@@ -1616,33 +1563,6 @@ void	FixOfs (void)
 ====================
 */
 
-inline int wall_at(int x, int y)
-{
-    if (tilemap[x][y] & 0x80) return 0;
-    return tilemap[x][y];
-}
-
-inline _boolean is_door_at(int x, int y)
-{
-    return 
-        ((tilemap[x][y] & 0x80) && !(tilemap[x][y] & 0x40))
-         ? _true : _false;
-}
-
-inline float door_percent(int x, int y)
-{
-    auto doorNum = tilemap[x][y] & 0x3F;
-    return (float)doorposition[doorNum] / (float)0xffff;
-}
-
-inline bool has_floor_at(int x, int y)
-{
-    if (pwallstate && pwallx == x && pwally == y) return true;
-    byte num = tilemap[x][y];
-    return !num || ((num & 0x80) && !(num & 0x40));
-}
-
-void ws_flush();
 void WallRefresh (void)
 {
 //
@@ -1671,175 +1591,8 @@ void WallRefresh (void)
 	 //ScalePost ();			// no more optimization on last post
 
     ws_update_camera();
-
-    auto hwalls = horizwall;
-    auto vwalls = (ws_ao_enabled || ws_deferred_enabled) ? horizwall : vertwall;
-
-    //TODO: Batch this for static walls
-    for (int x = 1; x < 63; ++x)
-    {
-        for (int y = 1; y < 63; ++y)
-        {
-            if (!wall_at(x, y))
-            {
-                if (int w = wall_at(x, y - 1))
-                {
-                    if (is_door_at(x, y))
-                        w = DOORWALL + 3;
-                    else
-                        w = hwalls[w & 63];
-                    ws_draw_wall((float)x, (float)y, SOUTH, w, false, 
-                        wall_at(x - 1, y) ? 1 : (wall_at(x - 1, y - 1) ? 0 : -1), 
-                        wall_at(x + 1, y) ? 1 : (wall_at(x + 1, y - 1) ? 0 : -1));
-                }
-                if (int w = wall_at(x - 1, y))
-                {
-                    if (is_door_at(x, y))
-                        w = DOORWALL + 2;
-                    else
-                        w = vwalls[w & 63];
-                    ws_draw_wall((float)x, (float)y + 1.0f, EAST, w, false,
-                        wall_at(x, y + 1) ? 1 : (wall_at(x - 1, y + 1) ? 0 : -1),
-                        wall_at(x, y - 1) ? 1 : (wall_at(x - 1, y - 1) ? 0 : -1));
-                }
-                if (int w = wall_at(x, y + 1))
-                {
-                    if (is_door_at(x, y))
-                        w = DOORWALL + 3;
-                    else
-                        w = hwalls[w & 63];
-                    ws_draw_wall((float)x + 1.0f, (float)y + 1.0f, NORTH, w, false,
-                        wall_at(x + 1, y) ? 1 : (wall_at(x + 1, y + 1) ? 0 : -1),
-                        wall_at(x - 1, y) ? 1 : (wall_at(x - 1, y + 1) ? 0 : -1));
-                }
-                if (int w = wall_at(x + 1, y))
-                {
-                    if (is_door_at(x, y))
-                        w = DOORWALL + 2;
-                    else
-                        w = vwalls[w & 63];
-                    ws_draw_wall((float)x + 1.0f, (float)y, WEST, w, false,
-                        wall_at(x, y - 1) ? 1 : (wall_at(x + 1, y - 1) ? 0 : -1),
-                        wall_at(x, y + 1) ? 1 : (wall_at(x + 1, y + 1) ? 0 : -1));
-                }
-
-                if (is_door_at(x, y))
-                {
-                    auto percent = door_percent(x, y);
-                    auto tilehit = tilemap[x][y];
-                    uint16_t wallpic, doornum;
-                    doornum = tilehit & 0x7f;
-
-                    switch (doorobjlist[doornum].lock)
-                    {
-                    case dr_normal:
-                        wallpic = (PMSpriteStart - 8);
-                        break;
-                    case dr_lock1:
-                    case dr_lock2:
-                    case dr_lock3:
-                    case dr_lock4:
-                        wallpic = (PMSpriteStart - 8) + 6;
-                        break;
-                    case dr_elevator:
-                        wallpic = (PMSpriteStart - 8) + 4;
-                        break;
-                    }
-
-                    if (wall_at(x - 1, y))
-                    {
-                        ws_draw_wall((float)x + percent, (float)y + 0.5f, SOUTH, wallpic, true, 0, 0);
-                        ws_draw_wall((float)x + 1.0f + percent, (float)y + 0.5f, NORTH, wallpic, true, 0, 0);
-                    }
-                    else if (wall_at(x, y - 1))
-                    {
-                        ws_draw_wall((float)x + 0.5f, (float)y + 1.0f + percent, EAST, wallpic, true, 0, 0);
-                        ws_draw_wall((float)x + 0.5f, (float)y + percent, WEST, wallpic, true, 0, 0);
-                    }
-                }
-            }
-        }
-    }
-
-    extern uint16_t vgaCeiling[];
-    int ceiling = vgaCeiling[gamestate.episode*10+mapon] & 0xFF;
-
-    // Push walls
-    if (pwallstate)
-    {
-        float percent = (float)pwallpos / 64.0f;
-        const float DIROFS[4][2] = {
-            {0.0f, -1.0f},
-            {1.0f, 0.0f},
-            {0.0f, 1.0f},
-            {-1.0f, -0.0f} };
-        const int DIROFSi[4][2] = {
-            {0, -1},
-            {1, 0},
-            {0, 1},
-            {-1, -0} };
-        auto &ofs = DIROFS[pwalldir];
-        int n = wall_at(pwallx + DIROFSi[pwalldir][0], pwally + DIROFSi[pwalldir][1]);
-        int w = hwalls[n & 63];
-        ws_draw_wall((float)pwallx + ofs[0] * percent, (float)pwally + 1.0f + ofs[1] * percent, SOUTH, w);
-        ws_draw_wall((float)pwallx + 1.0f + ofs[0] * percent, (float)pwally + ofs[1] * percent, NORTH, w);
-        w = vwalls[n & 63];
-        ws_draw_wall((float)pwallx + 1.0f + ofs[0] * percent, (float)pwally + 1.0f + ofs[1] * percent, EAST, w);
-        ws_draw_wall((float)pwallx + ofs[0] * percent, (float)pwally + ofs[1] * percent, WEST, w);
-    }
-
-    // Draw ceilling and floor tile by tile (We could have gone with a full map plane, but then we would be depth testing in useless places and its not
-    // as nice to look at in freecam. + we need the AO to be done per tile
-    bool neighbors[] = { false, false, false, false, false, false, false, false };
-    for (int x = 1; x < 63; ++x)
-    {
-        for (int y = 1; y < 63; ++y)
-        {
-            if (has_floor_at(x, y))
-            {
-                neighbors[0] = !has_floor_at(x, y + 1);
-                neighbors[1] = !has_floor_at(x + 1, y + 1);
-                neighbors[2] = !has_floor_at(x + 1, y);
-                neighbors[3] = !has_floor_at(x + 1, y - 1);
-                neighbors[4] = !has_floor_at(x, y - 1);
-                neighbors[5] = !has_floor_at(x - 1, y - 1);
-                neighbors[6] = !has_floor_at(x - 1, y);
-                neighbors[7] = !has_floor_at(x - 1, y + 1);
-
-                ws_draw_ceiling(x, y, ceiling, neighbors);
-                ws_draw_floor(x, y, 0x19, neighbors);
-            }
-        }
-    }
-
-    // Door overlays - not now
-    ws_flush();
-    //glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
-    //glDepthMask(GL_FALSE);
-    //for (int x = 1; x < 63; ++x)
-    //{
-    //    for (int y = 1; y < 63; ++y)
-    //    {
-    //        if (is_door_at(x, y))
-    //        {
-    //            neighbors[0] = !has_floor_at(x, y + 1);
-    //            neighbors[1] = !has_floor_at(x + 1, y + 1);
-    //            neighbors[2] = !has_floor_at(x + 1, y);
-    //            neighbors[3] = !has_floor_at(x + 1, y - 1);
-    //            neighbors[4] = !has_floor_at(x, y - 1);
-    //            neighbors[5] = !has_floor_at(x - 1, y - 1);
-    //            neighbors[6] = !has_floor_at(x - 1, y);
-    //            neighbors[7] = !has_floor_at(x - 1, y + 1);
-
-    //            float percent = door_percent(x, y);
-    //            ws_draw_door_ceiling(x, y, ceiling, neighbors, percent);
-    //            ws_draw_door_floor(x, y, 0x19, neighbors, percent);
-    //        }
-    //    }
-    //}
-    //ws_flush();
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glDepthMask(GL_TRUE);
+    ws_update_culling();
+    ws_draw_walls();
 }
 
 //==========================================================================
@@ -1885,8 +1638,8 @@ void	ThreeDRefresh (void)
  //
 DrawScaleds();			// draw scaled stuff
 ws_finish_draw_3d();
-Pickups(); // This is like DrawScaleds for statics, but it does the pickup hud update
 DrawPlayerWeapon ();	// draw player's hands
+Pickups(); // This is like DrawScaleds for statics, but it does the pickup hud update
 
  //
  // show screen and time last cycle
