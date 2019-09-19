@@ -4,8 +4,9 @@ void ws_draw_sprite(int x, int y, int texture)
 {
     if (!ws_sprite_enabled) return;
 
-    auto xf = (float)x / 65536.0f;
-    auto yf = 64.0f - (float)y / 65536.0f;
+    auto xi = x / 65536;
+    auto yi = y / 65536;
+    auto visible = ws_visible_tiles[xi][yi];
 
     ws_Texture pic;
     {
@@ -16,13 +17,15 @@ void ws_draw_sprite(int x, int y, int texture)
             pic = it->second;
     }
 
+    auto xf = (float)x / 65536.0f;
+    auto yf = 64.0f - (float)y / 65536.0f;
     ws_prepare_for_pntc(GL_QUADS, ws_sprite_texture_enabled ? pic.tex : ws_resources.whiteTexture);
 
     auto pVertices = ws_resources.pPNTCVertices + ws_pntc_count;
 
     int clip[4] = { 0, 0, 64, 64 };
 
-    // Emit lights
+    // Sprite settings
     {
         auto it = ws_sprite_settings.find(texture);
         if (it != ws_sprite_settings.end())
@@ -30,12 +33,47 @@ void ws_draw_sprite(int x, int y, int texture)
             if (it->second.emit_light)
             {
                 auto light = it->second.light;
-                light.position = ws_Vector3(xf, yf, light.position.z) + ws_cam_right * light.position.x - ws_cam_front_flat * light.position.y;
-                ws_active_lights.push_back(light);
+
+                // Make sure the radius of the light is in the current draw rect
+                int radiusi = (int)light.radius + 1;
+                if (xi + radiusi >= ws_culled_rect[0] &&
+                    yi + radiusi >= ws_culled_rect[1] &&
+                    xi - radiusi <= ws_culled_rect[2] &&
+                    yi - radiusi <= ws_culled_rect[3])
+                {
+                    // Now lets check if any of the tile in the light rect is visible
+                    int lightRect[4] = {
+                        std::max(0, xi - radiusi),
+                        std::max(0, yi - radiusi),
+                        std::min(63, xi + radiusi),
+                        std::min(63, yi + radiusi)
+                    };
+
+                    bool lightVisible = false;
+                    for (int lx = lightRect[0]; lx <= lightRect[2]; ++lx)
+                    {
+                        for (int ly = lightRect[1]; ly <= lightRect[3]; ++ly)
+                        {
+                            if (ws_visible_tiles[lx][ly])
+                            {
+                                lightVisible = true;
+                                break;
+                            }
+                        }
+                        if (lightVisible) break;
+                    }
+                    if (lightVisible)
+                    {
+                        light.position = ws_Vector3(xf, yf, light.position.z) + ws_cam_right * light.position.x - ws_cam_front_flat * light.position.y;
+                        ws_active_lights.push_back(light);
+                    }
+                }
             }
             memcpy(clip, it->second.clip, sizeof(clip));
         }
     }
+
+    if (!visible) return;
 
     float clipf[4] = {
         (float)clip[0] / 64.0f,

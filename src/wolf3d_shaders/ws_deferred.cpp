@@ -5,6 +5,123 @@
 ws_GBuffer ws_gbuffer;
 std::vector<ws_PointLight> ws_active_lights;
 
+GLuint ws_create_sphere()
+{
+    GLuint handle;
+    glGenBuffers(1, &handle);
+    glBindBuffer(GL_ARRAY_BUFFER, handle);
+
+    ws_Vector3 *pVertices = new ws_Vector3[WS_SPHERE_VERT_COUNT];
+    int hseg = 8;
+    int vseg = 8;
+
+    auto pVerts = pVertices;
+    {
+        auto cos_h = cosf(1.0f / (float)hseg * (float)M_PI);
+        auto sin_h = sinf(1.0f / (float)hseg * (float)M_PI);
+        for (int j = 1; j < hseg - 1; ++j)
+        {
+            auto cos_h_next = cosf((float)(j + 1) / (float)hseg * (float)M_PI);
+            auto sin_h_next = sinf((float)(j + 1) / (float)hseg * (float)M_PI);
+            auto cos_v = cosf(0.0f);
+            auto sin_v = sinf(0.0f);
+            for (int i = 0; i < vseg; ++i)
+            {
+                auto cos_v_next = cosf((float)(i + 1) / (float)vseg * 2.0f * (float)M_PI);
+                auto sin_v_next = sinf((float)(i + 1) / (float)vseg * 2.0f * (float)M_PI);
+
+                pVerts->x = cos_v * sin_h;
+                pVerts->y = sin_v * sin_h;
+                pVerts->z = cos_h;
+                ++pVerts;
+
+                pVerts->x = cos_v * sin_h_next;
+                pVerts->y = sin_v * sin_h_next;
+                pVerts->z = cos_h_next;
+                ++pVerts;
+
+                pVerts->x = cos_v_next * sin_h_next;
+                pVerts->y = sin_v_next * sin_h_next;
+                pVerts->z = cos_h_next;
+                ++pVerts;
+
+                pVerts->x = cos_v * sin_h;
+                pVerts->y = sin_v * sin_h;
+                pVerts->z = cos_h;
+                ++pVerts;
+
+                pVerts->x = cos_v_next * sin_h_next;
+                pVerts->y = sin_v_next * sin_h_next;
+                pVerts->z = cos_h_next;
+                ++pVerts;
+
+                pVerts->x = cos_v_next * sin_h;
+                pVerts->y = sin_v_next * sin_h;
+                pVerts->z = cos_h;
+                ++pVerts;
+
+                cos_v = cos_v_next;
+                sin_v = sin_v_next;
+            }
+            cos_h = cos_h_next;
+            sin_h = sin_h_next;
+        }
+    }
+
+    // Caps
+    {
+        auto cos_h_next = cosf(1.0f / (float)hseg * (float)M_PI);
+        auto sin_h_next = sinf(1.0f / (float)hseg * (float)M_PI);
+        auto cos_v = cosf(0.0f);
+        auto sin_v = sinf(0.0f);
+        for (int i = 0; i < vseg; ++i)
+        {
+            auto cos_v_next = cosf((float)(i + 1) / (float)vseg * 2.0f * (float)M_PI);
+            auto sin_v_next = sinf((float)(i + 1) / (float)vseg * 2.0f * (float)M_PI);
+
+            pVerts->x = 0.0f;
+            pVerts->y = 0.0f;
+            pVerts->z = 1.0f;
+            ++pVerts;
+
+            pVerts->x = cos_v * sin_h_next;
+            pVerts->y = sin_v * sin_h_next;
+            pVerts->z = cos_h_next;
+            ++pVerts;
+
+            pVerts->x = cos_v_next * sin_h_next;
+            pVerts->y = sin_v_next * sin_h_next;
+            pVerts->z = cos_h_next;
+            ++pVerts;
+
+            pVerts->x = 0.0f;
+            pVerts->y = 0.0f;
+            pVerts->z = -1.0f;
+            ++pVerts;
+
+            pVerts->x = cos_v_next * sin_h_next;
+            pVerts->y = sin_v_next * sin_h_next;
+            pVerts->z = -cos_h_next;
+            ++pVerts;
+
+            pVerts->x = cos_v * sin_h_next;
+            pVerts->y = sin_v * sin_h_next;
+            pVerts->z = -cos_h_next;
+            ++pVerts;
+
+            cos_v = cos_v_next;
+            sin_v = sin_v_next;
+        }
+    }
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * WS_SPHERE_VERT_COUNT, pVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (float *)(uintptr_t)(0));
+
+    delete[] pVertices;
+
+    return handle;
+}
+
 ws_GBuffer ws_create_gbuffer(int w, int h)
 {
     ws_GBuffer gbuffer;
@@ -86,16 +203,18 @@ void ws_resize_gbuffer(ws_GBuffer &gbuffer, int w, int h)
 
 void ws_draw_pointlight(const ws_PointLight& pointLight)
 {
-    auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
-    float v = (float)(ws_screen_h - statusLineH) / (float)ws_screen_h;
+    //auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
+    //float v = (float)(ws_screen_h - statusLineH) / (float)ws_screen_h;
 
-    static auto LightPosition_uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "LightPosition");
-    static auto LightRadius_uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "LightRadius");
-    static auto LightIntensity_uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "LightIntensity");
+    static auto LightPosition_uniform = glGetUniformLocation(ws_resources.programPointlightP, "LightPosition");
+    static auto LightRadius_uniform = glGetUniformLocation(ws_resources.programPointlightP, "LightRadius");
+    static auto LightIntensity_uniform = glGetUniformLocation(ws_resources.programPointlightP, "LightIntensity");
     glUniform3fv(LightPosition_uniform, 1, &pointLight.position.x);
     glUniform1f(LightRadius_uniform, pointLight.radius);
     glUniform1f(LightIntensity_uniform, pointLight.intensity);
 
-    ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, 1, 1, 1 - v, pointLight.color);
-    ws_draw_ptc(ws_resources.pPTCVertices, 4, GL_QUADS);
+    glDrawArrays(GL_TRIANGLES, 0, WS_SPHERE_VERT_COUNT);
+
+    //ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, 1, 1, 1 - v, pointLight.color);
+    //ws_draw_ptc(ws_resources.pPTCVertices, 4, GL_QUADS);
 }

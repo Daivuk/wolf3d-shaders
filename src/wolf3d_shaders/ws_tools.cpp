@@ -17,6 +17,15 @@ static ws_SpriteSettings ws_sprite_settings_clipboard = WS_DEFAULT_SPRITE_SETTIN
 int ws_selected_sprite = -1;
 int ws_gbuffer_tool_scale = 0;
 
+bool ws_tool_fullscreen_textures_pinned = false;
+bool ws_tool_fonts_pinned = false;
+bool ws_tool_ui_textures_pinned = false;
+bool ws_tool_walls_pinned = false;
+bool ws_tool_rendering_pinned = false;
+bool ws_tool_buffers_pinned = false;
+bool ws_tool_sprites_pinned = false;
+bool ws_tool_stats_pinned = false;
+
 static void tool_pointlight(const char* name, ws_PointLight& pointLight)
 {
     if (ImGui::CollapsingHeader(name))
@@ -32,6 +41,8 @@ static void tool_pointlight(const char* name, ws_PointLight& pointLight)
 static void tool_fullScreenTextures()
 {
     ImGui::Begin("Fullscreen Textures");
+    ImGui::Checkbox("Pinned", &ws_tool_fullscreen_textures_pinned);
+    ImGui::Separator();
     auto w = ImGui::GetWindowWidth();
     for (auto &kv : ws_screen_textures)
     {
@@ -44,6 +55,8 @@ static void tool_fullScreenTextures()
 static void tool_fonts()
 {
     ImGui::Begin("Fonts");
+    ImGui::Checkbox("Pinned", &ws_tool_fonts_pinned);
+    ImGui::Separator();
     for (auto &kv : ws_font_textures)
     {
         ImGui::Image(&kv.second.tex, { 128.0f, 10.0f }, { 0.0f, 0.0f }, {0.15f, 1.0f});
@@ -54,6 +67,8 @@ static void tool_fonts()
 static void tool_uiTextures()
 {
     ImGui::Begin("UI Textures");
+    ImGui::Checkbox("Pinned", &ws_tool_ui_textures_pinned);
+    ImGui::Separator();
     auto w = ImGui::GetWindowWidth();
     float x = w;
     for (auto &kv : ws_ui_textures)
@@ -69,6 +84,8 @@ static void tool_uiTextures()
 static void tool_walls()
 {
     ImGui::Begin("Walls");
+    ImGui::Checkbox("Pinned", &ws_tool_walls_pinned);
+    ImGui::Separator();
     auto w = ImGui::GetWindowWidth();
     float x = w;
     for (auto &kv : ws_wall_textures)
@@ -84,6 +101,8 @@ static void tool_walls()
 static void tool_rendering()
 {
     ImGui::Begin("Rendering");
+    ImGui::Checkbox("Pinned", &ws_tool_rendering_pinned);
+    ImGui::Separator();
     ImGui::Checkbox("Wireframe", &ws_wireframe_enabled);
     ImGui::Checkbox("Textures", &ws_texture_enabled);
     ImGui::Checkbox("Sprite textures", &ws_sprite_texture_enabled);
@@ -107,6 +126,8 @@ static void tool_sprites()
 {
     auto spriteScale = 4.0f;
     ImGui::Begin("Sprites");
+    ImGui::Checkbox("Pinned", &ws_tool_sprites_pinned);
+    ImGui::Separator();
     if (ws_selected_sprite != -1)
     {
         if (ws_sprite_settings.find(ws_selected_sprite) == ws_sprite_settings.end())
@@ -172,6 +193,8 @@ static void tool_sprites()
 static void tool_buffers()
 {
     ImGui::Begin("Buffers");
+    ImGui::Checkbox("Pinned", &ws_tool_buffers_pinned);
+    ImGui::Separator();
     ImGui::SliderInt("Scale", &ws_gbuffer_tool_scale, 0, TOOL_GBUFFER_SCALES_COUNT - 1);
     auto scale = TOOL_GBUFFER_SCALES[ws_gbuffer_tool_scale];
     auto w = ImGui::GetWindowWidth();
@@ -194,8 +217,11 @@ static void tool_buffers()
 static void tool_stats()
 {
     ImGui::Begin("Stats");
+    ImGui::Checkbox("Pinned", &ws_tool_stats_pinned);
+    ImGui::Separator();
     ImGui::Text("Delta Time: %.3f", ws_rdt);
     ImGui::Text("HDR Multiplier: %.3f", ws_hdr_multiplier);
+    ImGui::Text("Active lights: %i", (int)ws_active_lights.size());
     ImGui::End();
 }
 
@@ -206,14 +232,14 @@ void ws_do_tools()
     io.DisplaySize = { (float)ws_screen_w, (float)ws_screen_h };
     ImGui::NewFrame();
 
-    tool_fullScreenTextures();
-    tool_fonts();
-    tool_uiTextures();
-    tool_walls();
-    tool_rendering();
-    tool_buffers();
-    tool_sprites();
-    tool_stats();
+    if (ws_debug_view_enabled || ws_tool_fullscreen_textures_pinned) tool_fullScreenTextures();
+    if (ws_debug_view_enabled || ws_tool_fonts_pinned) tool_fonts();
+    if (ws_debug_view_enabled || ws_tool_ui_textures_pinned) tool_uiTextures();
+    if (ws_debug_view_enabled || ws_tool_walls_pinned) tool_walls();
+    if (ws_debug_view_enabled || ws_tool_rendering_pinned) tool_rendering();
+    if (ws_debug_view_enabled || ws_tool_buffers_pinned) tool_buffers();
+    if (ws_debug_view_enabled || ws_tool_sprites_pinned) tool_sprites();
+    if (ws_debug_view_enabled || ws_tool_stats_pinned) tool_stats();
 
     ImGui::Render();
     auto pDrawData = ImGui::GetDrawData();

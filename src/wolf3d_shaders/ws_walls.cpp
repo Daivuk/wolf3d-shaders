@@ -535,7 +535,7 @@ bool tile_line_of_sight(float offsetX, float offsetY, int fromX, int fromY, int 
     {
         x += dx;
         y += dy;
-        if (wall_at((float)x, (float)y)) return false;
+        if (wall_at((int)x, (int)y)) return false;
     }
 
     return true;
@@ -543,25 +543,29 @@ bool tile_line_of_sight(float offsetX, float offsetY, int fromX, int fromY, int 
 
 void ws_update_culling()
 {
-    memset(ws_visible_tiles, ws_debug_view_enabled, sizeof(ws_visible_tiles));
+    static bool newState[64][64];
+    auto visibles = newState;
+    memset(ws_visible_tiles, 0, sizeof(newState));
+    memset(newState, 0, sizeof(newState));
+
+    // Use fill algorithm from the player's view
+    int px = (int)player->tilex;
+    int py = (int)player->tiley;
     if (ws_debug_view_enabled)
     {
+        px = (int)ws_cam_eye.x;
+        py = (int)(64.0f - ws_cam_eye.y);
+    }
+
+    if (!has_floor_at(px, py) || (ws_debug_view_enabled && (ws_cam_eye.z < 0.0f || ws_cam_eye.z > 1.0f)))
+    {
+        memset(ws_visible_tiles, true, sizeof(ws_visible_tiles));
         ws_culled_rect[0] = 0;
         ws_culled_rect[1] = 0;
         ws_culled_rect[2] = 63;
         ws_culled_rect[3] = 63;
         return;
     }
-
-    static bool newState[64][64];
-    auto visibles = newState;
-    memset(newState, 0, sizeof(newState));
-
-    // Use fill algorithm from the player's view
-    float pxf = (float)player->x / 65536.f;
-    float pyf = (float)player->y / 65536.f;
-    int px = (int)player->tilex;
-    int py = (int)player->tiley;
     
     ws_culled_rect[0] = px;
     ws_culled_rect[1] = py;

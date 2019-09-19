@@ -72,12 +72,13 @@ struct ws_Resources
     GLuint programPTC;              /* Position2, TexCoord2, Color4 */
     GLuint programPNTC;             /* ws_Vector3, Normal3, TexCoord2, Color4 */
     GLuint programGBufferPNTC;      /* ws_Vector3, Normal3, TexCoord2, Color4 */
-    GLuint programPointlightPTC;    /* Position2, TexCoord2, Color4 */
+    GLuint programPointlightP;    /* Position2, TexCoord2, Color4 */
     GLuint programHDRPTC;           /* Position2, TexCoord2, Color4 */
     GLuint vertexBuffer;            /* Dynamic version buffer used by batches */
     ws_VertexPC *pPCVertices;       /* Used by dynamic rendering of ws_Vector2/ws_Color */
     ws_VertexPTC *pPTCVertices;     /* Used by dynamic rendering of ws_Vector2/ws_TexCoord/ws_Color */
     ws_VertexPNTC *pPNTCVertices;   /* Used by dynamic rendering of ws_Vector2/ws_TexCoord/ws_Color */
+    GLuint sphereVB;                /* Used by point lights */
     GLuint mapVB;                   /* ws_Vector3art of the map */
     GLuint checkerTexture;          /* Test texture to replace non-existing or corrupted data */
     GLuint whiteTexture;            /* ... */
@@ -118,6 +119,8 @@ struct ws_SpriteSettings
     int clip[4];
 };
 const ws_SpriteSettings WS_DEFAULT_SPRITE_SETTINGS = { 0, false, 0.0f, { {0,0,0.5f},{1,1,1,1},5,1.3f }, {0,0,64,64} };
+
+const int WS_SPHERE_VERT_COUNT = 8 * 6 * 6 + 8 * 3 * 2;
 
 extern _boolean sdl_keystates[NumCodes];
 extern ws_Color ws_palette[];
@@ -209,6 +212,7 @@ ws_Texture ws_load_sprite_texture(int16_t shapenum);
 ws_Texture ws_load_wall_texture(int wallpic);
 ws_Font &ws_get_font(int id);
 ws_GBuffer ws_create_gbuffer(int w, int h);
+GLuint ws_create_sphere();
 
 void ws_update_sdl();
 void ws_play_sound(float* data, int len, float x, float y, bool _3d = false);

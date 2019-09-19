@@ -4,7 +4,7 @@
 
 #include <chrono>
 
-static const float LUM_TARGET = .15f;
+static const float LUM_TARGET = .25f;
 static const float LUM_ADAPT_SPEED_LIGHT = 20.0f;
 static const float LUM_ADAPT_SPEED_DARK = 20.0f;
 static const float LUM_MIN = .01f;
@@ -88,36 +88,49 @@ void ws_finish_draw_3d()
         ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, 1, 1, 1 - v, ws_ambient_color);
         ws_draw_ptc(ws_resources.pPTCVertices, 4, GL_QUADS);
 
-        // Player light
+        // Lights
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         glDisable(GL_TEXTURE_2D);
-        glUseProgram(ws_resources.programPointlightPTC);
+
+        glUseProgram(ws_resources.programPointlightP);
+        glBindBuffer(GL_ARRAY_BUFFER, ws_resources.sphereVB);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (float *)(uintptr_t)(0));
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        glDepthFunc(GL_GREATER);
+        glDepthMask(GL_FALSE);
+        glEnableVertexAttribArray(0); // pos
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(3);
+
         auto InvProjMtx = ws_matrix3D.Invert().Transpose();
         {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "InvProjMtx");
+            static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "InvProjMtx");
             glUniformMatrix4fv(uniform, 1, GL_FALSE, &InvProjMtx._11);
         }
         {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "AlbeoTexture");
+            static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "AlbeoTexture");
             glUniform1i(uniform, 0);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, ws_gbuffer.albeoHandle);
         }
         {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "NormalTexture");
+            static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "NormalTexture");
             glUniform1i(uniform, 1);
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, ws_gbuffer.normalHandle);
         }
         {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightPTC, "DepthTexture");
+            static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "DepthTexture");
             glUniform1i(uniform, 2);
             glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, ws_gbuffer.depthHandle);
         }
 
-        glUniformMatrix4fv(glGetUniformLocation(ws_resources.programPointlightPTC, "ProjMtx"), 1, GL_FALSE, &ws_matrix2D._11);
+        glUniformMatrix4fv(glGetUniformLocation(ws_resources.programPointlightP, "ProjMtx"), 1, GL_FALSE, &ws_matrix3D._11);
         ws_player_light.position = { (float)player->x / 65536.f, 64.0f - (float)player->y / 65536.f, 0.5f };
         ws_draw_pointlight(ws_player_light);
 
@@ -132,7 +145,11 @@ void ws_finish_draw_3d()
             glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
             glEnable(GL_TEXTURE_2D);
             glDisable(GL_DEPTH_TEST);
+            glDepthMask(GL_TRUE);
+            glDepthFunc(GL_LESS);
             glDisable(GL_BLEND);
+            glDisable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
             glActiveTexture(GL_TEXTURE0);
             glUseProgram(ws_resources.programPTC);
             glEnableVertexAttribArray(0); // pos

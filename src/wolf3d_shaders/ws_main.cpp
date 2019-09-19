@@ -227,7 +227,7 @@ int main(int argc, char **argv)
     ws_resources.programPTC = ws_create_program(PTC_VERT, PTC_FRAG, {"Position", "TexCoord", "Color"});
     ws_resources.programPNTC = ws_create_program(PNTC_VERT, PNTC_FRAG, {"Position", "Normal", "TexCoord", "Color"});
     ws_resources.programGBufferPNTC = ws_create_program(PNTC_GBUFFER_VERT, PNTC_GBUFFER_FRAG, {"Position", "Normal", "TexCoord", "Color"});
-    ws_resources.programPointlightPTC = ws_create_program(PTC_POINTLIGHT_VERT, PTC_POINTLIGHT_FRAG, {"Position", "TexCoord", "Color"});
+    ws_resources.programPointlightP = ws_create_program(PTC_POINTLIGHT_VERT, PTC_POINTLIGHT_FRAG, {"Position", "TexCoord", "Color"});
     ws_resources.programHDRPTC = ws_create_program(PTC_HDR_VERT, PTC_HDR_FRAG, {"Position", "TexCoord", "Color"});
     ws_resources.vertexBuffer = createVertexBuffer();
     ws_resources.pPCVertices = new ws_VertexPC[MAX_VERTICES];
@@ -236,6 +236,7 @@ int main(int argc, char **argv)
     ws_resources.mainRT = ws_create_main_rt(ws_screen_w, ws_screen_h);
     ws_resources.hdrRT = ws_create_hdr_rt(ws_screen_w, ws_screen_h);
     ws_resources.lastFrameRT = ws_create_rt(4, 4);
+    ws_resources.sphereVB = ws_create_sphere();
     ws_gbuffer = ws_create_gbuffer(ws_screen_w, ws_screen_h);
 
     srand(0);
@@ -699,10 +700,7 @@ void VW_UpdateScreen()
     glBindTexture(GL_TEXTURE_2D, ws_resources.mainRT.handle);
     ws_draw_ptc(ws_resources.pPTCVertices, ws_ptc_count, GL_QUADS);
 
-    if (ws_debug_view_enabled)
-    {
-        ws_do_tools();
-    }
+    ws_do_tools();
 
     // Swap buffers
     SDL_GL_SwapWindow(sdlWindow);

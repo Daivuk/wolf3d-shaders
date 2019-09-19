@@ -149,21 +149,17 @@ static const char *PNTC_GBUFFER_FRAG =
 //
 static const char *PTC_POINTLIGHT_VERT =
 "uniform mat4 ProjMtx;"
+"uniform vec3 LightPosition;"
+"uniform float LightRadius;"
 
-"attribute vec2 Position;"
-"attribute vec2 TexCoord;"
-"attribute vec4 Color;"
+"attribute vec3 Position;"
 
-"varying vec2 Frag_Position;"
-"varying vec2 Frag_TexCoord;"
-"varying vec4 Frag_Color;"
+"varying vec4 Frag_Position;"
 
 "void main()"
 "{"
-"   gl_Position = ProjMtx * vec4(Position.xy, 0, 1);"
-"   Frag_Position = gl_Position.xy;"
-"   Frag_TexCoord = TexCoord;"
-"   Frag_Color = Color;"
+"   gl_Position = ProjMtx * vec4(Position * LightRadius + LightPosition, 1);"
+"   Frag_Position = gl_Position;"
 "}"
 ;
 
@@ -177,18 +173,19 @@ static const char *PTC_POINTLIGHT_FRAG =
 "uniform float LightRadius;"
 "uniform float LightIntensity;"
 
-"varying vec2 Frag_Position;"
-"varying vec2 Frag_TexCoord;"
-"varying vec4 Frag_Color;"
+"varying vec4 Frag_Position;"
 
 "void main()"
 "{"
-"   vec4 gAlbeo = texture2D(AlbeoTexture, Frag_TexCoord);"
-"   vec4 gNormal = texture2D(NormalTexture, Frag_TexCoord);"
-"   vec4 gDepth = texture2D(DepthTexture, Frag_TexCoord);"
+"   vec2 texCoord = Frag_Position.xy / Frag_Position.w * 0.5 + 0.5;"
+"   texCoord.y = 1 - ((1 - texCoord.y) * 160 / 200);"
+"   gl_FragColor = vec4(texCoord, 0, 1);"
+"   vec4 gAlbeo = texture2D(AlbeoTexture, texCoord);"
+"   vec4 gNormal = texture2D(NormalTexture, texCoord);"
+"   vec4 gDepth = texture2D(DepthTexture, texCoord);"
 
 // Position
-"   vec4 position = vec4(Frag_Position, gDepth.r, 1);"
+"   vec4 position = vec4(Frag_Position.xy / Frag_Position.w, gDepth.r, 1);"
 "   position = position * InvProjMtx;"
 "   position /= position.w;"
 
@@ -206,7 +203,7 @@ static const char *PTC_POINTLIGHT_FRAG =
 "   dotNormal = clamp(dotNormal, 0, 1);"
 "   intensity *= dotNormal;"
 
-"   gl_FragColor = gAlbeo * Frag_Color * intensity * LightIntensity;"
+"   gl_FragColor = gAlbeo * intensity * LightIntensity;"
 "}"
 ;
 
@@ -252,20 +249,5 @@ static const char *PTC_HDR_FRAG =
 "   gl_FragColor = hdr;"
 "}"
 ;
-
-
-//"static const vec3 LUM_CONVERT = vec3(0.299, 0.587, 0.114);"
-//
-//"float lumFromRGB(vec3 rgb)"
-//"{"
-//"   return dot(rgb, LUM_CONVERT);"
-//"}"
-
-
-//float4 PixelShaderHDR(VertexShaderOutput input) : COLOR0
-//{
-//    float4 gColor = tex2D(sampler0, input.TexCoord.xy);
-//    return gColor;
-//}
 
 #endif

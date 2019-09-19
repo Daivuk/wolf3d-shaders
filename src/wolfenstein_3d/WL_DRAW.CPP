@@ -1387,6 +1387,8 @@ void DrawScaleds (void)
 
  	visptr = &vislist[0];
 
+    // [dsl] We collect everything, and we will visibility cull later
+
  //
  // place static objects
  //
@@ -1395,8 +1397,8 @@ void DrawScaleds (void)
  		if ((visptr->shapenum = statptr->shapenum) == -1)
  			continue;						// object has been deleted
 
-        if (!ws_visible_tiles[statptr->tilex][statptr->tiley])
-            continue;
+        //if (!ws_visible_tiles[statptr->tilex][statptr->tiley])
+        //    continue;
 
         visptr->x = (fixed)statptr->tilex * 65536 + 32768;
         visptr->y = (fixed)statptr->tiley * 65536 + 32768;
@@ -1413,8 +1415,8 @@ void DrawScaleds (void)
  		if (!(visptr->shapenum = obj->state->shapenum))
  			continue;						// no shape
 
-        if (!ws_visible_tiles[obj->tilex][obj->tiley]) 
-            continue;
+        //if (!ws_visible_tiles[obj->tilex][obj->tiley]) 
+        //    continue;
 
  		obj->active = (activetype)_true;
  		TransformActor (obj);
