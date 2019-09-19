@@ -4,7 +4,7 @@
 
 #include <chrono>
 
-static const float LUM_TARGET = .25f;
+static const float LUM_TARGET = .20f;
 static const float LUM_ADAPT_SPEED_LIGHT = 20.0f;
 static const float LUM_ADAPT_SPEED_DARK = 20.0f;
 static const float LUM_MIN = .01f;

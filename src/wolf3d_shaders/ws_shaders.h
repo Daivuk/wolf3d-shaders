@@ -192,6 +192,7 @@ static const char *PTC_POINTLIGHT_FRAG =
 // Normal
 "   vec3 normal = gNormal.xyz * 2 - 1;"
 "   vec3 dir = LightPosition - position.xyz;"
+"   normal.z *= 0.5;" // floor and ceilings are too bright
 
 // Attenuation stuff
 "   float dis = length(dir);"
