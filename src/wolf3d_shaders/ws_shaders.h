@@ -172,6 +172,7 @@ static const char *PTC_POINTLIGHT_FRAG =
 "uniform vec3 LightPosition;"
 "uniform float LightRadius;"
 "uniform float LightIntensity;"
+"uniform vec4 LightColor;"
 
 "varying vec4 Frag_Position;"
 
@@ -203,7 +204,7 @@ static const char *PTC_POINTLIGHT_FRAG =
 "   dotNormal = clamp(dotNormal, 0, 1);"
 "   intensity *= dotNormal;"
 
-"   gl_FragColor = gAlbeo * intensity * LightIntensity;"
+"   gl_FragColor = gAlbeo * intensity * LightIntensity * LightColor;"
 "}"
 ;
 
