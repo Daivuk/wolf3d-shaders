@@ -11,7 +11,6 @@ int ws_pc_count = 0;
 int ws_ptc_count = 0;
 int ws_pntc_count = 0;
 int ws_draw_mode = -1;
-float ws_ui_scale = 1.0f;
 GLuint ws_current_3d_texture = 0;
 
 void ws_draw_pc(const ws_VertexPC *pVertices, int count, GLenum mode)
@@ -108,6 +107,7 @@ void ws_prepare_for_pntc(int prim, GLuint texture)
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, ws_current_3d_texture);
+    glDisable(GL_BLEND);
     if (ws_draw_mode != DRAW_MODE_PNTC)
     {
         ws_draw_mode = DRAW_MODE_PNTC;
@@ -201,10 +201,10 @@ void VL_Bar(int16_t x, int16_t y, int16_t width, int16_t height, int16_t color)
 {
     ws_prepare_for_pc(GL_QUADS);
     ws_pc_count += ws_draw_rect(ws_resources.pPCVertices + ws_pc_count,
-        (float)x * ws_ui_scale,
-        (float)y * ws_ui_scale,
-        (float)width * ws_ui_scale,
-        (float)height * ws_ui_scale,
+        (float)x,
+        (float)y,
+        (float)width,
+        (float)height,
         ws_palette[color]);
 }
 
@@ -212,10 +212,10 @@ void VL_Hlin(uint16_t x, uint16_t y, uint16_t width, uint16_t color)
 {
     ws_prepare_for_pc(GL_QUADS);
     ws_pc_count += ws_draw_rect(ws_resources.pPCVertices + ws_pc_count,
-        (float)x * ws_ui_scale,
-        (float)y * ws_ui_scale,
-        (float)width * ws_ui_scale,
-        1 * ws_ui_scale,
+        (float)x,
+        (float)y,
+        (float)width,
+        1,
         ws_palette[color]);
 }
 
@@ -223,10 +223,10 @@ void VL_Vlin(int16_t x, int16_t y, int16_t height, int16_t color)
 {
     ws_prepare_for_pc(GL_QUADS);
     ws_pc_count += ws_draw_rect(ws_resources.pPCVertices + ws_pc_count,
-        (float)x * ws_ui_scale,
-        (float)y * ws_ui_scale,
-        1 * ws_ui_scale,
-        (float)height * ws_ui_scale,
+        (float)x,
+        (float)y,
+        1,
+        (float)height,
         ws_palette[color]);
 }
 
@@ -261,8 +261,8 @@ void VWB_DrawPic(int16_t x, int16_t y, int16_t chunknum, int16_t w, int16_t h)
     ws_prepare_for_ptc(GL_QUADS);
     glBindTexture(GL_TEXTURE_2D, pic.tex);
     ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count,
-        (float)x * ws_ui_scale, (float)y * ws_ui_scale,
-        (float)pic.w * ws_ui_scale, (float)pic.h * ws_ui_scale,
+        (float)x, (float)y,
+        (float)pic.w, (float)pic.h,
         0, 0, 1, 1, { 1, 1, 1, 1 });
     ws_flush();
 }
@@ -337,8 +337,8 @@ void VW_DrawPropString(char *string)
         width = font->width[ch];
         auto os = bakedFont.os[ch];
         ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count,
-            (float)px * ws_ui_scale, (float)py * ws_ui_scale,
-            (float)width * ws_ui_scale, (float)height * ws_ui_scale,
+            (float)px, (float)py,
+            (float)width, (float)height,
             os, 0, os + bakedFont.ws[ch], 1,
             { 1, 1, 1, 1 });
         px += width;
@@ -368,10 +368,10 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     glBindTexture(GL_TEXTURE_2D, pic.tex);
     ws_ptc_count += ws_draw_rect(
         ws_resources.pPTCVertices + ws_ptc_count,
-        (float)(MaxX / 2 - pic.w / 2 * SCALE) * ws_ui_scale + 9.0f, // The +9 pixel here is to make sure the gun is centered in the screen
-        (float)(MaxY - SCALE - STATUSLINES - pic.h * SCALE + SCALE) * ws_ui_scale,
-        (float)(pic.w * SCALE) * ws_ui_scale,
-        (float)(pic.h * SCALE) * ws_ui_scale,
+        (float)(MaxX / 2 - pic.w / 2 * SCALE) + 9.0f, // The +9 pixel here is to make sure the gun is centered in the screen
+        (float)(MaxY - SCALE - STATUSLINES - pic.h * SCALE + SCALE),
+        (float)(pic.w * SCALE),
+        (float)(pic.h * SCALE),
         0, 0, 1, 1, { 1, 1, 1, 1 });
     ws_flush();
 }
@@ -384,22 +384,23 @@ void ws_flush()
         if (ws_pc_count)
         {
             ws_draw_pc(ws_resources.pPCVertices, ws_pc_count, ws_draw_mode_prim);
-            ws_pc_count = 0;
         }
         break;
     case DRAW_MODE_PTC:
         if (ws_ptc_count)
         {
             ws_draw_ptc(ws_resources.pPTCVertices, ws_ptc_count, ws_draw_mode_prim);
-            ws_ptc_count = 0;
         }
         break;
     case DRAW_MODE_PNTC:
         if (ws_pntc_count)
         {
             ws_draw_pntc(ws_resources.pPNTCVertices, ws_pntc_count, ws_draw_mode_prim);
-            ws_pntc_count = 0;
         }
         break;
     }
+
+    ws_pc_count = 0;
+    ws_ptc_count = 0;
+    ws_pntc_count = 0;
 }

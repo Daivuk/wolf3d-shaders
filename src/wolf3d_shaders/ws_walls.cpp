@@ -56,6 +56,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
 
     auto leftAOSize = wallLeft == 0 ? 0.0f : ws_ao_size;
     auto rightAOSize = wallRight == 0 ? 1.0f : 1.0f - ws_ao_size;
+    auto vAO = ws_ao_size / WS_WALL_HEIGHT;
     float uL = uvs.x + (uvs.y - uvs.x) * leftAOSize;
     float uR = uvs.x + (uvs.y - uvs.x) * rightAOSize;
 
@@ -69,7 +70,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             // top
             pVertices[0].position.x = x + ofs.x * leftAOSize;
             pVertices[0].position.y = y + ofs.y * leftAOSize;
-            pVertices[0].position.z = 1.0f;
+            pVertices[0].position.z = WS_WALL_HEIGHT;
             pVertices[0].normal.x = n.x;
             pVertices[0].normal.y = n.y;
             pVertices[0].normal.z = 0.0f;
@@ -78,7 +79,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
 
             pVertices[1].position.x = x;
             pVertices[1].position.y = y;
-            pVertices[1].position.z = 1.0f;
+            pVertices[1].position.z = WS_WALL_HEIGHT;
             pVertices[1].normal.x = n.x;
             pVertices[1].normal.y = n.y;
             pVertices[1].normal.z = 0.0f;
@@ -87,20 +88,20 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
 
             pVertices[2].position.x = x;
             pVertices[2].position.y = y;
-            pVertices[2].position.z = 1.0f - ws_ao_size;
+            pVertices[2].position.z = WS_WALL_HEIGHT - ws_ao_size;
             pVertices[2].normal.x = n.x;
             pVertices[2].normal.y = n.y;
             pVertices[2].normal.z = 0.0f;
-            pVertices[2].texCoord = { uvs.x, ws_ao_size };
+            pVertices[2].texCoord = { uvs.x, vAO };
             pVertices[2].color = colMid;
 
             pVertices[3].position.x = x + ofs.x * leftAOSize;
             pVertices[3].position.y = y + ofs.y * leftAOSize;
-            pVertices[3].position.z = 1.0f - ws_ao_size;
+            pVertices[3].position.z = WS_WALL_HEIGHT - ws_ao_size;
             pVertices[3].normal.x = n.x;
             pVertices[3].normal.y = n.y;
             pVertices[3].normal.z = 0.0f;
-            pVertices[3].texCoord = { uL, ws_ao_size };
+            pVertices[3].texCoord = { uL, vAO };
             pVertices[3].color = col;
 
             ws_pntc_count += 4;
@@ -109,11 +110,11 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             // middle
             pVertices[0].position.x = x;
             pVertices[0].position.y = y;
-            pVertices[0].position.z = 1.0f - ws_ao_size;
+            pVertices[0].position.z = WS_WALL_HEIGHT - ws_ao_size;
             pVertices[0].normal.x = n.x;
             pVertices[0].normal.y = n.y;
             pVertices[0].normal.z = 0.0f;
-            pVertices[0].texCoord = { uvs.x, ws_ao_size };
+            pVertices[0].texCoord = { uvs.x, vAO };
             pVertices[0].color = colMid;
 
             pVertices[1].position.x = x;
@@ -122,7 +123,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             pVertices[1].normal.x = n.x;
             pVertices[1].normal.y = n.y;
             pVertices[1].normal.z = 0.0f;
-            pVertices[1].texCoord = { uvs.x, 1.0f - ws_ao_size };
+            pVertices[1].texCoord = { uvs.x, 1.0f - vAO };
             pVertices[1].color = colMid;
 
             pVertices[2].position.x = x + ofs.x * leftAOSize;
@@ -131,16 +132,16 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             pVertices[2].normal.x = n.x;
             pVertices[2].normal.y = n.y;
             pVertices[2].normal.z = 0.0f;
-            pVertices[2].texCoord = { uL, 1.0f - ws_ao_size };
+            pVertices[2].texCoord = { uL, 1.0f - vAO };
             pVertices[2].color = col;
 
             pVertices[3].position.x = x + ofs.x * leftAOSize;
             pVertices[3].position.y = y + ofs.y * leftAOSize;
-            pVertices[3].position.z = 1.0f - ws_ao_size;
+            pVertices[3].position.z = WS_WALL_HEIGHT - ws_ao_size;
             pVertices[3].normal.x = n.x;
             pVertices[3].normal.y = n.y;
             pVertices[3].normal.z = 0.0f;
-            pVertices[3].texCoord = { uL, ws_ao_size };
+            pVertices[3].texCoord = { uL, vAO };
             pVertices[3].color = col;
 
             ws_pntc_count += 4;
@@ -153,7 +154,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             pVertices[0].normal.x = n.x;
             pVertices[0].normal.y = n.y;
             pVertices[0].normal.z = 0.0f;
-            pVertices[0].texCoord = { uvs.x, 1.0f - ws_ao_size };
+            pVertices[0].texCoord = { uvs.x, 1.0f - vAO };
             pVertices[0].color = colMid;
 
             pVertices[1].position.x = x;
@@ -180,7 +181,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             pVertices[3].normal.x = n.x;
             pVertices[3].normal.y = n.y;
             pVertices[3].normal.z = 0.0f;
-            pVertices[3].texCoord = { uL, 1.0f - ws_ao_size };
+            pVertices[3].texCoord = { uL, 1.0f - vAO };
             pVertices[3].color = col;
 
             ws_pntc_count += 4;
@@ -190,7 +191,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
         // top
         pVertices[0].position.x = x + ofs.x * leftAOSize;
         pVertices[0].position.y = y + ofs.y * leftAOSize;
-        pVertices[0].position.z = 1.0f;
+        pVertices[0].position.z = WS_WALL_HEIGHT;
         pVertices[0].normal.x = n.x;
         pVertices[0].normal.y = n.y;
         pVertices[0].normal.z = 0.0f;
@@ -199,25 +200,25 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
 
         pVertices[1].position.x = x + ofs.x * leftAOSize;
         pVertices[1].position.y = y + ofs.y * leftAOSize;
-        pVertices[1].position.z = 1.0f - ws_ao_size;
+        pVertices[1].position.z = WS_WALL_HEIGHT - ws_ao_size;
         pVertices[1].normal.x = n.x;
         pVertices[1].normal.y = n.y;
         pVertices[1].normal.z = 0.0f;
-        pVertices[1].texCoord = { uL, ws_ao_size };
+        pVertices[1].texCoord = { uL, vAO };
         pVertices[1].color = col;
 
         pVertices[2].position.x = x + ofs.x * rightAOSize;
         pVertices[2].position.y = y + ofs.y * rightAOSize;
-        pVertices[2].position.z = 1.0f - ws_ao_size;
+        pVertices[2].position.z = WS_WALL_HEIGHT - ws_ao_size;
         pVertices[2].normal.x = n.x;
         pVertices[2].normal.y = n.y;
         pVertices[2].normal.z = 0.0f;
-        pVertices[2].texCoord = { uR, ws_ao_size };
+        pVertices[2].texCoord = { uR, vAO };
         pVertices[2].color = col;
 
         pVertices[3].position.x = x + ofs.x * rightAOSize;
         pVertices[3].position.y = y + ofs.y * rightAOSize;
-        pVertices[3].position.z = 1.0f;
+        pVertices[3].position.z = WS_WALL_HEIGHT;
         pVertices[3].normal.x = n.x;
         pVertices[3].normal.y = n.y;
         pVertices[3].normal.z = 0.0f;
@@ -230,11 +231,11 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
         // middle
         pVertices[0].position.x = x + ofs.x * leftAOSize;
         pVertices[0].position.y = y + ofs.y * leftAOSize;
-        pVertices[0].position.z = 1.0f - ws_ao_size;
+        pVertices[0].position.z = WS_WALL_HEIGHT - ws_ao_size;
         pVertices[0].normal.x = n.x;
         pVertices[0].normal.y = n.y;
         pVertices[0].normal.z = 0.0f;
-        pVertices[0].texCoord = { uL, ws_ao_size };
+        pVertices[0].texCoord = { uL, vAO };
         pVertices[0].color = col;
 
         pVertices[1].position.x = x + ofs.x * leftAOSize;
@@ -243,7 +244,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
         pVertices[1].normal.x = n.x;
         pVertices[1].normal.y = n.y;
         pVertices[1].normal.z = 0.0f;
-        pVertices[1].texCoord = { uL, 1.0f - ws_ao_size };
+        pVertices[1].texCoord = { uL, 1.0f - vAO };
         pVertices[1].color = col;
 
         pVertices[2].position.x = x + ofs.x * rightAOSize;
@@ -252,16 +253,16 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
         pVertices[2].normal.x = n.x;
         pVertices[2].normal.y = n.y;
         pVertices[2].normal.z = 0.0f;
-        pVertices[2].texCoord = { uR, 1.0f - ws_ao_size };
+        pVertices[2].texCoord = { uR, 1.0f - vAO };
         pVertices[2].color = col;
 
         pVertices[3].position.x = x + ofs.x * rightAOSize;
         pVertices[3].position.y = y + ofs.y * rightAOSize;
-        pVertices[3].position.z = 1.0f - ws_ao_size;
+        pVertices[3].position.z = WS_WALL_HEIGHT - ws_ao_size;
         pVertices[3].normal.x = n.x;
         pVertices[3].normal.y = n.y;
         pVertices[3].normal.z = 0.0f;
-        pVertices[3].texCoord = { uR, ws_ao_size };
+        pVertices[3].texCoord = { uR, vAO };
         pVertices[3].color = col;
 
         ws_pntc_count += 4;
@@ -274,7 +275,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
         pVertices[0].normal.x = n.x;
         pVertices[0].normal.y = n.y;
         pVertices[0].normal.z = 0.0f;
-        pVertices[0].texCoord = { uL, 1.0f - ws_ao_size };
+        pVertices[0].texCoord = { uL, 1.0f - vAO };
         pVertices[0].color = col;
 
         pVertices[1].position.x = x + ofs.x * leftAOSize;
@@ -301,7 +302,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
         pVertices[3].normal.x = n.x;
         pVertices[3].normal.y = n.y;
         pVertices[3].normal.z = 0.0f;
-        pVertices[3].texCoord = { uR, 1.0f - ws_ao_size };
+        pVertices[3].texCoord = { uR, 1.0f - vAO };
         pVertices[3].color = col;
 
         ws_pntc_count += 4;
@@ -315,7 +316,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             // top
             pVertices[0].position.x = x + ofs.x * rightAOSize;
             pVertices[0].position.y = y + ofs.y * rightAOSize;
-            pVertices[0].position.z = 1.0f;
+            pVertices[0].position.z = WS_WALL_HEIGHT;
             pVertices[0].normal.x = n.x;
             pVertices[0].normal.y = n.y;
             pVertices[0].normal.z = 0.0f;
@@ -324,25 +325,25 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
 
             pVertices[1].position.x = x + ofs.x * rightAOSize;
             pVertices[1].position.y = y + ofs.y * rightAOSize;
-            pVertices[1].position.z = 1.0f - ws_ao_size;
+            pVertices[1].position.z = WS_WALL_HEIGHT - ws_ao_size;
             pVertices[1].normal.x = n.x;
             pVertices[1].normal.y = n.y;
             pVertices[1].normal.z = 0.0f;
-            pVertices[1].texCoord = { uR, ws_ao_size };
+            pVertices[1].texCoord = { uR, vAO };
             pVertices[1].color = col;
 
             pVertices[2].position.x = x + ofs.x;
             pVertices[2].position.y = y + ofs.y;
-            pVertices[2].position.z = 1.0f - ws_ao_size;
+            pVertices[2].position.z = WS_WALL_HEIGHT - ws_ao_size;
             pVertices[2].normal.x = n.x;
             pVertices[2].normal.y = n.y;
             pVertices[2].normal.z = 0.0f;
-            pVertices[2].texCoord = { uvs.y, ws_ao_size };
+            pVertices[2].texCoord = { uvs.y, vAO };
             pVertices[2].color = colMid;
 
             pVertices[3].position.x = x + ofs.x;
             pVertices[3].position.y = y + ofs.y;
-            pVertices[3].position.z = 1.0f;
+            pVertices[3].position.z = WS_WALL_HEIGHT;
             pVertices[3].normal.x = n.x;
             pVertices[3].normal.y = n.y;
             pVertices[3].normal.z = 0.0f;
@@ -355,11 +356,11 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             // middle
             pVertices[0].position.x = x + ofs.x * rightAOSize;
             pVertices[0].position.y = y + ofs.y * rightAOSize;
-            pVertices[0].position.z = 1.0f - ws_ao_size;
+            pVertices[0].position.z = WS_WALL_HEIGHT - ws_ao_size;
             pVertices[0].normal.x = n.x;
             pVertices[0].normal.y = n.y;
             pVertices[0].normal.z = 0.0f;
-            pVertices[0].texCoord = { uR, ws_ao_size };
+            pVertices[0].texCoord = { uR, vAO };
             pVertices[0].color = col;
 
             pVertices[1].position.x = x + ofs.x * rightAOSize;
@@ -368,7 +369,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             pVertices[1].normal.x = n.x;
             pVertices[1].normal.y = n.y;
             pVertices[1].normal.z = 0.0f;
-            pVertices[1].texCoord = { uR, 1.0f - ws_ao_size };
+            pVertices[1].texCoord = { uR, 1.0f - vAO };
             pVertices[1].color = col;
 
             pVertices[2].position.x = x + ofs.x;
@@ -377,16 +378,16 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             pVertices[2].normal.x = n.x;
             pVertices[2].normal.y = n.y;
             pVertices[2].normal.z = 0.0f;
-            pVertices[2].texCoord = { uvs.y, 1.0f - ws_ao_size };
+            pVertices[2].texCoord = { uvs.y, 1.0f - vAO };
             pVertices[2].color = colMid;
 
             pVertices[3].position.x = x + ofs.x;
             pVertices[3].position.y = y + ofs.y;
-            pVertices[3].position.z = 1.0f - ws_ao_size;
+            pVertices[3].position.z = WS_WALL_HEIGHT - ws_ao_size;
             pVertices[3].normal.x = n.x;
             pVertices[3].normal.y = n.y;
             pVertices[3].normal.z = 0.0f;
-            pVertices[3].texCoord = { uvs.y, ws_ao_size };
+            pVertices[3].texCoord = { uvs.y, vAO };
             pVertices[3].color = colMid;
 
             ws_pntc_count += 4;
@@ -399,7 +400,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             pVertices[0].normal.x = n.x;
             pVertices[0].normal.y = n.y;
             pVertices[0].normal.z = 0.0f;
-            pVertices[0].texCoord = { uvs.y, 1.0f - ws_ao_size };
+            pVertices[0].texCoord = { uvs.y, 1.0f - vAO };
             pVertices[0].color = colMid;
 
             pVertices[1].position.x = x + ofs.x * rightAOSize;
@@ -408,7 +409,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
             pVertices[1].normal.x = n.x;
             pVertices[1].normal.y = n.y;
             pVertices[1].normal.z = 0.0f;
-            pVertices[1].texCoord = { uR, 1.0f - ws_ao_size };
+            pVertices[1].texCoord = { uR, 1.0f - vAO };
             pVertices[1].color = col;
 
             pVertices[2].position.x = x + ofs.x * rightAOSize;
@@ -436,7 +437,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
     {
         pVertices[0].position.x = x;
         pVertices[0].position.y = y;
-        pVertices[0].position.z = 1.0f;
+        pVertices[0].position.z = WS_WALL_HEIGHT;
         pVertices[0].normal.x = n.x;
         pVertices[0].normal.y = n.y;
         pVertices[0].normal.z = 0.0f;
@@ -463,7 +464,7 @@ void ws_draw_wall(float x, float y, int dir, int wallpic, bool isDoor, int wallL
 
         pVertices[3].position.x = x + ofs.x;
         pVertices[3].position.y = y + ofs.y;
-        pVertices[3].position.z = 1.0f;
+        pVertices[3].position.z = WS_WALL_HEIGHT;
         pVertices[3].normal.x = n.x;
         pVertices[3].normal.y = n.y;
         pVertices[3].normal.z = 0.0f;
@@ -659,7 +660,6 @@ void ws_update_culling()
 void ws_draw_walls()
 {
     auto hwalls = horizwall;
-    auto vwalls = (ws_ao_enabled || ws_deferred_enabled) ? horizwall : vertwall;
 
     for (int x = ws_culled_rect[0]; x <= ws_culled_rect[2]; ++x)
     {
@@ -673,7 +673,9 @@ void ws_draw_walls()
                     if (is_door_at(x, y))
                         w = DOORWALL + 3;
                     else
+                    {
                         w = hwalls[w & 63];
+                    }
                     ws_draw_wall((float)x, (float)y, SOUTH, w, false,
                         wall_at(x - 1, y) ? 1 : (wall_at(x - 1, y - 1) ? 0 : -1),
                         wall_at(x + 1, y) ? 1 : (wall_at(x + 1, y - 1) ? 0 : -1));
@@ -683,7 +685,11 @@ void ws_draw_walls()
                     if (is_door_at(x, y))
                         w = DOORWALL + 2;
                     else
+                    {
+                        auto vwalls = (ws_ao_enabled || ws_deferred_enabled) ? horizwall : vertwall;
+                        if (w == ELEVATORTILE) vwalls = vertwall;
                         w = vwalls[w & 63];
+                    }
                     ws_draw_wall((float)x, (float)y + 1.0f, EAST, w, false,
                         wall_at(x, y + 1) ? 1 : (wall_at(x - 1, y + 1) ? 0 : -1),
                         wall_at(x, y - 1) ? 1 : (wall_at(x - 1, y - 1) ? 0 : -1));
@@ -703,7 +709,11 @@ void ws_draw_walls()
                     if (is_door_at(x, y))
                         w = DOORWALL + 2;
                     else
+                    {
+                        auto vwalls = (ws_ao_enabled || ws_deferred_enabled) ? horizwall : vertwall;
+                        if (w == ELEVATORTILE) vwalls = vertwall;
                         w = vwalls[w & 63];
+                    }
                     ws_draw_wall((float)x + 1.0f, (float)y, WEST, w, false,
                         wall_at(x, y - 1) ? 1 : (wall_at(x + 1, y - 1) ? 0 : -1),
                         wall_at(x, y + 1) ? 1 : (wall_at(x + 1, y + 1) ? 0 : -1));
@@ -753,6 +763,8 @@ void ws_draw_walls()
     // Push walls
     if (pwallstate)
     {
+        auto vwalls = (ws_ao_enabled || ws_deferred_enabled) ? horizwall : vertwall;
+
         float percent = (float)pwallpos / 64.0f;
         const float DIROFS[4][2] = {
             {0.0f, -1.0f},

@@ -203,22 +203,17 @@ void ws_resize_gbuffer(ws_GBuffer &gbuffer, int w, int h)
 
 void ws_draw_pointlight(const ws_PointLight& pointLight)
 {
-    //auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
-    //float v = (float)(ws_screen_h - statusLineH) / (float)ws_screen_h;
-
+    // Update uniforms
     static auto LightPosition_uniform = glGetUniformLocation(ws_resources.programPointlightP, "LightPosition");
     static auto LightRadius_uniform = glGetUniformLocation(ws_resources.programPointlightP, "LightRadius");
     static auto LightIntensity_uniform = glGetUniformLocation(ws_resources.programPointlightP, "LightIntensity");
     static auto LightColor_uniform = glGetUniformLocation(ws_resources.programPointlightP, "LightColor");
 
-    ws_Vector3 lpos = {pointLight.position.x, pointLight.position.y, pointLight.position.z * 1.2f};
+    ws_Vector3 lpos = {pointLight.position.x, pointLight.position.y, pointLight.position.z};
     glUniform3fv(LightPosition_uniform, 1, &lpos.x);
     glUniform1f(LightRadius_uniform, pointLight.radius);
     glUniform1f(LightIntensity_uniform, pointLight.intensity);
     glUniform4fv(LightColor_uniform, 1, &pointLight.color.r);
 
     glDrawArrays(GL_TRIANGLES, 0, WS_SPHERE_VERT_COUNT);
-
-    //ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, 1, 1, 1 - v, pointLight.color);
-    //ws_draw_ptc(ws_resources.pPTCVertices, 4, GL_QUADS);
 }

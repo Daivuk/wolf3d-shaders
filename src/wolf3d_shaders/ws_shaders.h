@@ -118,7 +118,7 @@ static const char *PNTC_GBUFFER_VERT =
 
 "void main()"
 "{"
-"   gl_Position = ProjMtx * vec4(vec3(Position.xy, Position.z*1.2), 1);"
+"   gl_Position = ProjMtx * vec4(vec3(Position.xy, Position.z), 1);"
 "   Frag_Normal = Normal;"
 "   Frag_TexCoord = TexCoord;"
 "   Frag_Color = Color;"
@@ -179,7 +179,6 @@ static const char *PTC_POINTLIGHT_FRAG =
 "void main()"
 "{"
 "   vec2 texCoord = Frag_Position.xy / Frag_Position.w * 0.5 + 0.5;"
-"   texCoord.y = 1 - ((1 - texCoord.y) * 160 / 200);"
 "   gl_FragColor = vec4(texCoord, 0, 1);"
 "   vec4 gAlbeo = texture2D(AlbeoTexture, texCoord);"
 "   vec4 gNormal = texture2D(NormalTexture, texCoord);"

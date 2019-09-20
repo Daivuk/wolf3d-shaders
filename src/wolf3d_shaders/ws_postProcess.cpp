@@ -48,12 +48,11 @@ static double gray(double r, double g, double b)
 void ws_finish_draw_3d()
 {
     ws_flush();
-    glScissor(0, 0, ws_screen_w, ws_screen_h);
-    glViewport(0, 0, ws_screen_w, ws_screen_h);
+
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glPolygonMode(GL_FRONT, GL_FILL);
+    glDisable(GL_BLEND);
 
     // Update render ticks
     static auto lastTime = std::chrono::high_resolution_clock::now();
@@ -67,131 +66,118 @@ void ws_finish_draw_3d()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.hdrRT.frameBuffer);
 
-        auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
-        float v = (float)(ws_screen_h - statusLineH) / (float)ws_screen_h;
-
-        ws_matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, -999, 999);
+        ws_matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_3d_w, (float)ws_3d_h, 0, -999, 999);
         {
             glUseProgram(ws_resources.programPTC);
             auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
             glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
         }
-        glViewport(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
 
         ws_prepare_for_ptc(GL_QUADS);
-        glEnable(GL_TEXTURE_2D);
-        glDisable(GL_BLEND);
-        glDisable(GL_DEPTH_TEST);
 
         // Ambient
         glBindTexture(GL_TEXTURE_2D, ws_gbuffer.albeoHandle);
-        ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h - (float)statusLineH, 0, 1, 1, 1 - v, ws_ambient_color);
-        ws_draw_ptc(ws_resources.pPTCVertices, 4, GL_QUADS);
+        ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)ws_3d_w, (float)ws_3d_h, 0, 1, 1, 0, ws_ambient_color);
+        ws_flush();
 
         // Lights
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        glDisable(GL_TEXTURE_2D);
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE); // We accumulate lights with ADD
+            glDisable(GL_TEXTURE_2D);
 
-        glUseProgram(ws_resources.programPointlightP);
-        glBindBuffer(GL_ARRAY_BUFFER, ws_resources.sphereVB);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (float *)(uintptr_t)(0));
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
-        glDepthFunc(GL_GREATER);
-        glDepthMask(GL_FALSE);
-        glEnableVertexAttribArray(0); // pos
-        glDisableVertexAttribArray(1);
-        glDisableVertexAttribArray(2);
-        glDisableVertexAttribArray(3);
+            glUseProgram(ws_resources.programPointlightP);
+            glBindBuffer(GL_ARRAY_BUFFER, ws_resources.sphereVB);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (float *)(uintptr_t)(0));
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);
+            glDepthFunc(GL_GREATER);
+            glDepthMask(GL_FALSE);
+            glEnableVertexAttribArray(0); // pos
+            glDisableVertexAttribArray(1);
+            glDisableVertexAttribArray(2);
+            glDisableVertexAttribArray(3);
 
-        auto InvProjMtx = ws_matrix3D.Invert().Transpose();
-        {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "InvProjMtx");
-            glUniformMatrix4fv(uniform, 1, GL_FALSE, &InvProjMtx._11);
-        }
-        {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "AlbeoTexture");
-            glUniform1i(uniform, 0);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, ws_gbuffer.albeoHandle);
-        }
-        {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "NormalTexture");
-            glUniform1i(uniform, 1);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, ws_gbuffer.normalHandle);
-        }
-        {
-            static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "DepthTexture");
-            glUniform1i(uniform, 2);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, ws_gbuffer.depthHandle);
-        }
+            auto InvProjMtx = ws_matrix3D.Invert().Transpose();
+            {
+                static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "InvProjMtx");
+                glUniformMatrix4fv(uniform, 1, GL_FALSE, &InvProjMtx._11);
+            }
+            {
+                static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "AlbeoTexture");
+                glUniform1i(uniform, 0);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, ws_gbuffer.albeoHandle);
+            }
+            {
+                static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "NormalTexture");
+                glUniform1i(uniform, 1);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, ws_gbuffer.normalHandle);
+            }
+            {
+                static auto uniform = glGetUniformLocation(ws_resources.programPointlightP, "DepthTexture");
+                glUniform1i(uniform, 2);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, ws_gbuffer.depthHandle);
+            }
 
-        glUniformMatrix4fv(glGetUniformLocation(ws_resources.programPointlightP, "ProjMtx"), 1, GL_FALSE, &ws_matrix3D._11);
-        ws_player_light.position = { (float)player->x / 65536.f, 64.0f - (float)player->y / 65536.f, 0.5f };
-        ws_draw_pointlight(ws_player_light);
+            glUniformMatrix4fv(glGetUniformLocation(ws_resources.programPointlightP, "ProjMtx"), 1, GL_FALSE, &ws_matrix3D._11);
 
-        // Other lights
-        for (auto& light : ws_active_lights)
-        {
-            ws_draw_pointlight(light);
+            // Player light
+            ws_player_light.position = { (float)player->x / 65536.f, 64.0f - (float)player->y / 65536.f, 0.5f };
+            ws_draw_pointlight(ws_player_light);
+
+            // Other lights
+            for (auto& light : ws_active_lights)
+            {
+                ws_draw_pointlight(light);
+            }
         }
 
         // Draw HDR image
         {
             glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
-            glEnable(GL_TEXTURE_2D);
             glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_TRUE);
             glDepthFunc(GL_LESS);
             glDisable(GL_BLEND);
             glDisable(GL_CULL_FACE);
             glCullFace(GL_BACK);
-            glActiveTexture(GL_TEXTURE0);
-            glUseProgram(ws_resources.programPTC);
-            glEnableVertexAttribArray(0); // pos
-            glEnableVertexAttribArray(1); // texcoord
-            glEnableVertexAttribArray(2); // color
-            glDisableVertexAttribArray(3);
-            glViewport(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
 
-            glBindTexture(GL_TEXTURE_2D, ws_resources.hdrRT.handle);
+            ws_draw_mode = -1;
+            ws_prepare_for_ptc(GL_QUADS);
             glUseProgram(ws_resources.programHDRPTC);
 
             static auto projUniform = glGetUniformLocation(ws_resources.programHDRPTC, "ProjMtx");
             static auto lumMultiplierUniform = glGetUniformLocation(ws_resources.programHDRPTC, "LumMultiplier");
             glUniformMatrix4fv(projUniform, 1, GL_FALSE, &ws_matrix2D._11);
             glUniform1f(lumMultiplierUniform, ws_hdr_multiplier);
-            
-            ws_ptc_count = ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h, 0, 1, 1, 0, { 1, 1, 1, 1 });
-            ws_draw_ptc(ws_resources.pPTCVertices, ws_ptc_count, GL_QUADS);
-            ws_ptc_count = 0;
 
-            // Gun and more UI will be draw after, revert some states
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_BLEND);
-            glUseProgram(ws_resources.programPTC);
+            glEnable(GL_TEXTURE_2D);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, ws_resources.hdrRT.handle);
+            ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)ws_3d_w, (float)ws_3d_h, 0, 1, 1, 0, { 1, 1, 1, 1 });
+            ws_flush();
+        }
 
-            // Draw into last frame so we can adjust HDR on next frame
+        // Draw into last frame so we can adjust HDR on next frame
+        {
             glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.lastFrameRT.frameBuffer);
             glBindTexture(GL_TEXTURE_2D, ws_resources.mainRT.handle);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glGenerateMipmap(GL_TEXTURE_2D);
             glViewport(0, 0, 4, 4);
-            ws_ptc_count = ws_draw_rect(ws_resources.pPTCVertices, 0, 0, (float)ws_screen_w, (float)ws_screen_h, 0, 1, 1, 0, { 1, 1, 1, 1 });
-            ws_draw_ptc(ws_resources.pPTCVertices, ws_ptc_count, GL_QUADS);
-            ws_ptc_count = 0;
-
-            glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
-            glViewport(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
+            ws_draw_mode = -1;
+            ws_prepare_for_ptc(GL_QUADS);
+            ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)ws_3d_w, (float)ws_3d_h, 0, 1, 1, 0, { 1, 1, 1, 1 });
+            ws_flush();
+            glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.uiRT.frameBuffer);
 
             // Calculate lum multiplier for HDR based on last rendered frame
             {
-                glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, ws_resources.lastFrameRT.handle);
                 byte lumData[4 * 16];
                 glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, lumData);
@@ -224,33 +210,23 @@ void ws_finish_draw_3d()
                 }
             }
         }
-
-        // Go back to our 2D frame buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glViewport(0, 0, ws_screen_w, ws_screen_h);
-
-        ws_matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)1024, (float)640, 0, -999, 999);
-        {
-            glUseProgram(ws_resources.programPC);
-            auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
-            glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
-        }
-        {
-            glUseProgram(ws_resources.programPTC);
-            auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
-            glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
-        }
     }
-    else
+
+    // Go back to our UI frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.uiRT.frameBuffer);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glViewport(0, 0, MaxX, MaxY);
+
+    ws_matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)MaxX, (float)MaxY, 0, -999, 999);
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
+        glUseProgram(ws_resources.programPC);
+        auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
     }
-
-    // Draw crosshair
-    //ws_prepare_for_pc(GL_LINES);
-    //ws_pc_count += ws_draw_line(ws_resources.pPCVertices + ws_pc_count, { 512, 260 - 10 }, { 512, 260 + 1000 }, { 1, 1, 1, 1 });
-    //ws_pc_count += ws_draw_line(ws_resources.pPCVertices + ws_pc_count, { 512 - 10, 260 }, { 512 + 10, 260 }, { 1, 1, 1, 1 });
-    //ws_flush();
+    {
+        glUseProgram(ws_resources.programPTC);
+        auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
+    }
 }

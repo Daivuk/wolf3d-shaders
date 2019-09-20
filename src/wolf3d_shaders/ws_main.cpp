@@ -35,7 +35,8 @@ void wolf3d_shutdown();
 int16_t ws_argc; // global arguments. this is referenced a bit everywhere
 char **ws_argv;
 
-int ws_screen_w = 1024, ws_screen_h = 640;
+int ws_screen_w = 1024, ws_screen_h = 768;
+int ws_3d_w = 0, ws_3d_h = 0;
 SDL_Window *sdlWindow;
 int lastMouse[2] = { 0 };
 int curMouse[2] = { 0 };
@@ -43,6 +44,7 @@ bool mouseInitialized = false;
 int16_t mouseButtons = 0;
 float ws_dt = 0.0f;
 float ws_rdt = 0.0f;
+ws_Matrix ws_ui_matrix;
 ws_Matrix ws_matrix2D;
 ws_Matrix ws_matrix3D;
 ws_Vector3 ws_cam_eye;
@@ -223,6 +225,9 @@ int main(int argc, char **argv)
     SDL_PauseAudio(0);
 
     // Init main ws_resources
+    ws_3d_w = ws_screen_w;
+    ws_3d_h = ws_screen_h - ws_get_statusline_height();
+
     ws_resources.programPC = ws_create_program(PC_VERT, PC_FRAG, {"Position", "Color"});
     ws_resources.programPTC = ws_create_program(PTC_VERT, PTC_FRAG, {"Position", "TexCoord", "Color"});
     ws_resources.programPNTC = ws_create_program(PNTC_VERT, PNTC_FRAG, {"Position", "Normal", "TexCoord", "Color"});
@@ -233,11 +238,12 @@ int main(int argc, char **argv)
     ws_resources.pPCVertices = new ws_VertexPC[MAX_VERTICES];
     ws_resources.pPTCVertices = new ws_VertexPTC[MAX_VERTICES];
     ws_resources.pPNTCVertices = new ws_VertexPNTC[MAX_VERTICES];
-    ws_resources.mainRT = ws_create_main_rt(ws_screen_w, ws_screen_h);
-    ws_resources.hdrRT = ws_create_hdr_rt(ws_screen_w, ws_screen_h);
+    ws_resources.uiRT = ws_create_rt(MaxX, MaxY);
+    ws_resources.mainRT = ws_create_main_rt(ws_3d_w, ws_3d_h);
+    ws_resources.hdrRT = ws_create_hdr_rt(ws_3d_w, ws_3d_h);
     ws_resources.lastFrameRT = ws_create_rt(4, 4);
     ws_resources.sphereVB = ws_create_sphere();
-    ws_gbuffer = ws_create_gbuffer(ws_screen_w, ws_screen_h);
+    ws_gbuffer = ws_create_gbuffer(ws_3d_w, ws_3d_h);
 
     srand(0);
     uint32_t checkerBytes[] = {0xFF880088, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF880088};
@@ -593,9 +599,12 @@ void ws_update_sdl()
                 {
                     ws_screen_w = event.window.data1;
                     ws_screen_h = event.window.data2;
-                    ws_resize_main_rt(ws_resources.mainRT, ws_screen_w, ws_screen_h);
-                    ws_resize_hdr_rt(ws_resources.hdrRT, ws_screen_w, ws_screen_h);
-                    ws_resize_gbuffer(ws_gbuffer, ws_screen_w, ws_screen_h);
+                    ws_3d_w = ws_screen_w;
+                    ws_3d_h = ws_screen_h - ws_get_statusline_height();
+                    auto lineh = ws_get_statusline_height();
+                    ws_resize_main_rt(ws_resources.mainRT, ws_3d_w, ws_3d_h);
+                    ws_resize_hdr_rt(ws_resources.hdrRT, ws_3d_w, ws_3d_h);
+                    ws_resize_gbuffer(ws_gbuffer, ws_3d_w, ws_3d_h);
                     break;
                 }
                 default: break;
@@ -604,8 +613,6 @@ void ws_update_sdl()
         }
     }
     // SDL_UnlockAudio();
-
-    ws_ui_scale = (float)640 / (float)MaxY;
 
     // Update ticks
     static auto lastTime = std::chrono::high_resolution_clock::now();
@@ -616,7 +623,6 @@ void ws_update_sdl()
     static long long curStep = 0;
     curStep += std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     lastTime = curTime;
-
     while (curStep >= TARGET_FPS)
     {
         curStep -= TARGET_FPS;
@@ -625,7 +631,7 @@ void ws_update_sdl()
 
     if (ws_debug_view_enabled && camControl)
     {
-        // Update camera crap
+        // Update free camera movement
         ws_cam_front.x = sinf(freecamAngleZ * (float)M_PI / 180.0f) * cosf(freecamAngleX * (float)M_PI / 180.0f);
         ws_cam_front.y = cosf(freecamAngleZ * (float)M_PI / 180.0f) * cosf(freecamAngleX * (float)M_PI / 180.0f);
         ws_cam_front.z = sinf(freecamAngleX * (float)M_PI / 180.0f);
@@ -654,73 +660,102 @@ void ws_update_sdl()
             freecamPos -= ws_Vector3(0, 0, 1.0f) * moveSpeed;
     }
 
+    // Screen flashes
     ws_save_flash_anim = std::max(0.0f, ws_save_flash_anim - ws_dt * 2.0f);
     ws_bonus_flash = std::max(0.0f, ws_bonus_flash - ws_dt * 2.0f);
     ws_damage_flash = std::max(0.0f, ws_damage_flash - ws_dt * 2.0f);
+}
+
+void VGAClearScreen()
+{
+    // This punches a whole inside the UI render target so we can render 3D
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(0, STATUSLINES, MaxX, MaxY - STATUSLINES);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_SCISSOR_TEST);
 }
 
 void VW_UpdateScreen()
 {
     ws_flush();
 
-    // Draw game
-    ws_pc_count = 0;
-    ws_ptc_count = 0;
-    ws_pntc_count = 0;
+    // Calculate our overlay flash color (When picking up powerups or taking damage)
+    auto bonusFlash = fabsf(sinf(ws_bonus_flash * 5.0f)) / (3.0f - ws_bonus_flash * 3.0f + 1.0f);
+    ws_Color flashColor = {
+        (1 + ws_save_flash_anim + bonusFlash * 0.75f) * (1.0f - ws_damage_flash) + ws_damage_flash,
+        (1 + ws_save_flash_anim + bonusFlash * 1.0f) * (1.0f - ws_damage_flash),
+        (1 + ws_save_flash_anim + bonusFlash * 1.25f) * (1.0f - ws_damage_flash),
+        1
+    };
+
+    // Prepare the main OpenGL framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_BLEND);
     glViewport(0, 0, ws_screen_w, ws_screen_h);
 
-    ws_matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h, 0, -999, 999);
+    // Render the final 3D image
     {
-        glUseProgram(ws_resources.programPC);
-        auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
-    }
-    {
+        auto transform = ws_Matrix::CreateOrthographicOffCenter(0, (float)ws_screen_w, (float)ws_screen_h, 0, -999, 999);
         glUseProgram(ws_resources.programPTC);
-        auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
+        static auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &transform._11);
+
+        ws_prepare_for_ptc(GL_QUADS);
+        glBindTexture(GL_TEXTURE_2D, ws_resources.mainRT.handle);
+        ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)ws_3d_w, (float)ws_3d_h, 0, 1, 1, 0, flashColor);
+        ws_flush();
     }
 
-    ws_prepare_for_ptc(GL_QUADS);
-    auto bonusFlash = fabsf(sinf(ws_bonus_flash * 5.0f)) / (3.0f - ws_bonus_flash * 3.0f + 1.0f);
-    ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)ws_screen_w, (float)ws_screen_h, 0, 1, 1, 0,
-        { (1 + ws_save_flash_anim + bonusFlash * 0.75f) * (1.0f - ws_damage_flash) + ws_damage_flash,
-          (1 + ws_save_flash_anim + bonusFlash * 1.0f) * (1.0f - ws_damage_flash),
-          (1 + ws_save_flash_anim + bonusFlash * 1.25f) * (1.0f - ws_damage_flash),
-          fade_val });
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, ws_resources.mainRT.handle);
-    ws_draw_ptc(ws_resources.pPTCVertices, ws_ptc_count, GL_QUADS);
+    // Draw UI
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBindTexture(GL_TEXTURE_2D, ws_resources.uiRT.handle);
+        auto ratio = (float)ws_screen_h / (float)240; // We don't use MaxY here because it's 40 Pixels more
+        auto w = (float)MaxX * ratio;
+        auto left = ((float)ws_screen_w - w) / 2.0f;
+        auto right = left + w;
+        ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, left, (float)ws_screen_h, 0, 1, 0, 0, flashColor);
+        ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, left, 0, w, (float)ws_screen_h, 0, 1, 1, 0, flashColor);
+        ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, right, 0, (float)ws_screen_w - right, (float)ws_screen_h, 1, 1, 1, 0, flashColor);
+        ws_flush();
+    }
 
-    ws_do_tools();
+    // Draw imgui tools on top of everything
+    {
+        ws_do_tools();
+    }
+
+    // Draw the fade on top of everything
+    ws_prepare_for_pc(GL_QUADS);
+    ws_pc_count += ws_draw_rect(ws_resources.pPCVertices + ws_pc_count, 0, 0, (float)ws_screen_w, (float)ws_screen_h, { 0, 0, 0, 1 - fade_val });
+    ws_flush();
 
     // Swap buffers
     SDL_GL_SwapWindow(sdlWindow);
 
-    // Go back to our 2D frame buffer
-    glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
+    // Go back to our UI frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.uiRT.frameBuffer);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glViewport(0, 0, ws_screen_w, ws_screen_h);
+    glViewport(0, 0, MaxX, MaxY);
 
-    ws_matrix2D = ws_Matrix::CreateOrthographicOffCenter(0, (float)1024, (float)640, 0, -999, 999);
+    ws_ui_matrix = ws_Matrix::CreateOrthographicOffCenter(0, (float)MaxX, (float)MaxY, 0, -999, 999);
     {
         glUseProgram(ws_resources.programPC);
         auto uniform = glGetUniformLocation(ws_resources.programPC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_ui_matrix._11);
     }
     {
         glUseProgram(ws_resources.programPTC);
         auto uniform = glGetUniformLocation(ws_resources.programPTC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix2D._11);
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_ui_matrix._11);
     }
 
     ws_pc_count = 0;
@@ -729,18 +764,6 @@ void VW_UpdateScreen()
     ws_draw_mode = -1;
     ws_draw_mode_prim = 0;
     ws_current_3d_texture = 0;
-}
-
-void VGAClearScreen(void)
-{
-    auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
-
-    glEnable(GL_SCISSOR_TEST);
-    glClearColor(0, 0, 0, 1);
-    glScissor(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glScissor(0, 0, ws_screen_w, ws_screen_h);
-    glDisable(GL_SCISSOR_TEST);
 }
 
 int palidx = 0;
@@ -808,11 +831,39 @@ void setvect(int16_t r_num, Interrupt interrupt)
     }
 }
 
+void ws_begin_draw_3d()
+{
+    ws_flush();
+
+    if (ws_deferred_enabled)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, ws_gbuffer.frameBuffer);
+        GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+        glDrawBuffers(3, buffers);
+        glUseProgram(ws_resources.programGBufferPNTC);
+
+        auto uniform = glGetUniformLocation(ws_resources.programGBufferPNTC, "ProjMtx");
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix3D._11);
+        ws_active_lights.clear();
+    }
+    else
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
+        glUseProgram(ws_resources.programPNTC);
+        auto uniform = glGetUniformLocation(ws_resources.programPNTC, "ProjMtx");
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix3D._11);
+    }
+
+    glEnable(GL_CULL_FACE);
+    glPolygonMode(GL_FRONT, ws_wireframe_enabled ? GL_LINE : GL_FILL);
+    glViewport(0, 0, ws_3d_w, ws_3d_h);
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
 void ws_update_camera()
 {
-    auto statusLineH = (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
-
-    auto proj = ws_Matrix::CreatePerspectiveFieldOfView(60.0f * (float)M_PI / 180.0f, (float)ws_screen_w / ((float)ws_screen_h - (float)statusLineH), 0.01f, 1000.0f);
+    auto proj = ws_Matrix::CreatePerspectiveFieldOfView(56.0f * (float)M_PI / 180.0f, (float)ws_3d_w / (float)ws_3d_h, 0.01f, 1000.0f);
 
     if (ws_debug_view_enabled)
     {
@@ -832,13 +883,12 @@ void ws_update_camera()
         float px = (float)player->x / 65536.0f;
         float py = (float)player->y / 65536.0f;
 
-        ws_cam_front = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
         ws_cam_front = ws_Vector3(vcos, vsin, 0.0f);
         ws_cam_front.Normalize();
         ws_cam_right = { ws_cam_front.y, -ws_cam_front.x, 0.0f };
         ws_cam_right.Normalize();
-        ws_cam_eye = ws_Vector3(px, 64.0f - py, 0.5f * 1.2f);
-        ws_cam_target = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f * 1.2f);
+        ws_cam_eye = ws_Vector3(px, 64.0f - py, WS_WALL_HEIGHT * 0.5f);
+        ws_cam_target = ws_Vector3(px + vcos, 64.0f - (py - vsin), WS_WALL_HEIGHT * 0.5f);
 
         // Update freecam so if we switch we're at the player's position
         freecamPos = ws_cam_eye;
@@ -855,35 +905,6 @@ void ws_update_camera()
         ws_cam_target,
         ws_Vector3(0.0f, 0.0f, 1.0f));
     ws_matrix3D = view * proj;
-
-    ws_flush();
-
-    if (ws_deferred_enabled)
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, ws_gbuffer.frameBuffer);
-        GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-        glDrawBuffers(3, buffers);
-        glUseProgram(ws_resources.programGBufferPNTC);
-        auto uniform = glGetUniformLocation(ws_resources.programGBufferPNTC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix3D._11);
-        ws_active_lights.clear();
-    }
-    else
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, ws_resources.mainRT.frameBuffer);
-        glUseProgram(ws_resources.programPNTC);
-        auto uniform = glGetUniformLocation(ws_resources.programPNTC, "ProjMtx");
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &ws_matrix3D._11);
-    }
-
-    glEnable(GL_SCISSOR_TEST);
-    glEnable(GL_CULL_FACE);
-    glPolygonMode(GL_FRONT, ws_wireframe_enabled ? GL_LINE : GL_FILL);
-    glScissor(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
-    glViewport(0, statusLineH, ws_screen_w, ws_screen_h - statusLineH);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(0, 0, 0, 1);
 }
 
 void Mouse(int16_t x)
@@ -899,4 +920,9 @@ void Mouse(int16_t x)
     {
         _BX = mouseButtons;
     }
+}
+
+int ws_get_statusline_height()
+{
+    return (int)((float)STATUSLINES * ((float)ws_screen_h / 200.0f));
 }

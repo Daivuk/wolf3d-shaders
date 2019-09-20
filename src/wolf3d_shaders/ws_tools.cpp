@@ -109,13 +109,13 @@ static void tool_rendering()
     ImGui::Checkbox("Sprites", &ws_sprite_enabled);
     if (ImGui::CollapsingHeader("Ambient Occlusion"))
     {
-        ImGui::Checkbox("Enabled", &ws_ao_enabled);
-        ImGui::SliderFloat("Amount", &ws_ao_amount, 0.0f, 1.0f);
-        ImGui::SliderFloat("Size", &ws_ao_size, 0.0f, 0.5f);
+        ImGui::Checkbox("Enabled##AO", &ws_ao_enabled);
+        ImGui::SliderFloat("Amount##AO", &ws_ao_amount, 0.0f, 1.0f);
+        ImGui::SliderFloat("Size##AO", &ws_ao_size, 0.0f, 0.5f);
     }
     if (ImGui::CollapsingHeader("Deferred Shading"))
     {
-        ImGui::Checkbox("Enabled", &ws_deferred_enabled);
+        ImGui::Checkbox("Enabled##DS", &ws_deferred_enabled);
         ImGui::ColorEdit3("Ambient Color", &ws_ambient_color.r);
         tool_pointlight("Player Light", ws_player_light);
     }
@@ -140,16 +140,6 @@ static void tool_sprites()
         auto& pic = ws_sprite_textures[(int16_t)ws_selected_sprite];
 
         ImGui::LabelText("ID", "%i", sprite.id);
-
-        {
-            auto window = ImGui::GetCurrentWindow();
-            auto cur = window->DC.CursorPos;
-            ImGui::Image(&pic.tex, { (float)pic.w * spriteScale, (float)pic.h * spriteScale });
-            window->DrawList->AddRect(
-                { cur.x + (float)sprite.clip[0] * spriteScale, cur.y + (float)sprite.clip[1] * spriteScale },
-                { cur.x + (float)sprite.clip[2] * spriteScale, cur.y + (float)sprite.clip[3] * spriteScale },
-                0xFF0000FF);
-        }
         if (ImGui::Button("Copy"))
         {
             ws_sprite_settings_clipboard = sprite;
@@ -161,10 +151,56 @@ static void tool_sprites()
             sprite = ws_sprite_settings_clipboard;
             sprite.id = id;
         }
+        ImGui::Separator();
+
+        {
+            auto window = ImGui::GetCurrentWindow();
+            auto cur = window->DC.CursorPos;
+            ImGui::Image(&pic.tex, { (float)pic.w * spriteScale, (float)pic.h * spriteScale });
+            //if (ImGui::IsItemClicked())
+            //{
+            //    auto mouse = ImGui::GetMousePos();
+            //    auto picX = (int)((mouse.x - cur.x) / spriteScale);
+            //    auto picY = (int)((mouse.y - cur.y) / spriteScale);
+            //    if (picX >= 0 && picX < 64 && picY >= 0 && picY < 64)
+            //    {
+            //        auto colId = pic.originalData[picY * 64 + picX];
+            //        bool alreadyPicked = false;
+            //        for (auto otherCol : sprite.transparents) alreadyPicked |= otherCol == colId;
+            //        if (!alreadyPicked)
+            //        {
+            //            sprite.transparents.push_back(colId);
+            //            ws_refresh_sprite_texture(pic, sprite);
+            //        }
+            //    }
+            //}
+            window->DrawList->AddRect(
+                { cur.x + (float)sprite.clip[0] * spriteScale, cur.y + (float)sprite.clip[1] * spriteScale },
+                { cur.x + (float)sprite.clip[2] * spriteScale, cur.y + (float)sprite.clip[3] * spriteScale },
+                0xFF0000FF);
+        }
+
         ImGui::SliderInt("Left", &sprite.clip[0], 0, 64);
         ImGui::SliderInt("Top", &sprite.clip[1], 0, 64);
         ImGui::SliderInt("Right", &sprite.clip[2], 0, 64);
         ImGui::SliderInt("Bottom", &sprite.clip[3], 0, 64);
+
+        // Transparents
+        ImGui::Text("Transparent colors:");
+        for (auto it = sprite.transparents.begin(); it != sprite.transparents.end();)
+        {
+            auto col = *it;
+            if (ImGui::Button(("Remove##" + std::to_string(col)).c_str()))
+            {
+                it = sprite.transparents.erase(it);
+                ws_refresh_sprite_texture(pic, sprite);
+            }
+            else ++it;
+            ImGui::SameLine();
+            ImGui::Text(std::to_string(col).c_str());
+        }
+
+        ImGui::Separator();
         ImGui::DragFloat("Self Illum", &sprite.self_illumination, 0.01f, 0.0f, 1.0f, "%.2f");
         ImGui::Checkbox("Emit light", &sprite.emit_light);
         if (sprite.emit_light)
@@ -245,6 +281,7 @@ void ws_do_tools()
     auto pDrawData = ImGui::GetDrawData();
     auto cmdListCount = pDrawData->CmdListsCount;
     glEnable(GL_SCISSOR_TEST);
+    glScissor(0, 0, ws_screen_w, ws_screen_h);
     for (int i = 0; i < cmdListCount; ++i)
     {
         auto pCmdList = pDrawData->CmdLists[i];
@@ -295,5 +332,6 @@ void ws_do_tools()
         }
     }
     glDisable(GL_SCISSOR_TEST);
-    glScissor(0, 0, ws_screen_w, ws_screen_h);
+
+    ws_ptc_count = 0;
 }

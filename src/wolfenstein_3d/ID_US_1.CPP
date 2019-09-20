@@ -28,6 +28,8 @@
 
 #include "ID_HEADS.H"
 
+#include "ws.h"
+
 #pragma	hdrstop
 
 #pragma	warn	-pia
@@ -779,6 +781,7 @@ US_LineInput(int16_t x,int16_t y,char *buf,char *def,_boolean escok,
 			USL_XORICursor(x,y,s,cursor);
 
 		VW_UpdateScreen();
+        ws_update_sdl();
 	}
 
 	if (cursorvis)

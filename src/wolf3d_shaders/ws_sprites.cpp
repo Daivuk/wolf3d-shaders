@@ -64,7 +64,7 @@ void ws_draw_sprite(int x, int y, int texture)
                     }
                     if (lightVisible)
                     {
-                        light.position = ws_Vector3(xf, yf, light.position.z) + ws_cam_right * light.position.x - ws_cam_front_flat * light.position.y;
+                        light.position = ws_Vector3(xf, yf, light.position.z * WS_WALL_HEIGHT) + ws_cam_right * light.position.x - ws_cam_front_flat * light.position.y;
                         ws_active_lights.push_back(light);
                     }
                 }
@@ -87,28 +87,28 @@ void ws_draw_sprite(int x, int y, int texture)
 
     pVertices[0].position.x = xf + ws_cam_right.x * clipf[0];
     pVertices[0].position.y = yf + ws_cam_right.y * clipf[0];
-    pVertices[0].position.z = 1.0f - clipf[1];
+    pVertices[0].position.z = WS_WALL_HEIGHT - clipf[1] * WS_WALL_HEIGHT;
     pVertices[0].normal = -ws_cam_front - ws_cam_right + ws_Vector3::UnitZ;
     pVertices[0].texCoord = { clipf[0], clipf[1] };
     pVertices[0].color = { 1, 1, 1, 1 };
 
     pVertices[1].position.x = xf + ws_cam_right.x * clipf[0];
     pVertices[1].position.y = yf + ws_cam_right.y * clipf[0];
-    pVertices[1].position.z = 1.0f - clipf[3];
+    pVertices[1].position.z = WS_WALL_HEIGHT - clipf[3] * WS_WALL_HEIGHT;
     pVertices[1].normal = -ws_cam_front - ws_cam_right - ws_Vector3::UnitZ * .1f;
     pVertices[1].texCoord = { clipf[0], clipf[3] };
     pVertices[1].color = { 1, 1, 1, 1 };
 
     pVertices[2].position.x = xf + ws_cam_right.x * clipf[2];
     pVertices[2].position.y = yf + ws_cam_right.y * clipf[2];
-    pVertices[2].position.z = 1.0f - clipf[3];
+    pVertices[2].position.z = WS_WALL_HEIGHT - clipf[3] * WS_WALL_HEIGHT;
     pVertices[2].normal = -ws_cam_front + ws_cam_right - ws_Vector3::UnitZ * .1f;
     pVertices[2].texCoord = { clipf[2], clipf[3] };
     pVertices[2].color = { 1, 1, 1, 1 };
 
     pVertices[3].position.x = xf + ws_cam_right.x * clipf[2];
     pVertices[3].position.y = yf + ws_cam_right.y * clipf[2];
-    pVertices[3].position.z = 1.0f - clipf[1];
+    pVertices[3].position.z = WS_WALL_HEIGHT - clipf[1] * WS_WALL_HEIGHT;
     pVertices[3].normal = -ws_cam_front + ws_cam_right + ws_Vector3::UnitZ;
     pVertices[3].texCoord = { clipf[2], clipf[1] };
     pVertices[3].color = { 1, 1, 1, 1 };

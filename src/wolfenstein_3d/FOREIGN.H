@@ -16,6 +16,7 @@
 #define STR_NG	"New Game"
 #define	STR_SD	"Sound"
 #define	STR_CL	"Control"
+#define	STR_GR	"Graphics"
 #define	STR_LG	"Load Game"
 #define	STR_SG	"Save Game"
 #define	STR_CV	"Change View"
@@ -56,8 +57,12 @@
 #define	STR_DEATH	"I am Death incarnate!"
 
 #define	STR_MOUSEADJ	"Adjust Mouse Sensitivity"
+#define	STR_SND_VOL	"Adjust Sound Volume"
+#define	STR_MUSIC_VOL	"Adjust Music Volume"
 #define STR_SLOW	"Slow"
 #define STR_FAST	"Fast"
+#define STR_MUTE	"Mute"
+#define STR_LOUD	"Loud"
 
 #define	STR_CRUN	"Run"
 #define STR_COPEN	"Open"

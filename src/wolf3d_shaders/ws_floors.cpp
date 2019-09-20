@@ -15,7 +15,7 @@ void ws_draw_ceiling(int x, int y, int color, bool* neighbors)
     {
         pVertices[0].position.x = xf;
         pVertices[0].position.y = yf;
-        pVertices[0].position.z = 1.0f;
+        pVertices[0].position.z = WS_WALL_HEIGHT;
         pVertices[0].normal.x = 0;
         pVertices[0].normal.y = 0;
         pVertices[0].normal.z = -1;
@@ -24,7 +24,7 @@ void ws_draw_ceiling(int x, int y, int color, bool* neighbors)
 
         pVertices[1].position.x = xf;
         pVertices[1].position.y = yf + 1.0f;
-        pVertices[1].position.z = 1.0f;
+        pVertices[1].position.z = WS_WALL_HEIGHT;
         pVertices[1].normal.x = 0;
         pVertices[1].normal.y = 0;
         pVertices[1].normal.z = -1;
@@ -33,7 +33,7 @@ void ws_draw_ceiling(int x, int y, int color, bool* neighbors)
 
         pVertices[2].position.x = xf + 1.0f;
         pVertices[2].position.y = yf + 1.0f;
-        pVertices[2].position.z = 1.0f;
+        pVertices[2].position.z = WS_WALL_HEIGHT;
         pVertices[2].normal.x = 0;
         pVertices[2].normal.y = 0;
         pVertices[2].normal.z = -1;
@@ -42,7 +42,7 @@ void ws_draw_ceiling(int x, int y, int color, bool* neighbors)
 
         pVertices[3].position.x = xf + 1.0f;
         pVertices[3].position.y = yf;
-        pVertices[3].position.z = 1.0f;
+        pVertices[3].position.z = WS_WALL_HEIGHT;
         pVertices[3].normal.x = 0;
         pVertices[3].normal.y = 0;
         pVertices[3].normal.z = -1;
@@ -74,90 +74,90 @@ void ws_draw_ceiling(int x, int y, int color, bool* neighbors)
             pVertices[i].texCoord = { 0, 0 }; // no textures on ceiling
         }
 
-        pVertices[0].position = { xf + ws_ao_size, yf, 1.0f };
-        pVertices[1].position = { xf, yf, 1.0f };
-        pVertices[2].position = { xf, yf + ws_ao_size, 1.0f };
-        pVertices[3].position = { xf + ws_ao_size, yf + ws_ao_size, 1.0f };
+        pVertices[0].position = { xf + ws_ao_size, yf, WS_WALL_HEIGHT };
+        pVertices[1].position = { xf, yf, WS_WALL_HEIGHT };
+        pVertices[2].position = { xf, yf + ws_ao_size, WS_WALL_HEIGHT };
+        pVertices[3].position = { xf + ws_ao_size, yf + ws_ao_size, WS_WALL_HEIGHT };
         pVertices[0].color = nCol[0];
         pVertices[1].color = nCol[7];
         pVertices[2].color = nCol[6];
         pVertices[3].color = col;
 
         pVertices += 4;
-        pVertices[0].position = { xf + ws_ao_size, yf, 1.0f };
-        pVertices[1].position = { xf + ws_ao_size, yf + ws_ao_size, 1.0f };
-        pVertices[2].position = { xf + invSize, yf + ws_ao_size, 1.0f };
-        pVertices[3].position = { xf + invSize, yf, 1.0f };
+        pVertices[0].position = { xf + ws_ao_size, yf, WS_WALL_HEIGHT };
+        pVertices[1].position = { xf + ws_ao_size, yf + ws_ao_size, WS_WALL_HEIGHT };
+        pVertices[2].position = { xf + invSize, yf + ws_ao_size, WS_WALL_HEIGHT };
+        pVertices[3].position = { xf + invSize, yf, WS_WALL_HEIGHT };
         pVertices[0].color = nCol[0];
         pVertices[1].color = col;
         pVertices[2].color = col;
         pVertices[3].color = nCol[0];
 
         pVertices += 4;
-        pVertices[0].position = { xf + invSize, yf, 1.0f };
-        pVertices[1].position = { xf + invSize, yf + ws_ao_size, 1.0f };
-        pVertices[2].position = { xf + 1, yf + ws_ao_size, 1.0f };
-        pVertices[3].position = { xf + 1, yf, 1.0f };
+        pVertices[0].position = { xf + invSize, yf, WS_WALL_HEIGHT };
+        pVertices[1].position = { xf + invSize, yf + ws_ao_size, WS_WALL_HEIGHT };
+        pVertices[2].position = { xf + 1, yf + ws_ao_size, WS_WALL_HEIGHT };
+        pVertices[3].position = { xf + 1, yf, WS_WALL_HEIGHT };
         pVertices[0].color = nCol[0];
         pVertices[1].color = col;
         pVertices[2].color = nCol[2];
         pVertices[3].color = nCol[1];
 
         pVertices += 4;
-        pVertices[0].position = { xf, yf + ws_ao_size, 1.0f };
-        pVertices[1].position = { xf, yf + invSize, 1.0f };
-        pVertices[2].position = { xf + ws_ao_size, yf + invSize, 1.0f };
-        pVertices[3].position = { xf + ws_ao_size, yf + ws_ao_size, 1.0f };
+        pVertices[0].position = { xf, yf + ws_ao_size, WS_WALL_HEIGHT };
+        pVertices[1].position = { xf, yf + invSize, WS_WALL_HEIGHT };
+        pVertices[2].position = { xf + ws_ao_size, yf + invSize, WS_WALL_HEIGHT };
+        pVertices[3].position = { xf + ws_ao_size, yf + ws_ao_size, WS_WALL_HEIGHT };
         pVertices[0].color = nCol[6];
         pVertices[1].color = nCol[6];
         pVertices[2].color = col;
         pVertices[3].color = col;
 
         pVertices += 4;
-        pVertices[0].position = { xf + ws_ao_size, yf + ws_ao_size, 1.0f };
-        pVertices[1].position = { xf + ws_ao_size, yf + invSize, 1.0f };
-        pVertices[2].position = { xf + invSize, yf + invSize, 1.0f };
-        pVertices[3].position = { xf + invSize, yf + ws_ao_size, 1.0f };
+        pVertices[0].position = { xf + ws_ao_size, yf + ws_ao_size, WS_WALL_HEIGHT };
+        pVertices[1].position = { xf + ws_ao_size, yf + invSize, WS_WALL_HEIGHT };
+        pVertices[2].position = { xf + invSize, yf + invSize, WS_WALL_HEIGHT };
+        pVertices[3].position = { xf + invSize, yf + ws_ao_size, WS_WALL_HEIGHT };
         pVertices[0].color = col;
         pVertices[1].color = col;
         pVertices[2].color = col;
         pVertices[3].color = col;
 
         pVertices += 4;
-        pVertices[0].position = { xf + invSize, yf + ws_ao_size, 1.0f };
-        pVertices[1].position = { xf + invSize, yf + invSize, 1.0f };
-        pVertices[2].position = { xf + 1, yf + invSize, 1.0f };
-        pVertices[3].position = { xf + 1, yf + ws_ao_size, 1.0f };
+        pVertices[0].position = { xf + invSize, yf + ws_ao_size, WS_WALL_HEIGHT };
+        pVertices[1].position = { xf + invSize, yf + invSize, WS_WALL_HEIGHT };
+        pVertices[2].position = { xf + 1, yf + invSize, WS_WALL_HEIGHT };
+        pVertices[3].position = { xf + 1, yf + ws_ao_size, WS_WALL_HEIGHT };
         pVertices[0].color = col;
         pVertices[1].color = col;
         pVertices[2].color = nCol[2];
         pVertices[3].color = nCol[2];
 
         pVertices += 4;
-        pVertices[0].position = { xf, yf + invSize, 1.0f };
-        pVertices[1].position = { xf, yf + 1, 1.0f };
-        pVertices[2].position = { xf + ws_ao_size, yf + 1, 1.0f };
-        pVertices[3].position = { xf + ws_ao_size, yf + invSize, 1.0f };
+        pVertices[0].position = { xf, yf + invSize, WS_WALL_HEIGHT };
+        pVertices[1].position = { xf, yf + 1, WS_WALL_HEIGHT };
+        pVertices[2].position = { xf + ws_ao_size, yf + 1, WS_WALL_HEIGHT };
+        pVertices[3].position = { xf + ws_ao_size, yf + invSize, WS_WALL_HEIGHT };
         pVertices[0].color = nCol[6];
         pVertices[1].color = nCol[5];
         pVertices[2].color = nCol[4];
         pVertices[3].color = col;
 
         pVertices += 4;
-        pVertices[0].position = { xf + ws_ao_size, yf + invSize, 1.0f };
-        pVertices[1].position = { xf + ws_ao_size, yf + 1, 1.0f };
-        pVertices[2].position = { xf + invSize, yf + 1, 1.0f };
-        pVertices[3].position = { xf + invSize, yf + invSize, 1.0f };
+        pVertices[0].position = { xf + ws_ao_size, yf + invSize, WS_WALL_HEIGHT };
+        pVertices[1].position = { xf + ws_ao_size, yf + 1, WS_WALL_HEIGHT };
+        pVertices[2].position = { xf + invSize, yf + 1, WS_WALL_HEIGHT };
+        pVertices[3].position = { xf + invSize, yf + invSize, WS_WALL_HEIGHT };
         pVertices[0].color = col;
         pVertices[1].color = nCol[4];
         pVertices[2].color = nCol[4];
         pVertices[3].color = col;
 
         pVertices += 4;
-        pVertices[0].position = { xf + 1, yf + invSize, 1.0f };
-        pVertices[1].position = { xf + invSize, yf + invSize, 1.0f };
-        pVertices[2].position = { xf + invSize, yf + 1, 1.0f };
-        pVertices[3].position = { xf + 1, yf + 1, 1.0f };
+        pVertices[0].position = { xf + 1, yf + invSize, WS_WALL_HEIGHT };
+        pVertices[1].position = { xf + invSize, yf + invSize, WS_WALL_HEIGHT };
+        pVertices[2].position = { xf + invSize, yf + 1, WS_WALL_HEIGHT };
+        pVertices[3].position = { xf + 1, yf + 1, WS_WALL_HEIGHT };
         pVertices[0].color = nCol[2];
         pVertices[1].color = col;
         pVertices[2].color = nCol[4];

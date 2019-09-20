@@ -49,15 +49,15 @@
 #define MENU_Y	55
 #define MENU_W	178
 #ifndef SPEAR
-#define MENU_H	13*8+6
+#define MENU_H	13*9+6
 #else
 #define MENU_H	13*9+6
 #endif
 
-#define SM_X	48
+#define SM_X	40
 #define SM_W	250
 
-#define SM_Y1	20
+#define SM_Y1	63
 #define SM_H1	4*13-7
 #define SM_Y2	SM_Y1+5*13
 #define SM_H2	4*13-7
@@ -178,6 +178,7 @@ void CP_Sound(void);
 int16_t  CP_LoadGame(int16_t quick);
 int16_t  CP_SaveGame(int16_t quick);
 void CP_Control(void);
+void CP_Graphics(void);
 void CP_ChangeView(void);
 void CP_ExitOptions(void);
 void CP_Quit(void);
@@ -186,6 +187,8 @@ int16_t  CP_EndGame(void);
 int16_t  CP_CheckQuick(uint16_t scancode);
 void CustomControls(void);
 void MouseSensitivity(void);
+void SoundVolume(void);
+void MusicVolume(void);
 
 void CheckForEpisodes(void);
 
@@ -200,10 +203,11 @@ enum {MOUSE,JOYSTICK,KEYBOARDBTNS,KEYBOARDMOVE};	// FOR INPUT TYPES
 enum menuitems
 {
 	newgame,
-	soundmenu,
-	control,
 	loadgame,
 	savegame,
+	soundmenu,
+	control,
+    graphics,
 	//changeview,
 
 #ifndef GOODTIMES

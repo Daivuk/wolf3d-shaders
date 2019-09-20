@@ -199,6 +199,48 @@ void ws_preload_ui_textures()
     }
 }
 
+static ws_Texture finalize_sprite_Texture(byte* sprdata, const ws_Color *palette)
+{
+    uint16_t width, height;
+    ws_Texture pic;
+
+    width = 64;
+    height = 64;
+
+    auto data = new uint8_t[width * height * 4];
+
+    int k = 0;
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            auto col = palette[sprdata[k / 4]];
+            data[k + 0] = (byte)(col.r * 255.0f);
+            data[k + 1] = (byte)(col.g * 255.0f);
+            data[k + 2] = (byte)(col.b * 255.0f);
+            data[k + 3] = (byte)(col.a * 255.0f);
+            k += 4;
+        }
+    }
+
+    auto texture = ws_create_texture(data, width, height);
+    delete[] data;
+    pic.w = width;
+    pic.h = height;
+    pic.tex = texture;
+    pic.originalData = sprdata;
+
+    return pic;
+}
+
+void ws_refresh_sprite_texture(ws_Texture &pic, const ws_SpriteSettings &sprite)
+{
+    ws_Color palette[256];
+    memcpy(palette, ws_palette, sizeof(palette));
+    for (auto col : sprite.transparents) palette[col].a = 0.0f;
+    pic = finalize_sprite_Texture(pic.originalData, palette);
+}
+
 ws_Texture ws_load_sprite_texture(int16_t shapenum)
 {
     uint16_t width, height;
@@ -239,30 +281,8 @@ ws_Texture ws_load_sprite_texture(int16_t shapenum)
     }
     delete[] column_offsets;
 
-    auto data = new uint8_t[width * height * 4];
-
-    int k = 0;
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            auto col = ws_palette[sprdata[k / 4]];
-            data[k + 0] = (byte)(col.r * 255.0f);
-            data[k + 1] = (byte)(col.g * 255.0f);
-            data[k + 2] = (byte)(col.b * 255.0f);
-            data[k + 3] = (byte)(col.a * 255.0f);
-            k += 4;
-        }
-    }
-
-    delete[] sprdata;
-    auto texture = ws_create_texture(data, width, height);
-    delete[] data;
-    pic.w = width;
-    pic.h = height;
-    pic.tex = texture;
+    pic = finalize_sprite_Texture(sprdata, ws_palette);
     ws_sprite_textures[shapenum] = pic;
-
     return pic;
 }
 

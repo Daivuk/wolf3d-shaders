@@ -1628,31 +1628,21 @@ void	ThreeDRefresh (void)
 
  	bufferofs += screenofs;
 
- //
- // follow the walls from there to the right, drawwing as we go
- //
- 	 VGAClearScreen ();
+ 	VGAClearScreen();
+    ws_begin_draw_3d();
+ 	WallRefresh();
+    DrawScaleds();
+    ws_finish_draw_3d();
+    DrawPlayerWeapon();
 
- 	WallRefresh ();
+    Pickups(); // This is like DrawScaleds for statics, but it does the pickup hud update
 
- //
- // draw all the scaled images
- //
-DrawScaleds();			// draw scaled stuff
-ws_finish_draw_3d();
-DrawPlayerWeapon ();	// draw player's hands
-Pickups(); // This is like DrawScaleds for statics, but it does the pickup hud update
-
- //
- // show screen and time last cycle
- //
  	if (fizzlein)
  	{
  		FizzleFade(bufferofs,displayofs+screenofs,viewwidth,viewheight,20,_false);
  		fizzlein = _false;
 
  		lasttimecount = TimeCount = 0;		// don't make a big tic count
-
  	}
 
  	bufferofs -= screenofs;

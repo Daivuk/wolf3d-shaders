@@ -51,8 +51,8 @@ char endStrings[9][80]=
 };
 
 CP_iteminfo
-	MainItems={MENU_X,MENU_Y,8,STARTITEM,24},
-	SndItems={SM_X,SM_Y1,12,0,52},
+	MainItems={MENU_X,MENU_Y,9,STARTITEM,24},
+	SndItems={SM_X,SM_Y1,2,0,52},
 	LSItems={LSM_X,LSM_Y,10,0,24},
 	CtlItems={CTL_X,CTL_Y,6,-1,56},
 	CusItems={8,CST_Y+13*2,9,-1,0},
@@ -77,10 +77,11 @@ MainMenu[]=
 #else
 
 	{1,STR_NG,(void(*)(int16_t))CP_NewGame},
-	{1,STR_SD,(void(*)(int16_t))CP_Sound},
-	{1,STR_CL,(void(*)(int16_t))CP_Control},
-	{1,STR_LG,(void(*)(int16_t))CP_LoadGame},
-	{0,STR_SG,(void(*)(int16_t))CP_SaveGame},
+    {1,STR_LG,(void(*)(int16_t))CP_LoadGame},
+    {0,STR_SG,(void(*)(int16_t))CP_SaveGame},
+    {1,STR_SD,(void(*)(int16_t))CP_Sound},
+    {1,STR_CL,(void(*)(int16_t))CP_Control},
+    {1,STR_GR,(void(*)(int16_t))CP_Graphics},
 	//{1,STR_CV,(void(*)(int16_t))CP_ChangeView},
 
 #ifndef GOODTIMES
@@ -96,7 +97,7 @@ MainMenu[]=
 #endif
 
 	{1,STR_VS,(void(*)(int16_t))CP_ViewScores},
-	{1,STR_BD,0},
+	{0,STR_BD,0},
 	{1,STR_QT,0}
 #endif
 },
@@ -117,18 +118,20 @@ SndMenu[]=
 	{1,"",0},
 	{1,"",0},
 #else
-	{1,STR_NONE,0},
-	{1,STR_PC,0},
-	{1,STR_ALSB,0},
-	{0,"",0},
-	{0,"",0},
-	{1,STR_NONE,0},
-	{1,STR_DISNEY,0},
-	{1,STR_SB,0},
-	{0,"",0},
-	{0,"",0},
-	{1,STR_NONE,0},
-	{1,STR_ALSB,0}
+	//{1,STR_NONE,0},
+	//{1,STR_PC,0},
+	//{1,STR_ALSB,0},
+	//{0,"",0},
+	//{0,"",0},
+	//{1,STR_NONE,0},
+	//{1,STR_DISNEY,0},
+	//{1,STR_SB,0},
+	//{0,"",0},
+	//{0,"",0},
+	//{1,STR_NONE,0},
+	//{1,STR_ALSB,0}
+    {0,"",(void(*)(int16_t))SoundVolume},
+    {0,"",(void(*)(int16_t))MusicVolume}
 #endif
 },
 
@@ -558,7 +561,7 @@ void DrawMainMenu(void)
 	//
 	// CHANGE "GAME" AND "DEMO"
 	//
-	if (ingame)
+	//if (ingame)
 	{
 		#ifndef JAPAN
 
@@ -576,26 +579,26 @@ void DrawMainMenu(void)
 		VWB_DrawPic(12*8,18*8,C_MENDGAMEPIC);
 		UNCACHEGRCHUNK(C_MENDGAMEPIC);
 		#endif
-		MainMenu[backtodemo].active=2;
+		MainMenu[backtodemo].active= ingame ? 2 : 0;
 	}
-	else
-	{
-		#ifndef JAPAN
-		#ifdef SPANISH
-		strcpy(&MainMenu[backtodemo].string,STR_BD);
-		#else
-		strcpy(&MainMenu[backtodemo].string[8],STR_DEMO);
-		#endif
-		#else
-		CA_CacheGrChunk(C_MRETDEMOPIC);
-		VWB_DrawPic(12*8,20*8,C_MRETDEMOPIC);
-		UNCACHEGRCHUNK(C_MRETDEMOPIC);
-		CA_CacheGrChunk(C_MSCORESPIC);
-		VWB_DrawPic(12*8,18*8,C_MSCORESPIC);
-		UNCACHEGRCHUNK(C_MSCORESPIC);
-		#endif
-		MainMenu[backtodemo].active=1;
-	}
+	//else
+	//{
+	//	#ifndef JAPAN
+	//	#ifdef SPANISH
+	//	strcpy(&MainMenu[backtodemo].string,STR_BD);
+	//	#else
+	//	strcpy(&MainMenu[backtodemo].string[8],STR_DEMO);
+	//	#endif
+	//	#else
+	//	CA_CacheGrChunk(C_MRETDEMOPIC);
+	//	VWB_DrawPic(12*8,20*8,C_MRETDEMOPIC);
+	//	UNCACHEGRCHUNK(C_MRETDEMOPIC);
+	//	CA_CacheGrChunk(C_MSCORESPIC);
+	//	VWB_DrawPic(12*8,18*8,C_MSCORESPIC);
+	//	UNCACHEGRCHUNK(C_MSCORESPIC);
+	//	#endif
+	//	MainMenu[backtodemo].active=1;
+	//}
 
 	DrawMenu(&MainItems,&MainMenu[0]);
 	VW_UpdateScreen();
@@ -1150,91 +1153,6 @@ void CP_Sound(void)
 	do
 	{
 		which=HandleMenu(&SndItems,&SndMenu[0],NULL);
-		//
-		// HANDLE MENU CHOICES
-		//
-		switch(which)
-		{
-			//
-			// SOUND EFFECTS
-			//
-			case 0:
-				if (SoundMode!=sdm_Off)
-				{
-					SD_WaitSoundDone();
-					SD_SetSoundMode(sdm_Off);
-					DrawSoundMenu();
-				}
-				break;
-			case 1:
-				if (SoundMode!=sdm_PC)
-				{
-					SD_WaitSoundDone();
-					SD_SetSoundMode(sdm_PC);
-					CA_LoadAllSounds();
-					DrawSoundMenu();
-					ShootSnd();
-				}
-				break;
-			case 2:
-				if (SoundMode!=sdm_AdLib)
-				{
-					SD_WaitSoundDone();
-					SD_SetSoundMode(sdm_AdLib);
-					CA_LoadAllSounds();
-					DrawSoundMenu();
-					ShootSnd();
-				}
-				break;
-
-			//
-			// DIGITIZED SOUND
-			//
-			case 5:
-				if (DigiMode!=sds_Off)
-				{
-					SD_SetDigiDevice(sds_Off);
-					DrawSoundMenu();
-				}
-				break;
-			case 6:
-				if (DigiMode!=sds_SoundSource)
-				{
-					SD_SetDigiDevice(sds_SoundSource);
-					DrawSoundMenu();
-					ShootSnd();
-				}
-				break;
-			case 7:
-				if (DigiMode!=sds_SoundBlaster)
-				{
-					SD_SetDigiDevice(sds_SoundBlaster);
-					DrawSoundMenu();
-					ShootSnd();
-				}
-				break;
-
-			//
-			// MUSIC
-			//
-			case 10:
-				if (MusicMode!=smm_Off)
-				{
-					SD_SetMusicMode(smm_Off);
-					DrawSoundMenu();
-					ShootSnd();
-				}
-				break;
-			case 11:
-				if (MusicMode!=smm_AdLib)
-				{
-					SD_SetMusicMode(smm_AdLib);
-					DrawSoundMenu();
-					ShootSnd();
-					StartCPMusic(MENUSONG);
-				}
-				break;
-		}
 	} while(which>=0);
 
 	MenuFadeOut();
@@ -1252,86 +1170,52 @@ void CP_Sound(void)
 //
 void DrawSoundMenu(void)
 {
-	int16_t i,on;
+    ClearMScreen();
+    VWB_DrawPic(112, 184, C_MOUSELBACKPIC);
 
+    DrawWindow(10, 80 - 20, 300, 30, BKGDCOLOR);
+    {
+        WindowX = 0;
+        WindowW = 320;
+        PrintY = 82 - 20;
+        SETFONTCOLOR(READCOLOR, BKGDCOLOR);
+        US_CPrint((char*)STR_SND_VOL);
 
-#ifdef JAPAN
-	CA_CacheScreen(S_SOUNDPIC);
-#else
-	//
-	// DRAW SOUND MENU
-	//
-	ClearMScreen();
-	VWB_DrawPic(112,184,C_MOUSELBACKPIC);
+        SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
+        PrintX = 14;
+        PrintY = 95 - 20;
+        US_Print((char*)STR_MUTE);
+        PrintX = 269;
+        US_Print((char*)STR_LOUD);
 
-	DrawWindow(SM_X-8,SM_Y1-3,SM_W,SM_H1,BKGDCOLOR);
-	DrawWindow(SM_X-8,SM_Y2-3,SM_W,SM_H2,BKGDCOLOR);
-	DrawWindow(SM_X-8,SM_Y3-3,SM_W,SM_H3,BKGDCOLOR);
-#endif
+        VWB_Bar(60, 97 - 20, 200, 10, TEXTCOLOR);
+        DrawOutline(60, 97 - 20, 200, 10, 0, HIGHLIGHT);
+        DrawOutline(60 + 20 * mouseadjustment, 97 - 20, 20, 10, 0, READCOLOR);
+        VWB_Bar(61 + 20 * mouseadjustment, 98 - 20, 19, 9, READHCOLOR);
+    }
 
-	//
-	// IF NO ADLIB, NON-CHOOSENESS!
-	//
-	if (!AdLibPresent && !SoundBlasterPresent)
-	{
-		SndMenu[2].active=SndMenu[10].active=SndMenu[11].active=0;
-	}
+    DrawWindow(10, 80 + 20, 300, 30, BKGDCOLOR);
+    {
+        WindowX = 0;
+        WindowW = 320;
+        PrintY = 82 + 20;
+        SETFONTCOLOR(READCOLOR, BKGDCOLOR);
+        US_CPrint((char*)STR_MUSIC_VOL);
 
-	if (!SoundSourcePresent)
-		SndMenu[6].active=0;
+        SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
+        PrintX = 14;
+        PrintY = 95 + 20;
+        US_Print((char*)STR_MUTE);
+        PrintX = 269;
+        US_Print((char*)STR_LOUD);
 
-	if (!SoundBlasterPresent)
-		SndMenu[7].active=0;
+        VWB_Bar(60, 97 + 20, 200, 10, TEXTCOLOR);
+        DrawOutline(60, 97 + 20, 200, 10, 0, HIGHLIGHT);
+        DrawOutline(60 + 20 * mouseadjustment, 97 + 20, 20, 10, 0, READCOLOR);
+        VWB_Bar(61 + 20 * mouseadjustment, 98 + 20, 19, 9, READHCOLOR);
+    }
 
-	if (!SoundSourcePresent && !SoundBlasterPresent)
-		SndMenu[5].active=0;
-
-	DrawMenu(&SndItems,&SndMenu[0]);
-#ifndef JAPAN
-	VWB_DrawPic(100,SM_Y1-20,C_FXTITLEPIC);
-	VWB_DrawPic(100,SM_Y2-20,C_DIGITITLEPIC);
-	VWB_DrawPic(100,SM_Y3-20,C_MUSICTITLEPIC);
-#endif
-
-	for (i=0;i<SndItems.amount;i++)
-#ifdef JAPAN
-		if (i!=3 && i!=4 && i!=8 && i!=9)
-#else
-		if (SndMenu[i].string[0])
-#endif
-		{
-			//
-			// DRAW SELECTED/NOT SELECTED GRAPHIC BUTTONS
-			//
-			on=0;
-			switch(i)
-			{
-				//
-				// SOUND EFFECTS
-				//
-				case 0: if (SoundMode==sdm_Off) on=1; break;
-				case 1: if (SoundMode==sdm_PC) on=1; break;
-				case 2: if (SoundMode==sdm_AdLib) on=1; break;
-
-				//
-				// DIGITIZED SOUND
-				//
-				case 5: if (DigiMode==sds_Off) on=1; break;
-				case 6: if (DigiMode==sds_SoundSource) on=1; break;
-				case 7: if (DigiMode==sds_SoundBlaster) on=1; break;
-
-				//
-				// MUSIC
-				//
-				case 10: if (MusicMode==smm_Off) on=1; break;
-				case 11: if (MusicMode==smm_AdLib) on=1; break;
-			}
-
-			if (on)
-				VWB_DrawPic(SM_X+24,SM_Y1+i*13+2,C_SELECTEDPIC);
-			else
-				VWB_DrawPic(SM_X+24,SM_Y1+i*13+2,C_NOTSELECTEDPIC);
-		}
+    //MenuFadeIn(); 
 
 	DrawMenuGun(&SndItems);
 	VW_UpdateScreen();
@@ -1755,6 +1639,11 @@ int16_t CalibrateJoystick(void)
 	return 1;
 }
 
+// Rendering options
+void CP_Graphics(void)
+{
+}
+
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -1915,6 +1804,158 @@ void MouseSensitivity(void)
 				break;
 
 			case dir_South:
+			case dir_East:
+				if (mouseadjustment<9)
+				{
+					mouseadjustment++;
+					VWB_Bar(60,97,200,10,TEXTCOLOR);
+					DrawOutline(60,97,200,10,0,HIGHLIGHT);
+					DrawOutline(60+20*mouseadjustment,97,20,10,0,READCOLOR);
+					VWB_Bar(61+20*mouseadjustment,98,19,9,READHCOLOR);
+					VW_UpdateScreen();
+					SD_PlaySound(MOVEGUN1SND);
+                    while (Keyboard[sc_RightArrow]) { ws_update_sdl(); }
+					WaitKeyUp();
+				}
+				break;
+		}
+
+		#ifndef SPEAR
+		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
+		#else
+		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
+		#endif
+			PicturePause();
+
+		if (ci.button0 || Keyboard[sc_Space] || Keyboard[sc_Enter])
+			exit=1;
+		else
+		if (ci.button1 || Keyboard[sc_Escape])
+			exit=2;
+
+	} while(!exit);
+
+	if (exit==2)
+	{
+		mouseadjustment=oldMA;
+		SD_PlaySound(ESCPRESSEDSND);
+	}
+	else
+		SD_PlaySound(SHOOTSND);
+
+	WaitKeyUp();
+	MenuFadeOut();
+}
+
+///////////////////////////
+//
+// ADJUST SOUND VOLUME
+//
+void SoundVolume(void)
+{
+	ControlInfo ci;
+	int16_t exit=0,oldMA;
+
+
+	oldMA=mouseadjustment;
+	DrawMouseSens();
+	do
+	{
+		ReadAnyControl(&ci);
+		switch(ci.dir)
+		{
+            default: break;
+			case dir_West:
+				if (mouseadjustment)
+				{
+					mouseadjustment--;
+					VWB_Bar(60,97,200,10,TEXTCOLOR);
+					DrawOutline(60,97,200,10,0,HIGHLIGHT);
+					DrawOutline(60+20*mouseadjustment,97,20,10,0,READCOLOR);
+					VWB_Bar(61+20*mouseadjustment,98,19,9,READHCOLOR);
+					VW_UpdateScreen();
+					SD_PlaySound(MOVEGUN1SND);
+                    while (Keyboard[sc_LeftArrow]) { ws_update_sdl(); }
+					WaitKeyUp();
+				}
+				break;
+
+			case dir_East:
+				if (mouseadjustment<9)
+				{
+					mouseadjustment++;
+					VWB_Bar(60,97,200,10,TEXTCOLOR);
+					DrawOutline(60,97,200,10,0,HIGHLIGHT);
+					DrawOutline(60+20*mouseadjustment,97,20,10,0,READCOLOR);
+					VWB_Bar(61+20*mouseadjustment,98,19,9,READHCOLOR);
+					VW_UpdateScreen();
+					SD_PlaySound(MOVEGUN1SND);
+                    while (Keyboard[sc_RightArrow]) { ws_update_sdl(); }
+					WaitKeyUp();
+				}
+				break;
+		}
+
+		#ifndef SPEAR
+		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
+		#else
+		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
+		#endif
+			PicturePause();
+
+		if (ci.button0 || Keyboard[sc_Space] || Keyboard[sc_Enter])
+			exit=1;
+		else
+		if (ci.button1 || Keyboard[sc_Escape])
+			exit=2;
+
+	} while(!exit);
+
+	if (exit==2)
+	{
+		mouseadjustment=oldMA;
+		SD_PlaySound(ESCPRESSEDSND);
+	}
+	else
+		SD_PlaySound(SHOOTSND);
+
+	WaitKeyUp();
+	MenuFadeOut();
+}
+
+///////////////////////////
+//
+// ADJUST MUSIC VOLUME
+//
+void MusicVolume(void)
+{
+	ControlInfo ci;
+	int16_t exit=0,oldMA;
+
+
+	oldMA=mouseadjustment;
+	DrawMouseSens();
+	do
+	{
+		ReadAnyControl(&ci);
+		switch(ci.dir)
+		{
+            default: break;
+			case dir_West:
+				if (mouseadjustment)
+				{
+					mouseadjustment--;
+					VWB_Bar(60,97,200,10,TEXTCOLOR);
+					DrawOutline(60,97,200,10,0,HIGHLIGHT);
+					DrawOutline(60+20*mouseadjustment,97,20,10,0,READCOLOR);
+					VWB_Bar(61+20*mouseadjustment,98,19,9,READHCOLOR);
+					VW_UpdateScreen();
+					SD_PlaySound(MOVEGUN1SND);
+                    while (Keyboard[sc_LeftArrow]) { ws_update_sdl(); }
+					WaitKeyUp();
+				}
+				break;
+
 			case dir_East:
 				if (mouseadjustment<9)
 				{
@@ -3191,7 +3232,7 @@ int16_t HandleMenu(CP_iteminfo *item_i,CP_itemtype *items,void (*routine)(int16_
 			if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"debugmode"))
 			#endif
 				PicturePause();
-
+             
 
 			if (key>='a')
 				key-='a'-'A';

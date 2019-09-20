@@ -83,7 +83,8 @@ struct ws_Resources
     GLuint checkerTexture;          /* Test texture to replace non-existing or corrupted data */
     GLuint whiteTexture;            /* ... */
     GLuint imguiFontTexture;
-    ws_RenderTarget mainRT;         /* Main scree render ws_cam_target (Final image) */
+    ws_RenderTarget mainRT;         /* Main screen render ws_cam_target (Final image) */
+    ws_RenderTarget uiRT;           /* UI render target. 320x200 */
     ws_RenderTarget hdrRT;          /* Used for high dynamic range */
     ws_RenderTarget lastFrameRT;    /* Miniature of last frame 4x4 pixels to calculate HDR multiplier */
 };
@@ -92,6 +93,7 @@ struct ws_Texture
 {
     int w, h;
     GLuint tex;
+    byte* originalData;
 };
 
 struct ws_Font
@@ -117,10 +119,12 @@ struct ws_SpriteSettings
     float self_illumination;
     ws_PointLight light;
     int clip[4];
+    std::vector<byte> transparents;
 };
 const ws_SpriteSettings WS_DEFAULT_SPRITE_SETTINGS = { 0, false, 0.0f, { {0,0,0.5f},{1,1,1,1},5,1.3f }, {0,0,64,64} };
 
 const int WS_SPHERE_VERT_COUNT = 8 * 6 * 6 + 8 * 3 * 2;
+const float WS_WALL_HEIGHT = 1.16f;
 
 extern _boolean sdl_keystates[NumCodes];
 extern ws_Color ws_palette[];
@@ -129,6 +133,8 @@ extern int16_t ws_argc;
 extern char **ws_argv;
 extern int ws_screen_w;
 extern int ws_screen_h;
+extern int ws_3d_w;
+extern int ws_3d_h;
 extern bool ws_audio_on;
 extern float ws_dt;
 extern float ws_rdt; // Render dt
@@ -140,6 +146,7 @@ extern ws_Vector3 ws_cam_right;
 extern ws_Vector3 ws_cam_front;
 extern ws_Vector3 ws_cam_front_flat;
 extern ws_Vector3 ws_cam_target;
+extern ws_Matrix ws_ui_matrix;
 extern ws_Matrix ws_matrix2D;
 extern ws_Matrix ws_matrix3D;
 extern bool ws_debug_view_enabled;
@@ -149,7 +156,6 @@ extern int ws_pc_count;
 extern int ws_ptc_count;
 extern int ws_pntc_count;
 extern int ws_draw_mode;
-extern float ws_ui_scale;
 extern GLenum ws_draw_mode_prim;
 extern GLuint ws_current_3d_texture;
 extern std::vector<ws_PointLight> ws_active_lights;
@@ -213,6 +219,7 @@ ws_Texture ws_load_wall_texture(int wallpic);
 ws_Font &ws_get_font(int id);
 ws_GBuffer ws_create_gbuffer(int w, int h);
 GLuint ws_create_sphere();
+void ws_refresh_sprite_texture(ws_Texture &pic, const ws_SpriteSettings &sprite);
 
 void ws_update_sdl();
 void ws_play_sound(float* data, int len, float x, float y, bool _3d = false);
@@ -221,6 +228,7 @@ void ws_audio_callback(void *userdata, Uint8 *stream, int len);
 void ws_update_camera();
 void ws_draw_walls();
 void ws_update_culling();
+void ws_begin_draw_3d();
 void ws_finish_draw_3d();
 void ws_draw_wall(float x, float y, int dir, int texture, bool isDoor=false, int wallLeft = 0, int wallRight = 0);
 void ws_draw_ceiling(int x, int y, int color, bool* neighbors);
@@ -230,6 +238,7 @@ void ws_draw_door_ceiling(int x, int y, int color, bool* neighbors, float percen
 void ws_draw_sprite(int x, int y, int texture);
 void ws_flush();
 
+int ws_get_statusline_height();
 void ws_draw_screen_from_raw(byte* data, int16_t chunk);
 void ws_draw_pc(const ws_VertexPC *pVertices, int count, GLenum mode);
 void ws_draw_ptc(const ws_VertexPTC *pVertices, int count, GLenum mode);
