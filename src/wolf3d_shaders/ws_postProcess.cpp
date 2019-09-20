@@ -199,11 +199,11 @@ void ws_finish_draw_3d()
                 float lumDataf[3] = { 0 };
                 for (int i = 0; i < 16; ++i)
                 {
-                    float w = .3333f;
+                    float w = .666667f;
                     if (i % 4 >= 1 &&
                         i % 4 <= 2 &&
                         i / 4 >= 1 &&
-                        i / 4 <= 2) w = 3;
+                        i / 4 <= 2) w = 2;
                     lumDataf[0] += (float)lumData[i * 4 + 0] / 255.0f * w;
                     lumDataf[1] += (float)lumData[i * 4 + 1] / 255.0f * w;
                     lumDataf[2] += (float)lumData[i * 4 + 2] / 255.0f * w;

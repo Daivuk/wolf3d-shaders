@@ -209,7 +209,8 @@ void ws_draw_pointlight(const ws_PointLight& pointLight)
     static auto LightPosition_uniform = glGetUniformLocation(ws_resources.programPointlightP, "LightPosition");
     static auto LightRadius_uniform = glGetUniformLocation(ws_resources.programPointlightP, "LightRadius");
     static auto LightIntensity_uniform = glGetUniformLocation(ws_resources.programPointlightP, "LightIntensity");
-    glUniform3fv(LightPosition_uniform, 1, &pointLight.position.x);
+    ws_Vector3 lpos = {pointLight.position.x, pointLight.position.y, pointLight.position.z * 1.2f};
+    glUniform3fv(LightPosition_uniform, 1, &lpos.x);
     glUniform1f(LightRadius_uniform, pointLight.radius);
     glUniform1f(LightIntensity_uniform, pointLight.intensity);
 

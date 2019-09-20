@@ -118,7 +118,7 @@ static const char *PNTC_GBUFFER_VERT =
 
 "void main()"
 "{"
-"   gl_Position = ProjMtx * vec4(Position.xyz, 1);"
+"   gl_Position = ProjMtx * vec4(vec3(Position.xy, Position.z*1.2), 1);"
 "   Frag_Normal = Normal;"
 "   Frag_TexCoord = TexCoord;"
 "   Frag_Color = Color;"
@@ -192,7 +192,6 @@ static const char *PTC_POINTLIGHT_FRAG =
 // Normal
 "   vec3 normal = gNormal.xyz * 2 - 1;"
 "   vec3 dir = LightPosition - position.xyz;"
-"   normal.z *= 0.5;" // floor and ceilings are too bright
 
 // Attenuation stuff
 "   float dis = length(dir);"

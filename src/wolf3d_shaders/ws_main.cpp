@@ -837,8 +837,8 @@ void ws_update_camera()
         ws_cam_front.Normalize();
         ws_cam_right = { ws_cam_front.y, -ws_cam_front.x, 0.0f };
         ws_cam_right.Normalize();
-        ws_cam_eye = ws_Vector3(px, 64.0f - py, 0.5f);
-        ws_cam_target = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f);
+        ws_cam_eye = ws_Vector3(px, 64.0f - py, 0.5f * 1.2f);
+        ws_cam_target = ws_Vector3(px + vcos, 64.0f - (py - vsin), 0.5f * 1.2f);
 
         // Update freecam so if we switch we're at the player's position
         freecamPos = ws_cam_eye;
