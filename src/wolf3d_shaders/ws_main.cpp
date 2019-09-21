@@ -725,6 +725,7 @@ void VW_UpdateScreen()
         ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, left, (float)ws_screen_h, 0, 1, 0, 0, flashColor);
         ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, left, 0, w, (float)ws_screen_h, 0, 1, 1, 0, flashColor);
         ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, right, 0, (float)ws_screen_w - right, (float)ws_screen_h, 1, 1, 1, 0, flashColor);
+        //ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, 0, 0, (float)MaxX, (float)MaxY, 0, 1, 1, 0, flashColor);
         ws_flush();
     }
 

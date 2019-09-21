@@ -54,8 +54,8 @@ CP_iteminfo
 	MainItems={MENU_X,MENU_Y,9,STARTITEM,24},
 	SndItems={SM_X,SM_Y1,4,0,52},
 	LSItems={LSM_X,LSM_Y,10,0,24},
-	CtlItems={CTL_X,CTL_Y,6,-1,56},
-	CusItems={8,CST_Y+13*2,9,-1,0},
+	CtlItems={CTL_X,CTL_Y,2,0,56},
+	CusItems={8,52+21,8,0,32},
 	NewEitems={NE_X,NE_Y,11,0,88},
 	NewItems={NM_X,NM_Y,4,2,24};
 
@@ -147,11 +147,11 @@ CtlMenu[]=
 	{0,"",MouseSensitivity},
 	{1,"",CustomControls}
 #else
-	{0,STR_MOUSEEN,0},
-	{0,STR_JOYEN,0},
-	{0,STR_PORT2,0},
-	{0,STR_GAMEPAD,0},
-	{0,STR_SENS,(void(*)(int16_t))MouseSensitivity},
+	//{0,STR_MOUSEEN,0},
+	//{0,STR_JOYEN,0},
+	//{0,STR_PORT2,0},
+	//{0,STR_GAMEPAD,0},
+	{1,STR_SENS,(void(*)(int16_t))MouseSensitivity},
 	{1,STR_CUSTOM,(void(*)(int16_t))CustomControls}
 #endif
 },
@@ -263,18 +263,16 @@ LSMenu[]=
 
 CusMenu[]=
 {
-	{1,"",0},
-	{0,"",0},
-	{0,"",0},
-	{1,"",0},
-	{0,"",0},
-	{0,"",0},
-	{1,"",0},
-	{0,"",0},
-	{1,"",0}
+	{1,STR_FRWD,0},
+	{1,STR_BKWD,0},
+	{1,STR_CSTRAFEL,0},
+	{1,STR_CSTRAFER,0},
+	{1,STR_CFIRE,0},
+	{1,STR_COPEN,0},
+	{1,STR_LEFT,0},
+	{1,STR_RIGHT,0},
 }
 ;
-
 
 int16_t color_hlite[]={
    DEACTIVE,
@@ -1628,7 +1626,7 @@ void CP_Graphics(void)
 void CP_Control(void)
 {
 	#define CTL_SPC	70
-	enum {MOUSEENABLE,JOYENABLE,USEPORT2,PADENABLE,MOUSESENS,CUSTOMIZE};
+	enum {/*MOUSEENABLE,JOYENABLE,USEPORT2,PADENABLE,*/MOUSESENS,CUSTOMIZE};
 	int16_t i,which;
 
 
@@ -1646,36 +1644,36 @@ void CP_Control(void)
 		which=HandleMenu(&CtlItems,&CtlMenu[0],NULL);
 		switch(which)
 		{
-			case MOUSEENABLE:
-				mouseenabled = (_boolean)((int16_t)mouseenabled^1);
-				// _CX=_DX=CENTER;
-				Mouse(4);
-				DrawCtlScreen();
-				CusItems.curpos=-1;
-				ShootSnd();
-				break;
+			//case MOUSEENABLE:
+			//	mouseenabled = (_boolean)((int16_t)mouseenabled^1);
+			//	// _CX=_DX=CENTER;
+			//	Mouse(4);
+			//	DrawCtlScreen();
+			//	CusItems.curpos=-1;
+			//	ShootSnd();
+			//	break;
 
-			case JOYENABLE:
-				joystickenabled = (_boolean)((int16_t)joystickenabled^1);
-				if (joystickenabled)
-					if (!CalibrateJoystick())
-						joystickenabled = _false;
-				DrawCtlScreen();
-				CusItems.curpos=-1;
-				ShootSnd();
-				break;
+			//case JOYENABLE:
+			//	joystickenabled = (_boolean)((int16_t)joystickenabled^1);
+			//	if (joystickenabled)
+			//		if (!CalibrateJoystick())
+			//			joystickenabled = _false;
+			//	DrawCtlScreen();
+			//	CusItems.curpos=-1;
+			//	ShootSnd();
+			//	break;
 
-			case USEPORT2:
-				joystickport^=1;
-				DrawCtlScreen();
-				ShootSnd();
-				break;
+			//case USEPORT2:
+			//	joystickport^=1;
+			//	DrawCtlScreen();
+			//	ShootSnd();
+			//	break;
 
-			case PADENABLE:
-				joypadenabled = (_boolean)((int16_t)joypadenabled^1);
-				DrawCtlScreen();
-				ShootSnd();
-				break;
+			//case PADENABLE:
+			//	joypadenabled = (_boolean)((int16_t)joypadenabled^1);
+			//	DrawCtlScreen();
+			//	ShootSnd();
+			//	break;
 
 			case MOUSESENS:
 			case CUSTOMIZE:
@@ -1949,74 +1947,69 @@ void DrawCtlScreen(void)
 {
  int16_t i,x,y;
 
-
-#ifdef JAPAN
-	CA_CacheScreen(S_CONTROLPIC);
-#else
  ClearMScreen();
  DrawStripes(10);
  VWB_DrawPic(80,0,C_CONTROLPIC);
  VWB_DrawPic(112,184,C_MOUSELBACKPIC);
  DrawWindow(CTL_X-8,CTL_Y-5,CTL_W,CTL_H,BKGDCOLOR);
-#endif
  WindowX=0;
  WindowW=320;
  SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
 
- if (JoysPresent[0])
-   CtlMenu[1].active=
-   CtlMenu[2].active=
-   CtlMenu[3].active=1;
+ //if (JoysPresent[0])
+ //  CtlMenu[1].active=
+ //  CtlMenu[2].active=
+ //  CtlMenu[3].active=1;
 
- CtlMenu[2].active=CtlMenu[3].active=joystickenabled;
+ //CtlMenu[2].active=CtlMenu[3].active=joystickenabled;
 
- if (MousePresent)
- {
-  CtlMenu[4].active=
-  CtlMenu[0].active=1;
- }
+ //if (MousePresent)
+ //{
+ // CtlMenu[4].active=
+ // CtlMenu[0].active=1;
+ //}
 
- CtlMenu[4].active=mouseenabled;
+ //CtlMenu[4].active=mouseenabled;
 
 
  DrawMenu(&CtlItems,&CtlMenu[0]);
 
 
- x=CTL_X+CtlItems.indent-24;
- y=CTL_Y+3;
- if (mouseenabled)
-   VWB_DrawPic(x,y,C_SELECTEDPIC);
- else
-   VWB_DrawPic(x,y,C_NOTSELECTEDPIC);
+ //x=CTL_X+CtlItems.indent-24;
+ //y=CTL_Y+3;
+ //if (mouseenabled)
+ //  VWB_DrawPic(x,y,C_SELECTEDPIC);
+ //else
+ //  VWB_DrawPic(x,y,C_NOTSELECTEDPIC);
 
- y=CTL_Y+16;
- if (joystickenabled)
-   VWB_DrawPic(x,y,C_SELECTEDPIC);
- else
-   VWB_DrawPic(x,y,C_NOTSELECTEDPIC);
+ //y=CTL_Y+16;
+ //if (joystickenabled)
+ //  VWB_DrawPic(x,y,C_SELECTEDPIC);
+ //else
+ //  VWB_DrawPic(x,y,C_NOTSELECTEDPIC);
 
- y=CTL_Y+29;
- if (joystickport)
-   VWB_DrawPic(x,y,C_SELECTEDPIC);
- else
-   VWB_DrawPic(x,y,C_NOTSELECTEDPIC);
+ //y=CTL_Y+29;
+ //if (joystickport)
+ //  VWB_DrawPic(x,y,C_SELECTEDPIC);
+ //else
+ //  VWB_DrawPic(x,y,C_NOTSELECTEDPIC);
 
- y=CTL_Y+42;
- if (joypadenabled)
-   VWB_DrawPic(x,y,C_SELECTEDPIC);
- else
-   VWB_DrawPic(x,y,C_NOTSELECTEDPIC);
+ //y=CTL_Y+42;
+ //if (joypadenabled)
+ //  VWB_DrawPic(x,y,C_SELECTEDPIC);
+ //else
+ //  VWB_DrawPic(x,y,C_NOTSELECTEDPIC);
 
  //
  // PICK FIRST AVAILABLE SPOT
  //
- if (CtlItems.curpos<0 || !CtlMenu[CtlItems.curpos].active)
-   for (i=0;i<6;i++)
-	 if (CtlMenu[i].active)
-	 {
-	  CtlItems.curpos=i;
-	  break;
-	 }
+ //if (CtlItems.curpos<0 || !CtlMenu[CtlItems.curpos].active)
+ //  for (i=0;i<6;i++)
+	// if (CtlMenu[i].active)
+	// {
+	//  CtlItems.curpos=i;
+	//  break;
+	// }
 
  DrawMenuGun(&CtlItems);
  VW_UpdateScreen();
@@ -2042,24 +2035,24 @@ void CustomControls(void)
  do
  {
   which=HandleMenu(&CusItems,&CusMenu[0],FixupCustom);
-  switch(which)
-  {
-   case 0:
-	 DefineMouseBtns();
-	 DrawCustMouse(1);
-	 break;
-   case 3:
-	 DefineJoyBtns();
-	 DrawCustJoy(0);
-	 break;
-   case 6:
-	 DefineKeyBtns();
-	 DrawCustKeybd(0);
-	 break;
-   case 8:
-	 DefineKeyMove();
-	 DrawCustKeys(0);
-  }
+  //switch(which)
+  //{
+  // case 0:
+	 //DefineMouseBtns();
+	 //DrawCustMouse(1);
+	 //break;
+  // case 3:
+	 //DefineJoyBtns();
+	 //DrawCustJoy(0);
+	 //break;
+  // case 6:
+	 //DefineKeyBtns();
+	 //DrawCustKeybd(0);
+	 //break;
+  // case 8:
+	 //DefineKeyMove();
+	 //DrawCustKeys(0);
+  //}
  } while(which>=0);
 
 
@@ -2417,27 +2410,6 @@ void DrawCustomScreen(void)
 {
 	int16_t i;
 
-
-#ifdef JAPAN
-	CA_CacheScreen(S_CUSTOMPIC);
-	fontnumber=1;
-
-	PrintX=CST_START;
-	PrintY = CST_Y+26;
-	DrawCustMouse(0);
-
-	PrintX=CST_START;
-	US_Print("\n\n\n");
-	DrawCustJoy(0);
-
-	PrintX=CST_START;
-	US_Print("\n\n\n");
-	DrawCustKeybd(0);
-
-	PrintX=CST_START;
-	US_Print("\n\n\n");
-	DrawCustKeys(0);
-#else
 	ClearMScreen();
 	WindowX=0;
 	WindowW=320;
@@ -2446,156 +2418,85 @@ void DrawCustomScreen(void)
 	VWB_DrawPic(80,0,C_CUSTOMIZEPIC);
 
 	//
-	// MOUSE
-	//
-	SETFONTCOLOR(READCOLOR,BKGDCOLOR);
-	WindowX=0;
-	WindowW=320;
-
-#ifndef SPEAR
-	PrintY=CST_Y;
-	US_CPrint((char*)"Mouse\n");
-#else
-	PrintY = CST_Y+13;
-	VWB_DrawPic (128,48,C_MOUSEPIC);
-#endif
-
-	SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
-	#ifdef SPANISH
-	PrintX=CST_START-16;
-	US_Print(STR_CRUN);
-	PrintX=CST_START-16+CST_SPC*1;
-	US_Print(STR_COPEN);
-	PrintX=CST_START-16+CST_SPC*2;
-	US_Print(STR_CFIRE);
-	PrintX=CST_START-16+CST_SPC*3;
-	US_Print(STR_CSTRAFE"\n");
-	#else
-	PrintX=CST_START;
-	US_Print((char*)STR_CRUN);
-	PrintX=CST_START+CST_SPC*1;
-	US_Print((char*)STR_COPEN);
-	PrintX=CST_START+CST_SPC*2;
-	US_Print((char*)STR_CFIRE);
-	PrintX=CST_START+CST_SPC*3;
-	US_Print((char*)STR_CSTRAFE"\n");
-	#endif
-
-	DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
-	DrawCustMouse(0);
-	US_Print((char*)"\n");
-
-
-	//
-	// JOYSTICK/PAD
-	//
-#ifndef SPEAR
-	SETFONTCOLOR(READCOLOR,BKGDCOLOR);
-	US_CPrint((char*)"Joystick/Gravis GamePad\n");
-#else
-	PrintY += 13;
-	VWB_DrawPic (40,88,C_JOYSTICKPIC);
-#endif
-
-#ifdef SPEAR
-	VWB_DrawPic (112,120,C_KEYBOARDPIC);
-#endif
-
-	SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
-	#ifdef SPANISH
-	PrintX=CST_START-16;
-	US_Print(STR_CRUN);
-	PrintX=CST_START-16+CST_SPC*1;
-	US_Print(STR_COPEN);
-	PrintX=CST_START-16+CST_SPC*2;
-	US_Print(STR_CFIRE);
-	PrintX=CST_START-16+CST_SPC*3;
-	US_Print(STR_CSTRAFE"\n");
-	#else
-	PrintX=CST_START;
-	US_Print((char*)STR_CRUN);
-	PrintX=CST_START+CST_SPC*1;
-	US_Print((char*)STR_COPEN);
-	PrintX=CST_START+CST_SPC*2;
-	US_Print((char*)STR_CFIRE);
-	PrintX=CST_START+CST_SPC*3;
-	US_Print((char*)STR_CSTRAFE"\n");
-	#endif
-	DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
-	DrawCustJoy(0);
-	US_Print((char*)"\n");
-
-
-	//
 	// KEYBOARD
 	//
-#ifndef SPEAR
-	SETFONTCOLOR(READCOLOR,BKGDCOLOR);
-	US_CPrint((char*)"Keyboard\n");
-#else
-	PrintY += 13;
-#endif
-	SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
-	#ifdef SPANISH
-	PrintX=CST_START-16;
-	US_Print(STR_CRUN);
-	PrintX=CST_START-16+CST_SPC*1;
-	US_Print(STR_COPEN);
-	PrintX=CST_START-16+CST_SPC*2;
-	US_Print(STR_CFIRE);
-	PrintX=CST_START-16+CST_SPC*3;
-	US_Print(STR_CSTRAFE"\n");
-	#else
-	PrintX=CST_START;
-	US_Print((char*)STR_CRUN);
-	PrintX=CST_START+CST_SPC*1;
-	US_Print((char*)STR_COPEN);
-	PrintX=CST_START+CST_SPC*2;
-	US_Print((char*)STR_CFIRE);
-	PrintX=CST_START+CST_SPC*3;
-	US_Print((char*)STR_CSTRAFE"\n");
-	#endif
-	DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
-	DrawCustKeybd(0);
-	US_Print((char*)"\n");
+	DrawWindow(5,52 - 3 + 20,310,13 * 8 + 6,BKGDCOLOR);
+
+    SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
+    PrintX = 40;
+    PrintY = 52-3+24;
+    US_Print((char*)STR_FRWD);
+    PrintX = 40;
+    PrintY += 13;
+    US_Print((char*)STR_BKWD);
+    PrintX = 40;
+    PrintY += 13;
+    US_Print((char*)STR_CSTRAFEL);
+    PrintX = 40;
+    PrintY += 13;
+    US_Print((char*)STR_CSTRAFER);
+    PrintX = 40;
+    PrintY += 13;
+    US_Print((char*)STR_CFIRE);
+    PrintX = 40;
+    PrintY += 13;
+    US_Print((char*)STR_COPEN);
+    PrintX = 40;
+    PrintY += 13;
+    US_Print((char*)STR_LEFT);
+    PrintX = 40;
+    PrintY += 13;
+    US_Print((char*)STR_RIGHT);
+
+	//PrintX=CST_START;
+	//US_Print((char*)STR_CRUN);
+	//PrintX=CST_START+CST_SPC*1;
+	//US_Print((char*)STR_COPEN);
+	//PrintX=CST_START+CST_SPC*2;
+	//US_Print((char*)STR_CFIRE);
+	//PrintX=CST_START+CST_SPC*3;
+	//US_Print((char*)STR_CSTRAFE"\n");
+	//DrawCustKeybd(0);
+	//US_Print((char*)"\n");
+
 
 
 	//
 	// KEYBOARD MOVE KEYS
 	//
-	SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
-	#ifdef SPANISH
-	PrintX=4;
-	US_Print(STR_LEFT);
-	US_Print("/");
-	US_Print(STR_RIGHT);
-	US_Print("/");
-	US_Print(STR_FRWD);
-	US_Print("/");
-	US_Print(STR_BKWD"\n");
-	#else
-	PrintX=CST_START;
-	US_Print((char*)STR_LEFT);
-	PrintX=CST_START+CST_SPC*1;
-	US_Print((char*)STR_RIGHT);
-	PrintX=CST_START+CST_SPC*2;
-	US_Print((char*)STR_FRWD);
-	PrintX=CST_START+CST_SPC*3;
-	US_Print((char*)STR_BKWD"\n");
-	#endif
-	DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
-	DrawCustKeys(0);
-#endif
+	//SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
+	//#ifdef SPANISH
+	//PrintX=4;
+	//US_Print(STR_LEFT);
+	//US_Print("/");
+	//US_Print(STR_RIGHT);
+	//US_Print("/");
+	//US_Print(STR_FRWD);
+	//US_Print("/");
+	//US_Print(STR_BKWD"\n");
+	//#else
+	//PrintX=CST_START;
+	//US_Print((char*)STR_LEFT);
+	//PrintX=CST_START+CST_SPC*1;
+	//US_Print((char*)STR_RIGHT);
+	//PrintX=CST_START+CST_SPC*2;
+	//US_Print((char*)STR_FRWD);
+	//PrintX=CST_START+CST_SPC*3;
+	//US_Print((char*)STR_BKWD"\n");
+	//#endif
+	//DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
+	//DrawCustKeys(0);
+
 	//
 	// PICK STARTING POINT IN MENU
 	//
-	if (CusItems.curpos<0)
-		for (i=0;i<CusItems.amount;i++)
-			if (CusMenu[i].active)
-			{
-				CusItems.curpos=i;
-				break;
-			}
+	//if (CusItems.curpos<0)
+	//	for (i=0;i<CusItems.amount;i++)
+	//		if (CusMenu[i].active)
+	//		{
+	//			CusItems.curpos=i;
+	//			break;
+	//		}
 
 
 	VW_UpdateScreen();
@@ -2626,13 +2527,13 @@ void DrawCustMouse(int16_t hilight)
 		color=HIGHLIGHT;
 	SETFONTCOLOR((byte)color,BKGDCOLOR);
 
-	if (!mouseenabled)
-	{
-		SETFONTCOLOR(DEACTIVE,BKGDCOLOR);
-		CusMenu[0].active=0;
-	}
-	else
-		CusMenu[0].active=1;
+	//if (!mouseenabled)
+	//{
+	//	SETFONTCOLOR(DEACTIVE,BKGDCOLOR);
+	//	CusMenu[0].active=0;
+	//}
+	//else
+	//	CusMenu[0].active=1;
 
 	PrintY=CST_Y+13*2;
 	for (i=0;i<4;i++)
@@ -2662,13 +2563,13 @@ void DrawCustJoy(int16_t hilight)
 		color=HIGHLIGHT;
 	SETFONTCOLOR((byte)color,BKGDCOLOR);
 
-	if (!joystickenabled)
-	{
-		SETFONTCOLOR(DEACTIVE,BKGDCOLOR);
-		CusMenu[3].active=0;
-	}
-	else
-		CusMenu[3].active=1;
+	//if (!joystickenabled)
+	//{
+	//	SETFONTCOLOR(DEACTIVE,BKGDCOLOR);
+	//	CusMenu[3].active=0;
+	//}
+	//else
+	//	CusMenu[3].active=1;
 
 	PrintY=CST_Y+13*5;
 	for (i=0;i<4;i++)

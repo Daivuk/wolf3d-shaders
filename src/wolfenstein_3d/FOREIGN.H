@@ -68,11 +68,13 @@
 #define STR_COPEN	"Open"
 #define STR_CFIRE	"Fire"
 #define STR_CSTRAFE	"Strafe"
+#define STR_CSTRAFEL	"Strafe Left"
+#define STR_CSTRAFER	"Strafe Right"
 
-#define	STR_LEFT	"Left"
-#define	STR_RIGHT	"Right"
-#define	STR_FRWD	"Frwd"
-#define	STR_BKWD	"Bkwrd"
+#define	STR_LEFT	"Turn Left"
+#define	STR_RIGHT	"Turn Right"
+#define	STR_FRWD	"Forward"
+#define	STR_BKWD	"Backward"
 #define	STR_THINK	"Thinking"
 
 #define STR_SIZE1	"Use arrows to size"
