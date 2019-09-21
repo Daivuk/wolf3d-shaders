@@ -14,7 +14,7 @@
 					"are playing? (Y or N):"
 
 #define STR_NG	"New Game"
-#define	STR_SD	"Sound"
+#define	STR_SD	"Audio"
 #define	STR_CL	"Control"
 #define	STR_GR	"Graphics"
 #define	STR_LG	"Load Game"

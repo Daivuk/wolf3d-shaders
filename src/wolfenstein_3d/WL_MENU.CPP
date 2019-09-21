@@ -3020,7 +3020,7 @@ void DrawOutline(int16_t x,int16_t y,int16_t w,int16_t h,int16_t color1,int16_t 
 ////////////////////////////////////////////////////////////////////
 void SetupControlPanel(void)
 {
-	 //struct ffblk f;
+	ffblk f;
 	char name[13];
 	int16_t which,i;
 
@@ -3047,23 +3047,23 @@ void SetupControlPanel(void)
 	//
 	// SEE WHICH SAVE GAME FILES ARE AVAILABLE & READ STRING IN
 	//
-	 //strcpy(name,SaveName);
-	 //if (!findfirst(name,&f,0))
-	 //	do
-	 //	{
-	 //		which=f.ff_name[7]-'0';
-	 //		if (which<10)
-	 //		{
-	 //			int16_t handle;
-	 //			char temp[32];
+	 strcpy(name,SaveName);
+	 if (!findfirst((std::string("*.") + extension).c_str(),&f,0))
+	 	do
+	 	{
+	 		which=f.ff_name[7]-'0';
+	 		if (which<10)
+	 		{
+	 			int16_t handle;
+	 			char temp[32];
 
-	 //			SaveGamesAvail[which]=1;
-	 //			handle=file_open(f.ff_name,O_BINARY);
-	 //			file_read(handle,temp,32);
-	 //			file_close(handle);
-	 //			strcpy(&SaveGameNames[which][0],temp);
-	 //		}
-	 //	} while(!findnext(&f));
+	 			SaveGamesAvail[which]=1;
+	 			handle=file_open(f.ff_name,O_BINARY);
+	 			file_read(handle,temp,32);
+	 			file_close(handle);
+	 			strcpy(&SaveGameNames[which][0],temp);
+	 		}
+	 	} while(!findnext(&f));
 
 	//
 	// CENTER MOUSE
@@ -4032,6 +4032,8 @@ void CheckForEpisodes(void)
 	else
 		Quit((char*)"NO WOLFENSTEIN 3-D DATA FILES to be found!");
 #endif
+
+    closefind(&f);
 
 	strcat(configname,extension);
 	strcat(SaveName,extension);

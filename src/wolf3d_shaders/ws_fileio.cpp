@@ -11,6 +11,7 @@ static std::map<int, FILE*> file_handles;
 int file_open(const char* filename, int flags, int sb)
 {
     std::string f;
+    if (!(flags & O_RDONLY) && !(flags & O_WRONLY)) flags |= O_RDONLY;
     if (flags & O_RDONLY) f += "r";
     if (flags & O_WRONLY) f += "w";
     if (flags & O_BINARY) f += "b";
@@ -79,14 +80,13 @@ static std::string getExtension(const std::string& filename)
     return toUpper(filename.substr(pos + 1));
 }
 
-int findfirst(const char* extension, int* f, int flag)
+int findfirst(const char* extension, ffblk* f, int flag)
 {
-    auto upExt = toUpper(extension);
-    DIR *dir;
+    f->upExt = toUpper(extension);
     struct dirent *ent;
-    if ((dir = opendir(".")) != NULL)
+    if ((f->dir = opendir(".")) != NULL)
     {
-        while ((ent = readdir(dir)) != NULL)
+        while ((ent = readdir(f->dir)) != NULL)
         {
             if (!strcmp(ent->d_name, "."))
             {
@@ -97,14 +97,51 @@ int findfirst(const char* extension, int* f, int flag)
                 continue;
             }
 
-            if (toUpper("*." + getExtension(ent->d_name)) == upExt)
+            if (toUpper("*." + getExtension(ent->d_name)) == f->upExt)
             {
-                closedir(dir);
+                strncpy(f->ff_name, ent->d_name, std::min((int)1024 + 1, (int)strlen(ent->d_name) + 1));
                 return 0;
             }
         }
-        closedir(dir);
+        closedir(f->dir);
+        f->dir = NULL;
     }
 
     return -1;
+}
+
+int findnext(ffblk* f)
+{
+    if (!f->dir) return -1;
+
+    struct dirent *ent;
+    while ((ent = readdir(f->dir)) != NULL)
+    {
+        if (!strcmp(ent->d_name, "."))
+        {
+            continue;
+        }
+        else if (!strcmp(ent->d_name, ".."))
+        {
+            continue;
+        }
+
+        if (toUpper("*." + getExtension(ent->d_name)) == f->upExt)
+        {
+            strncpy(f->ff_name, ent->d_name, std::min((int)1024 + 1, (int)strlen(ent->d_name) + 1));
+            return 0;
+        }
+    }
+    closedir(f->dir);
+    f->dir = NULL;
+    return -1;
+}
+
+void closefind(ffblk* f)
+{
+    if (f->dir)
+    {
+        closedir(f->dir);
+        f->dir = NULL;
+    }
 }

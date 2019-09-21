@@ -4,6 +4,7 @@
 #define FILEIO_H_INCLUDED
 
 #include <stdio.h>
+#include <string>
 
 #define O_BINARY 0x1
 #define O_RDONLY 0x2
@@ -18,7 +19,12 @@
 
 #define FA_ARCH 0x1
 
-#define ffblk int
+struct ffblk
+{
+    struct DIR *dir;
+    std::string upExt;
+    char ff_name[1024 + 1];
+};
 
 int file_open(const char* filename, int flags, int sb = 0);
 void file_read(int handle, void* out, size_t size);
@@ -26,6 +32,8 @@ void file_write(int handle, const void* in, size_t size);
 void file_close(int handle);
 int file_seek(int handle, long pos, int flag);
 long filelength(int handle);
-int findfirst(const char* ext, int* f, int flag);
+int findfirst(const char* ext, ffblk* f, int flag);
+int findnext(ffblk* f);
+void closefind(ffblk* f);
 
 #endif
