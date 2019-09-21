@@ -4,7 +4,7 @@
 
 #include <chrono>
 
-static const float LUM_TARGET = .20f;
+static const float LUM_TARGET = .25f;
 static const float LUM_ADAPT_SPEED_LIGHT = 20.0f;
 static const float LUM_ADAPT_SPEED_DARK = 20.0f;
 static const float LUM_MIN = .01f;
@@ -127,7 +127,7 @@ void ws_finish_draw_3d()
 
             // Player light
             ws_player_light.position = { (float)player->x / 65536.f, 64.0f - (float)player->y / 65536.f, 0.5f };
-            ws_draw_pointlight(ws_player_light);
+            // ws_draw_pointlight(ws_player_light);
 
             // Other lights
             for (auto& light : ws_active_lights)

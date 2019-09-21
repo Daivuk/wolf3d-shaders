@@ -243,7 +243,7 @@ static const char *PTC_HDR_FRAG =
 "{"
 "   vec4 hdr = texture2D(HDRTexture, Frag_TexCoord);"
 
-"   hdr.rgb = pow(hdr.rgb, vec3(1.1));"
+"   hdr.rgb = pow(hdr.rgb, vec3(1.2));"
 "   hdr.rgb = hdr.rgb * LumMultiplier;"
 
 "   gl_FragColor = hdr;"

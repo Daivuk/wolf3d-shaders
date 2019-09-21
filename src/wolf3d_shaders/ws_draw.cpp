@@ -313,7 +313,7 @@ void ws_draw_screen_from_raw(byte *_data, int16_t chunk)
     ws_flush();
     ws_prepare_for_ptc(GL_QUADS);
     glBindTexture(GL_TEXTURE_2D, texture);
-    ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, (float)0, (float)0, (float)ws_screen_w, (float)ws_screen_h, 0, 0, 1, 1, { 1, 1, 1, 1 });
+    ws_ptc_count += ws_draw_rect(ws_resources.pPTCVertices + ws_ptc_count, (float)0, (float)0, (float)MaxX, (float)MaxY, 0, 0, 1, 1, { 1, 1, 1, 1 });
     ws_flush();
 }
 
