@@ -278,6 +278,7 @@ int main(int argc, char **argv)
     io.KeyMap[ImGuiKey_Y] = (int)SDL_SCANCODE_Y;
     io.KeyMap[ImGuiKey_Z] = (int)SDL_SCANCODE_Z;
 
+    ws_load_configs();
     ws_load_settings();
 
     ws_update_sdl();

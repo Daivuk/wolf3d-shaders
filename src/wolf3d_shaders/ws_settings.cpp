@@ -20,7 +20,11 @@ float ws_save_flash_anim = 0.0f;
 float ws_bonus_flash = 0.0f;
 float ws_damage_flash = 0.0f;
 
+float ws_sound_volume = 0.5f;
+float ws_music_volume = 0.5f;
+
 static const std::string GLOBAL_SETTINGS_FILENAME = "global_settings.json";
+static const std::string CONFIGS_FILENAME = "configs.json";
 
 static int json_to_int(const Json::Value& json, int _default = 0)
 {
@@ -203,4 +207,51 @@ void ws_load_settings()
     }
     ws_gbuffer_tool_scale = json_to_int(jsonDocument["gbuffer_tool_scale"], 0);
     //-----------------------
+}
+
+void ws_save_configs()
+{
+    std::ofstream file(CONFIGS_FILENAME);
+    if (!file.is_open())
+    {
+        tinyfd_messageBox("Open", ("Failed to open/create file:\n" + CONFIGS_FILENAME).c_str(), "ok", "error", 0);
+        return;
+    }
+
+    Json::Value jsonDocument;
+
+    //-----------------------
+    jsonDocument["sound_volume"] = ws_sound_volume;
+    jsonDocument["music_volume"] = ws_music_volume;
+    //-----------------------
+
+    file << jsonDocument;
+    file.close();
+}
+
+void ws_load_configs()
+{
+    std::ifstream file(CONFIGS_FILENAME);
+    if (!file.is_open())
+    {
+        tinyfd_messageBox("Open", ("Failed to open file:\n" + CONFIGS_FILENAME).c_str(), "ok", "error", 0);
+        return;
+    }
+    Json::Value jsonDocument;
+    try
+    {
+        file >> jsonDocument;
+    }
+    catch (...)
+    {
+        tinyfd_messageBox("Open", ("Failed to open file:\n" + CONFIGS_FILENAME + "\nIt is corrupted.").c_str(), "ok", "error", 0);
+        return;
+    }
+
+    //-----------------------
+    ws_sound_volume = json_to_float(jsonDocument["sound_volume"], 0.5f);
+    ws_music_volume = json_to_float(jsonDocument["music_volume"], 0.5f);
+    //-----------------------
+
+    file.close();
 }

@@ -52,6 +52,9 @@ void ws_audio_callback(void *userdata, Uint8 *stream, int len)
             volR = 1.0f;
         }
 
+        volL *= ws_sound_volume;
+        volR *= ws_sound_volume;
+
         auto len1 = std::min(len, playingSound.len);
         for (int i = 0; i < len1; ++i)
         {

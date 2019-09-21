@@ -187,6 +187,8 @@ extern float ws_bonus_flash;
 extern float ws_damage_flash;
 extern int ws_gbuffer_tool_scale;
 extern std::map<int, ws_SpriteSettings> ws_sprite_settings;
+extern float ws_sound_volume;
+extern float ws_music_volume;
 
 // Tools
 extern int ws_selected_sprite;
@@ -202,6 +204,8 @@ void Mouse(int16_t x);
 void ws_save_settings();
 void ws_load_settings();
 void ws_do_tools();
+void ws_save_configs();
+void ws_load_configs();
 
 GLuint ws_create_texture(uint8_t *data, int w, int h);
 ws_RenderTarget ws_create_rt(int w, int h);

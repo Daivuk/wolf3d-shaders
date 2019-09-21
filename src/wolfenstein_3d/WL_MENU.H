@@ -54,7 +54,7 @@
 #define MENU_H	13*9+6
 #endif
 
-#define SM_X	40
+#define SM_X	30
 #define SM_W	250
 
 #define SM_Y1	63

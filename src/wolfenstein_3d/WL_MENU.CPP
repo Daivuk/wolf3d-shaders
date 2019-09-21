@@ -52,7 +52,7 @@ char endStrings[9][80]=
 
 CP_iteminfo
 	MainItems={MENU_X,MENU_Y,9,STARTITEM,24},
-	SndItems={SM_X,SM_Y1,2,0,52},
+	SndItems={SM_X,SM_Y1,4,0,52},
 	LSItems={LSM_X,LSM_Y,10,0,24},
 	CtlItems={CTL_X,CTL_Y,6,-1,56},
 	CusItems={8,CST_Y+13*2,9,-1,0},
@@ -130,8 +130,10 @@ SndMenu[]=
 	//{0,"",0},
 	//{1,STR_NONE,0},
 	//{1,STR_ALSB,0}
-    {0,"",(void(*)(int16_t))SoundVolume},
-    {0,"",(void(*)(int16_t))MusicVolume}
+    {1,"",0},//(void(*)(int16_t))SoundVolume },
+    {0,"",0},
+    {0,"",0},
+    {1,"",0}//(void(*)(int16_t))MusicVolume }
 #endif
 },
 
@@ -327,6 +329,8 @@ static byte
 	(byte*)"Down",(byte*)"Left",(byte*)"Right",(byte*)""
 					};
 
+void DrawSoundScreen();
+void DrawMusicScreen();
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -1075,8 +1079,10 @@ void DrawNewEpisode(void)
 	SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
 	DrawMenu(&NewEitems,&NewEmenu[0]);
 
-	for (i=0;i<6;i++)
-		VWB_DrawPic(NE_X+32,NE_Y+i*26,C_EPISODE1PIC+i);
+    for (i = 0; i < 6; i++)
+    {
+        VWB_DrawPic(NE_X + 32, NE_Y + i * 26, C_EPISODE1PIC + i);
+    }
 
 	VW_UpdateScreen();
 	MenuFadeIn();
@@ -1150,10 +1156,15 @@ void CP_Sound(void)
 	MenuFadeIn();
 	WaitKeyUp();
 
+    auto sndVolBefore = ws_sound_volume;
+    auto musicVoldBefore = ws_music_volume;
 	do
 	{
 		which=HandleMenu(&SndItems,&SndMenu[0],NULL);
 	} while(which>=0);
+    if (sndVolBefore != ws_sound_volume ||
+        musicVoldBefore != ws_music_volume)
+        ws_save_configs();
 
 	MenuFadeOut();
 
@@ -1174,46 +1185,10 @@ void DrawSoundMenu(void)
     VWB_DrawPic(112, 184, C_MOUSELBACKPIC);
 
     DrawWindow(10, 80 - 20, 300, 30, BKGDCOLOR);
-    {
-        WindowX = 0;
-        WindowW = 320;
-        PrintY = 82 - 20;
-        SETFONTCOLOR(READCOLOR, BKGDCOLOR);
-        US_CPrint((char*)STR_SND_VOL);
-
-        SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
-        PrintX = 14;
-        PrintY = 95 - 20;
-        US_Print((char*)STR_MUTE);
-        PrintX = 269;
-        US_Print((char*)STR_LOUD);
-
-        VWB_Bar(60, 97 - 20, 200, 10, TEXTCOLOR);
-        DrawOutline(60, 97 - 20, 200, 10, 0, HIGHLIGHT);
-        DrawOutline(60 + 20 * mouseadjustment, 97 - 20, 20, 10, 0, READCOLOR);
-        VWB_Bar(61 + 20 * mouseadjustment, 98 - 20, 19, 9, READHCOLOR);
-    }
+    DrawSoundScreen();
 
     DrawWindow(10, 80 + 20, 300, 30, BKGDCOLOR);
-    {
-        WindowX = 0;
-        WindowW = 320;
-        PrintY = 82 + 20;
-        SETFONTCOLOR(READCOLOR, BKGDCOLOR);
-        US_CPrint((char*)STR_MUSIC_VOL);
-
-        SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
-        PrintX = 14;
-        PrintY = 95 + 20;
-        US_Print((char*)STR_MUTE);
-        PrintX = 269;
-        US_Print((char*)STR_LOUD);
-
-        VWB_Bar(60, 97 + 20, 200, 10, TEXTCOLOR);
-        DrawOutline(60, 97 + 20, 200, 10, 0, HIGHLIGHT);
-        DrawOutline(60 + 20 * mouseadjustment, 97 + 20, 20, 10, 0, READCOLOR);
-        VWB_Bar(61 + 20 * mouseadjustment, 98 + 20, 19, 9, READHCOLOR);
-    }
+    DrawMusicScreen();
 
     //MenuFadeIn(); 
 
@@ -1768,6 +1743,48 @@ void DrawMouseSens(void)
 	MenuFadeIn();
 }
 
+void DrawSoundScreen(void)
+{
+    WindowX = 0;
+    WindowW = 320;
+    PrintY = 82 - 20;
+    SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
+    US_CPrint((char*)STR_SND_VOL);
+
+    SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
+    PrintX = 14;
+    PrintY = 95 - 20;
+    US_Print((char*)STR_MUTE);
+    PrintX = 269;
+    US_Print((char*)STR_LOUD);
+
+    VWB_Bar(60, 97 - 20, 200, 10, TEXTCOLOR);
+    DrawOutline(60, 97 - 20, 200, 10, 0, HIGHLIGHT);
+    DrawOutline(60 + (int)(20 * ws_sound_volume * 9), 97 - 20, 20, 10, 0, READCOLOR);
+    VWB_Bar(61 + (int)(20 * ws_sound_volume * 9), 98 - 20, 19, 9, READHCOLOR);
+}
+
+void DrawMusicScreen(void)
+{
+    WindowX = 0;
+    WindowW = 320;
+    PrintY = 82 + 20 - 1;
+    SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
+    US_CPrint((char*)STR_MUSIC_VOL);
+
+    SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
+    PrintX = 14;
+    PrintY = 95 + 20 - 1;
+    US_Print((char*)STR_MUTE);
+    PrintX = 269;
+    US_Print((char*)STR_LOUD);
+
+    VWB_Bar(60, 97 + 20 - 1, 200, 10, TEXTCOLOR);
+    DrawOutline(60, 97 + 20 - 1, 200, 10, 0, HIGHLIGHT);
+    DrawOutline(60 + (int)(20 * ws_music_volume * 9), 97 + 20 - 1, 20, 10, 0, READCOLOR);
+    VWB_Bar(61 + (int)(20 * ws_music_volume * 9), 98 + 20 - 1, 19, 9, READHCOLOR);
+}
+
 
 ///////////////////////////
 //
@@ -1804,82 +1821,6 @@ void MouseSensitivity(void)
 				break;
 
 			case dir_South:
-			case dir_East:
-				if (mouseadjustment<9)
-				{
-					mouseadjustment++;
-					VWB_Bar(60,97,200,10,TEXTCOLOR);
-					DrawOutline(60,97,200,10,0,HIGHLIGHT);
-					DrawOutline(60+20*mouseadjustment,97,20,10,0,READCOLOR);
-					VWB_Bar(61+20*mouseadjustment,98,19,9,READHCOLOR);
-					VW_UpdateScreen();
-					SD_PlaySound(MOVEGUN1SND);
-                    while (Keyboard[sc_RightArrow]) { ws_update_sdl(); }
-					WaitKeyUp();
-				}
-				break;
-		}
-
-		#ifndef SPEAR
-		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm((char*)"goobers"))
-		#else
-		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
-		#endif
-			PicturePause();
-
-		if (ci.button0 || Keyboard[sc_Space] || Keyboard[sc_Enter])
-			exit=1;
-		else
-		if (ci.button1 || Keyboard[sc_Escape])
-			exit=2;
-
-	} while(!exit);
-
-	if (exit==2)
-	{
-		mouseadjustment=oldMA;
-		SD_PlaySound(ESCPRESSEDSND);
-	}
-	else
-		SD_PlaySound(SHOOTSND);
-
-	WaitKeyUp();
-	MenuFadeOut();
-}
-
-///////////////////////////
-//
-// ADJUST SOUND VOLUME
-//
-void SoundVolume(void)
-{
-	ControlInfo ci;
-	int16_t exit=0,oldMA;
-
-
-	oldMA=mouseadjustment;
-	DrawMouseSens();
-	do
-	{
-		ReadAnyControl(&ci);
-		switch(ci.dir)
-		{
-            default: break;
-			case dir_West:
-				if (mouseadjustment)
-				{
-					mouseadjustment--;
-					VWB_Bar(60,97,200,10,TEXTCOLOR);
-					DrawOutline(60,97,200,10,0,HIGHLIGHT);
-					DrawOutline(60+20*mouseadjustment,97,20,10,0,READCOLOR);
-					VWB_Bar(61+20*mouseadjustment,98,19,9,READHCOLOR);
-					VW_UpdateScreen();
-					SD_PlaySound(MOVEGUN1SND);
-                    while (Keyboard[sc_LeftArrow]) { ws_update_sdl(); }
-					WaitKeyUp();
-				}
-				break;
-
 			case dir_East:
 				if (mouseadjustment<9)
 				{
@@ -3277,34 +3218,40 @@ int16_t HandleMenu(CP_iteminfo *item_i,CP_itemtype *items,void (*routine)(int16_
 			// MOVE UP
 			//
 			case dir_North:
+                if (item_i == &SndItems)
+                {
+                }
+                else
+                {
 
-			EraseGun(item_i,items,x,y,which);
+                    EraseGun(item_i, items, x, y, which);
 
-			//
-			// ANIMATE HALF-STEP
-			//
-			if (which && (items+which-1)->active)
-			{
-				y-=6;
-				DrawHalfStep(x,y);
-			}
+                    //
+                    // ANIMATE HALF-STEP
+                    //
+                    if (which && (items + which - 1)->active)
+                    {
+                        y -= 6;
+                        DrawHalfStep(x, y);
+                    }
 
-			//
-			// MOVE TO NEXT AVAILABLE SPOT
-			//
-			do
-			{
-				if (!which)
-					which=item_i->amount-1;
-				else
-					which--;
-			} while(!(items+which)->active);
+                }
 
-			DrawGun(item_i,items,x,&y,which,basey,routine);
-			//
-			// WAIT FOR BUTTON-UP OR DELAY NEXT MOVE
-			//
-			TicDelay(20);
+                    //
+                    // MOVE TO NEXT AVAILABLE SPOT
+                    //
+                    do
+                    {
+                        if (!which)
+                            which = item_i->amount - 1;
+                        else
+                            which--;
+                    } while (!(items + which)->active);
+                    DrawGun(item_i, items, x, &y, which, basey, routine);
+                    //
+                    // WAIT FOR BUTTON-UP OR DELAY NEXT MOVE
+                    //
+                    TicDelay(20);
 			break;
 
 			////////////////////////////////////////////////
@@ -3313,23 +3260,29 @@ int16_t HandleMenu(CP_iteminfo *item_i,CP_itemtype *items,void (*routine)(int16_
 			//
 			case dir_South:
 
-			EraseGun(item_i,items,x,y,which);
-			//
-			// ANIMATE HALF-STEP
-			//
-			if (which!=item_i->amount-1 && (items+which+1)->active)
-			{
-				y+=6;
-				DrawHalfStep(x,y);
-			}
+                if (item_i == &SndItems)
+                {
+                }
+                else
+                {
+                    EraseGun(item_i, items, x, y, which);
+                    //
+                    // ANIMATE HALF-STEP
+                    //
+                    if (which != item_i->amount - 1 && (items + which + 1)->active)
+                    {
+                        y += 6;
+                        DrawHalfStep(x, y);
+                    }
 
-			do
-			{
-				if (which==item_i->amount-1)
-					which=0;
-				else
-					which++;
-			} while(!(items+which)->active);
+                }
+                    do
+                    {
+                        if (which == item_i->amount - 1)
+                            which = 0;
+                        else
+                            which++;
+                    } while (!(items + which)->active);
 
 			DrawGun(item_i,items,x,&y,which,basey,routine);
 
@@ -3338,11 +3291,54 @@ int16_t HandleMenu(CP_iteminfo *item_i,CP_itemtype *items,void (*routine)(int16_
 			//
 			TicDelay(20);
 			break;
-		}
+
+            case dir_West:
+            {
+                if (item_i == &SndItems)
+                {
+                    if (which == 0)
+                    {
+                        if (ws_sound_volume > 0.0f) ws_sound_volume = std::max(0.0f, ws_sound_volume - 0.1f);
+                        DrawSoundScreen();
+                        DrawGun(item_i, items, x, &y, which, basey, routine);
+                    }
+                    else if (which == 3)
+                    {
+                        if (ws_music_volume > 0.0f) ws_music_volume = std::max(0.0f, ws_music_volume - 0.1f);
+                        DrawMusicScreen();
+                        DrawGun(item_i, items, x, &y, which, basey, routine);
+                    }
+                }
+                TicDelay(20);
+                break;
+            }
+
+            case dir_East:
+            {
+                if (item_i == &SndItems)
+                {
+                    if (which == 0)
+                    {
+                        if (ws_sound_volume < 1.0f) ws_sound_volume = std::min(1.0f, ws_sound_volume + 0.1f);
+                        DrawSoundScreen();
+                        DrawGun(item_i, items, x, &y, which, basey, routine);
+                    }
+                    else if (which == 3)
+                    {
+                        if (ws_music_volume < 1.0f) ws_music_volume = std::min(1.0f, ws_music_volume + 0.1f);
+                        DrawMusicScreen();
+                        DrawGun(item_i, items, x, &y, which, basey, routine);
+                    }
+                }
+                TicDelay(20);
+                break;
+            }
+        }
 
 		if (ci.button0 ||
 			Keyboard[sc_Space] ||
 			Keyboard[sc_Enter])
+            if (item_i != &SndItems)
 				exit=1;
 
 		if (ci.button1 ||
@@ -3550,6 +3546,7 @@ void WaitKeyUp(void)
 void ReadAnyControl(ControlInfo *ci)
 {
     ws_update_sdl();
+    VW_UpdateScreen();
 	int16_t mouseactive=0;
 
 
