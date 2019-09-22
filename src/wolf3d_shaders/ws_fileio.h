@@ -19,9 +19,11 @@
 
 #define FA_ARCH 0x1
 
+#include <dirent.h>
+
 struct ffblk
 {
-    struct DIR *dir;
+    DIR *dir;
     std::string upExt;
     char ff_name[1024 + 1];
 };

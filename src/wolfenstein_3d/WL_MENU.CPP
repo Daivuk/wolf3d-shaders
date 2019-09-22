@@ -2601,7 +2601,7 @@ void DrawCustJoy(int16_t hilight)
 void PrintCustKeybd(int16_t i)
 {
 	PrintX=CST_START+CST_SPC*i;
-	US_Print((char*)IN_GetScanName((ScanCode)buttonscan[order[i]]));
+	US_Print((char*)IN_GetScanName((ScanCode)buttonscan[0][order[i]]));
 }
 
 void DrawCustKeybd(int16_t hilight)

@@ -3,8 +3,6 @@
 #include <map>
 #include <algorithm>
 
-#include <dirent.h>
-
 static int next_file_handle = 1;
 static std::map<int, FILE*> file_handles;
 
