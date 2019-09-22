@@ -677,7 +677,7 @@ typedef struct objstruct
 } objtype;
 
 
-#define NUMBUTTONS	8
+#define NUMBUTTONS	14
 enum	{
 	bt_nobutton=-1,
 	bt_attack=0,
@@ -687,7 +687,13 @@ enum	{
 	bt_readyknife,
 	bt_readypistol,
 	bt_readymachinegun,
-	bt_readychaingun
+	bt_readychaingun,
+    bt_forward,
+    bt_backward,
+    bt_strafeleft,
+    bt_straferight,
+    bt_turnleft,
+    bt_turnright
 };
 
 
@@ -894,7 +900,7 @@ extern	int16_t			extravbls;
 extern	_boolean		mouseenabled,joystickenabled,joypadenabled,joystickprogressive;
 extern	int16_t			joystickport;
 extern	int16_t			dirscan[6];
-extern	int16_t			buttonscan[NUMBUTTONS];
+extern	int16_t			buttonscan[2][NUMBUTTONS];
 extern	int16_t			buttonmouse[4];
 extern	int16_t			buttonjoy[4];
 

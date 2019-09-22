@@ -157,7 +157,7 @@ void DrawNewGame(void);
 void DrawChangeView(int16_t view);
 void DrawMouseSens(void);
 void DrawCtlScreen(void);
-void DrawCustomScreen(void);
+void DrawCustomScreen(int overlayRow = -1, int overlayIndex = -1);
 void DrawLSAction(int16_t which);
 void DrawCustMouse(int16_t hilight);
 void DrawCustJoy(int16_t hilight);

@@ -56,11 +56,44 @@ byte		update[UPDATESIZE];
 //
 // control info
 //
-_boolean		mouseenabled,joystickenabled,joypadenabled,joystickprogressive;
+_boolean		mouseenabled= _true,joystickenabled,joypadenabled,joystickprogressive;
 int16_t			joystickport;
 int16_t			dirscan[6] = {sc_W,sc_RightArrow,sc_S,sc_LeftArrow,sc_A,sc_D};
-int16_t			buttonscan[NUMBUTTONS] =
-			{ sc_Control,sc_Alt,sc_LShift,sc_E,sc_1,sc_2,sc_3,sc_4};
+int16_t			buttonscan[2][NUMBUTTONS] = {
+    {
+        sc_Mouse0, // bt_attack
+        sc_Alt, // bt_strafe
+        sc_LShift, // bt_run
+        sc_E, // bt_use
+        sc_1, // bt_readyknife
+        sc_2, // bt_readypistol
+        sc_3, // bt_readymachinegun
+        sc_4, // bt_readychaingun
+        sc_W, // bt_forward
+        sc_S, // bt_backward
+        sc_A, // bt_strafeleft
+        sc_D, // bt_straferight
+        sc_LeftArrow, // bt_turnleft
+        sc_RightArrow // bt_turnright
+    },
+    {
+        sc_Control, // bt_attack
+        sc_None, // bt_strafe
+        sc_None, // bt_run
+        sc_Mouse1, // bt_use
+        sc_None, // bt_readyknife
+        sc_None, // bt_readypistol
+        sc_None, // bt_readymachinegun
+        sc_None, // bt_readychaingun
+        sc_None, // bt_forward
+        sc_None, // bt_backward
+        sc_None, // bt_strafeleft
+        sc_None, // bt_straferight
+        sc_None, // bt_turnleft
+        sc_None // bt_turnright
+    }
+};
+
 int16_t			buttonmouse[4]={bt_attack,bt_use,bt_use,bt_nobutton};
 int16_t			buttonjoy[4]={bt_attack,bt_use,bt_use,bt_run};
 
@@ -263,9 +296,12 @@ void PollKeyboardButtons (void)
 {
 	int16_t		i;
 
-	for (i=0;i<NUMBUTTONS;i++)
-		if (Keyboard[buttonscan[i]])
-			buttonstate[i] = _true;
+    for (i = 0; i < NUMBUTTONS; i++)
+    {
+        if (Keyboard[buttonscan[0][i]] ||
+            Keyboard[buttonscan[1][i]])
+            buttonstate[i] = _true;
+    }
 }
 
 
@@ -279,16 +315,17 @@ void PollKeyboardButtons (void)
 
 void PollMouseButtons (void)
 {
-	int16_t	buttons;
+    // Nah we process mouse inputs as fake keyboard scancodes now
+	//int16_t	buttons;
 
-	buttons = IN_MouseButtons ();
+	//buttons = IN_MouseButtons ();
 
-	if (buttons&1)
-		buttonstate[buttonmouse[0]] = _true;
-	if (buttons&2)
-		buttonstate[buttonmouse[1]] = _true;
-	if (buttons&4)
-		buttonstate[buttonmouse[2]] = _true;
+	//if (buttons&1)
+	//	buttonstate[buttonmouse[0]] = _true;
+	//if (buttons&2)
+	//	buttonstate[buttonmouse[1]] = _true;
+	//if (buttons&4)
+	//	buttonstate[buttonmouse[2]] = _true;
 }
 
 
@@ -342,38 +379,24 @@ void PollJoystickButtons (void)
 
 void PollKeyboardMove (void)
 {
-	if (buttonstate[bt_run])
-	{
-		if (Keyboard[dirscan[di_north]])
-			controly -= RUNMOVE*tics;
-		if (Keyboard[dirscan[di_south]])
-			controly += RUNMOVE*tics;
-		//if (Keyboard[dirscan[di_west]])
-		//	controlx -= RUNMOVE*tics;
-		//if (Keyboard[dirscan[di_east]])
-		//	controlx += RUNMOVE*tics;
-		if (Keyboard[dirscan[4]])
-			strafecontrol -= RUNMOVE*tics;
-		if (Keyboard[dirscan[5]])
-            strafecontrol += RUNMOVE*tics;
+    int movSpeed = BASEMOVE;
+    if (buttonstate[bt_run])
+    {
+        movSpeed = RUNMOVE;
+    }
 
-        //strafecontrol
-	}
-	else
-	{
-		if (Keyboard[dirscan[di_north]])
-			controly -= BASEMOVE*tics;
-		if (Keyboard[dirscan[di_south]])
-			controly += BASEMOVE*tics;
-		//if (Keyboard[dirscan[di_west]])
-		//	controlx -= BASEMOVE*tics;
-		//if (Keyboard[dirscan[di_east]])
-		//	controlx += BASEMOVE*tics;
-        if (Keyboard[dirscan[4]])
-            strafecontrol -= BASEMOVE * tics;
-        if (Keyboard[dirscan[5]])
-            strafecontrol += BASEMOVE * tics;
-	}
+	if (buttonstate[bt_forward])
+		controly -= movSpeed * tics;
+	if (buttonstate[bt_backward])
+		controly += movSpeed * tics;
+	if (buttonstate[bt_turnleft])
+		controlx -= movSpeed *tics;
+	if (buttonstate[bt_turnright])
+		controlx += movSpeed *tics;
+    if (buttonstate[bt_strafeleft])
+        strafecontrol -= movSpeed * tics;
+    if (buttonstate[bt_straferight])
+        strafecontrol += movSpeed * tics;
 }
 
 
@@ -393,8 +416,9 @@ void PollMouseMove (void)
 	 mousexmove = _CX;
 	 mouseymove = _DX;
 
-	controlx += mousexmove * mouseadjustment;
-	//controly += mouseymove*40/(13-mouseadjustment);
+     controlx += (int)(float)mousexmove * 5.0f * ((float)(mouseadjustment + 1) / 10.0f);
+     //controlx += mousexmove * 40 / (13 - mouseadjustment);
+     //controly += mouseymove*40/(13-mouseadjustment);
 }
 
 
@@ -634,7 +658,7 @@ void	CenterWindow(word w,word h)
 void CheckKeys (void)
 {
 	int16_t		i;
-	byte	scan;
+    int16_t	scan;
 	uint16_t	temp;
 
 

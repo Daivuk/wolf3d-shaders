@@ -301,31 +301,35 @@ char SaveGameNames[10][32],SaveName[13]="SAVEGAM?.";
 //
 ////////////////////////////////////////////////////////////////////
 static byte
-					*ScanNames[] =		// Scan code names with single chars
-					{
-	(byte*)"?",(byte*)"?",(byte*)"1",(byte*)"2",(byte*)"3",(byte*)"4",(byte*)"5",(byte*)"6",(byte*)"7",(byte*)"8",(byte*)"9",(byte*)"0",(byte*)"-",(byte*)"+",(byte*)"?",(byte*)"?",
-	(byte*)"Q",(byte*)"W",(byte*)"E",(byte*)"R",(byte*)"T",(byte*)"Y",(byte*)"U",(byte*)"I",(byte*)"O",(byte*)"P",(byte*)"[",(byte*)"]",(byte*)"|",(byte*)"?",(byte*)"A",(byte*)"S",
-	(byte*)"D",(byte*)"F",(byte*)"G",(byte*)"H",(byte*)"J",(byte*)"K",(byte*)"L",(byte*)";",(byte*)"\"",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"Z",(byte*)"X",(byte*)"C",(byte*)"V",
-	(byte*)"B",(byte*)"N",(byte*)"M",(byte*)",(byte*)",(byte*)".",(byte*)"/",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",
-	(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"\xf",(byte*)"?",(byte*)"-",(byte*)"\x15",(byte*)"5",(byte*)"\x11",(byte*)"+",(byte*)"?",
-	(byte*)"\x13",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",
-	(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",
-	(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?"
-					},	// DEBUG - consolidate these
-					ExtScanCodes[] =	// Scan codes with >1 char names
-					{
-	1,0xe,0xf,0x1d,0x2a,0x39,0x3a,0x3b,0x3c,0x3d,0x3e,
-	0x3f,0x40,0x41,0x42,0x43,0x44,0x57,0x59,0x46,0x1c,0x36,
-	0x37,0x38,0x47,0x49,0x4f,0x51,0x52,0x53,0x45,0x48,
-	0x50,0x4b,0x4d,0x00
-					},
+*ScanNames[] =		// Scan code names with single chars
+{
+(byte*)"?",(byte*)"?",(byte*)"1",(byte*)"2",(byte*)"3",(byte*)"4",(byte*)"5",(byte*)"6",(byte*)"7",(byte*)"8",(byte*)"9",(byte*)"0",(byte*)"-",(byte*)"+",(byte*)"?",(byte*)"?",
+(byte*)"Q",(byte*)"W",(byte*)"E",(byte*)"R",(byte*)"T",(byte*)"Y",(byte*)"U",(byte*)"I",(byte*)"O",(byte*)"P",(byte*)"[",(byte*)"]",(byte*)"|",(byte*)"?",(byte*)"A",(byte*)"S",
+(byte*)"D",(byte*)"F",(byte*)"G",(byte*)"H",(byte*)"J",(byte*)"K",(byte*)"L",(byte*)";",(byte*)"\"",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"Z",(byte*)"X",(byte*)"C",(byte*)"V",
+(byte*)"B",(byte*)"N",(byte*)"M",(byte*)",(byte*)",(byte*)".",(byte*)"/",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",
+(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"\xf",(byte*)"?",(byte*)"-",(byte*)"\x15",(byte*)"5",(byte*)"\x11",(byte*)"+",(byte*)"?",
+(byte*)"\x13",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",
+(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",
+(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?",(byte*)"?"
+};
+static int16_t	// DEBUG - consolidate these
+ExtScanCodes[] =	// Scan codes with >1 char names
+{
+1,0xe,0xf,0x1d,0x2a,0x39,0x3a,0x3b,0x3c,0x3d,0x3e,
+0x3f,0x40,0x41,0x42,0x43,0x44,0x57,0x59,0x46,0x1c,0x36,
+0x37,0x38,0x47,0x49,0x4f,0x51,0x52,0x53,0x45,0x48,
+0x50,0x4b,0x4d,sc_Mouse0,sc_Mouse1,sc_Mouse2,0x00
+};
+static byte
 					*ExtScanNames[] =	// Names corresponding to ExtScanCodes
 					{
 	(byte*)"Esc",(byte*)"BkSp",(byte*)"Tab",(byte*)"Ctrl",(byte*)"LShft",(byte*)"Space",(byte*)"CapsLk",(byte*)"F1",(byte*)"F2",(byte*)"F3",(byte*)"F4",
 	(byte*)"F5",(byte*)"F6",(byte*)"F7",(byte*)"F8",(byte*)"F9",(byte*)"F10",(byte*)"F11",(byte*)"F12",(byte*)"ScrlLk",(byte*)"Enter",(byte*)"RShft",
 	(byte*)"PrtSc",(byte*)"Alt",(byte*)"Home",(byte*)"PgUp",(byte*)"End",(byte*)"PgDn",(byte*)"Ins",(byte*)"Del",(byte*)"NumLk",(byte*)"Up",
-	(byte*)"Down",(byte*)"Left",(byte*)"Right",(byte*)""
+	(byte*)"Down",(byte*)"Left",(byte*)"Right",(byte*)"LMB",(byte*)"RMB",(byte*)"MMB",(byte*)""
 					};
+//#define sc_JoyBtnBase   303
+//#define sc_JoyAxisBtnBase   350
 
 void DrawSoundScreen();
 void DrawMusicScreen();
@@ -1850,14 +1854,15 @@ void MouseSensitivity(void)
 
 	} while(!exit);
 
-	if (exit==2)
-	{
-		mouseadjustment=oldMA;
-		SD_PlaySound(ESCPRESSEDSND);
-	}
-	else
+	//if (exit==2) // This is counter intuitive. Save new value if escape is pressed
+	//{
+	//	mouseadjustment=oldMA;
+	//	SD_PlaySound(ESCPRESSEDSND);
+	//}
+	//else
 		SD_PlaySound(SHOOTSND);
-
+    if (mouseadjustment != oldMA)
+        ws_save_configs();
 	WaitKeyUp();
 	MenuFadeOut();
 }
@@ -1970,8 +1975,6 @@ void DrawCtlScreen(void)
  //}
 
  //CtlMenu[4].active=mouseenabled;
-
-
  DrawMenu(&CtlItems,&CtlMenu[0]);
 
 
@@ -2024,40 +2027,95 @@ void DrawCtlScreen(void)
 enum {FIRE,STRAFE,RUN,OPEN};
 char mbarray[4][3]={"b0","b1","b2","b3"},
 	   order[4]={RUN,OPEN,FIRE,STRAFE};
-
+int mk[] = { bt_forward, bt_backward, bt_strafeleft, bt_straferight, bt_attack, bt_use, bt_turnleft, bt_turnright };
 
 void CustomControls(void)
 {
- int16_t which;
+    int16_t which;
 
+    DrawCustomScreen();
+    MenuFadeIn();
 
- DrawCustomScreen();
- do
- {
-  which=HandleMenu(&CusItems,&CusMenu[0],FixupCustom);
-  //switch(which)
-  //{
-  // case 0:
-	 //DefineMouseBtns();
-	 //DrawCustMouse(1);
-	 //break;
-  // case 3:
-	 //DefineJoyBtns();
-	 //DrawCustJoy(0);
-	 //break;
-  // case 6:
-	 //DefineKeyBtns();
-	 //DrawCustKeybd(0);
-	 //break;
-  // case 8:
-	 //DefineKeyMove();
-	 //DrawCustKeys(0);
-  //}
- } while(which>=0);
+    do
+    {
+        which = HandleMenu(&CusItems,&CusMenu[0],NULL/*FixupCustom*/);
+        if (which >= 0)
+        {
+            int index = 0;
+            int exit = 0;
+            do
+            {
+                DrawCustomScreen(which, index);
 
+                ControlInfo ci;
+                IN_ClearKeysDown();
+                CheckPause();
+                ReadAnyControl(&ci);
+                switch (ci.dir)
+                {
+                default: break;
+                case dir_West:
+                    SD_PlaySound(MOVEGUN1SND);
+                    index = std::max(0, index - 1);
+                    break;
+                case dir_East:
+                    SD_PlaySound(MOVEGUN1SND);
+                    index = std::min(1, index + 1);
+                    break;
+                }
 
+                if (ci.button0 || Keyboard[sc_Enter])
+                {
+                    SD_PlaySound(SHOOTSND);
+                    while (true)
+                    {
+                        VL_Bar(index ? 240 : 180, 52 - 3 + 24 + which * 13, 60, 13, BORD2COLOR);
 
- MenuFadeOut();
+                        ControlInfo ci;
+                        IN_ClearKeysDown();
+                        CheckPause();
+                        ReadAnyControl(&ci);
+
+                        if (Keyboard[sc_Escape])
+                        {
+                            SD_PlaySound(ESCPRESSEDSND);
+                            break;
+                        }
+                        else if (Keyboard[sc_Delete])
+                        {
+                            SD_PlaySound(SHOOTSND);
+                            if (buttonscan[index][mk[which]] != sc_None)
+                            {
+                                buttonscan[index][mk[which]] = sc_None;
+                                ws_save_configs();
+                            }
+                            break;
+                        }
+                        else if (LastScan)
+                        {
+                            SD_PlaySound(SHOOTSND);
+                            if (buttonscan[index][mk[which]] != LastScan)
+                            {
+                                buttonscan[index][mk[which]] = LastScan;
+                                ws_save_configs();
+                            }
+                            break;
+                        }
+                    };
+                }
+                else if (ci.button1 || Keyboard[sc_Escape])
+                {
+                    exit = 1;
+                    SD_PlaySound(ESCPRESSEDSND);
+                }
+
+            } while (!exit);
+
+            DrawCustomScreen();
+        }
+    } while(which>=0);
+
+    MenuFadeOut();
 }
 
 
@@ -2207,80 +2265,80 @@ void EnterCtrlData(int16_t index, CustomCtrls *cust, void(*DrawRtn)(int16_t), vo
                 //
                 switch (type)
                 {
-                case MOUSE:
-                    Mouse(3);
-                    button = _BX;
-                    switch (button)
-                    {
-                    case 1: result = 1; break;
-                    case 2: result = 2; break;
-                    case 4: result = 3; break;
-                    }
+                //case MOUSE:
+                //    Mouse(3);
+                //    button = _BX;
+                //    switch (button)
+                //    {
+                //    case 1: result = 1; break;
+                //    case 2: result = 2; break;
+                //    case 4: result = 3; break;
+                //    }
 
-                    if (result)
-                    {
-                        int16_t z;
-
-
-                        for (z = 0; z < 4; z++)
-                            if (order[which] == buttonmouse[z])
-                            {
-                                buttonmouse[z] = bt_nobutton;
-                                break;
-                            }
-
-                        buttonmouse[result - 1] = order[which];
-                        picked = 1;
-                        SD_PlaySound(SHOOTDOORSND);
-                    }
-                    break;
-
-                case JOYSTICK:
-                    if (ci.button0) result = 1;
-                    else
-                        if (ci.button1) result = 2;
-                        else
-                            if (ci.button2) result = 3;
-                            else
-                                if (ci.button3) result = 4;
-
-                    if (result)
-                    {
-                        int16_t z;
+                //    if (result)
+                //    {
+                //        int16_t z;
 
 
-                        for (z = 0; z < 4; z++)
-                            if (order[which] == buttonjoy[z])
-                            {
-                                buttonjoy[z] = bt_nobutton;
-                                break;
-                            }
+                //        for (z = 0; z < 4; z++)
+                //            if (order[which] == buttonmouse[z])
+                //            {
+                //                buttonmouse[z] = bt_nobutton;
+                //                break;
+                //            }
 
-                        buttonjoy[result - 1] = order[which];
-                        picked = 1;
-                        SD_PlaySound(SHOOTDOORSND);
-                    }
-                    break;
+                //        buttonmouse[result - 1] = order[which];
+                //        picked = 1;
+                //        SD_PlaySound(SHOOTDOORSND);
+                //    }
+                //    break;
+
+                //case JOYSTICK:
+                //    if (ci.button0) result = 1;
+                //    else
+                //        if (ci.button1) result = 2;
+                //        else
+                //            if (ci.button2) result = 3;
+                //            else
+                //                if (ci.button3) result = 4;
+
+                //    if (result)
+                //    {
+                //        int16_t z;
+
+
+                //        for (z = 0; z < 4; z++)
+                //            if (order[which] == buttonjoy[z])
+                //            {
+                //                buttonjoy[z] = bt_nobutton;
+                //                break;
+                //            }
+
+                //        buttonjoy[result - 1] = order[which];
+                //        picked = 1;
+                //        SD_PlaySound(SHOOTDOORSND);
+                //    }
+                //    break;
 
                 case KEYBOARDBTNS:
                     if (LastScan)
                     {
-                        buttonscan[order[which]] = LastScan;
+                        //buttonscan[order[which]] = LastScan; //TODO:
                         picked = 1;
                         ShootSnd();
                         IN_ClearKeysDown();
                     }
                     break;
 
-                case KEYBOARDMOVE:
-                    if (LastScan)
-                    {
-                        dirscan[moveorder[which]] = LastScan;
-                        picked = 1;
-                        ShootSnd();
-                        IN_ClearKeysDown();
-                    }
-                    break;
+                //case KEYBOARDMOVE:
+                //    if (LastScan)
+                //    {
+                //        dirscan[moveorder[which]] = LastScan;
+                //        picked = 1;
+                //        ShootSnd();
+                //        IN_ClearKeysDown();
+                //    }
+                //    break;
                 }
 
                 //
@@ -2406,7 +2464,7 @@ void FixupCustom(int16_t w)
 //
 // DRAW CUSTOMIZE SCREEN
 //
-void DrawCustomScreen(void)
+void DrawCustomScreen(int overlayRow, int overlayIndex)
 {
 	int16_t i;
 
@@ -2423,84 +2481,47 @@ void DrawCustomScreen(void)
 	DrawWindow(5,52 - 3 + 20,310,13 * 8 + 6,BKGDCOLOR);
 
     SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
-    PrintX = 40;
-    PrintY = 52-3+24;
-    US_Print((char*)STR_FRWD);
-    PrintX = 40;
-    PrintY += 13;
-    US_Print((char*)STR_BKWD);
-    PrintX = 40;
-    PrintY += 13;
-    US_Print((char*)STR_CSTRAFEL);
-    PrintX = 40;
-    PrintY += 13;
-    US_Print((char*)STR_CSTRAFER);
-    PrintX = 40;
-    PrintY += 13;
-    US_Print((char*)STR_CFIRE);
-    PrintX = 40;
-    PrintY += 13;
-    US_Print((char*)STR_COPEN);
-    PrintX = 40;
-    PrintY += 13;
-    US_Print((char*)STR_LEFT);
-    PrintX = 40;
-    PrintY += 13;
-    US_Print((char*)STR_RIGHT);
+    PrintX = 180;
+    PrintY = 52+3;
+    US_Print("Cfg 1");
+    PrintX = 240;
+    PrintY = 52+3;
+    US_Print("Cfg 2");
 
-	//PrintX=CST_START;
-	//US_Print((char*)STR_CRUN);
-	//PrintX=CST_START+CST_SPC*1;
-	//US_Print((char*)STR_COPEN);
-	//PrintX=CST_START+CST_SPC*2;
-	//US_Print((char*)STR_CFIRE);
-	//PrintX=CST_START+CST_SPC*3;
-	//US_Print((char*)STR_CSTRAFE"\n");
-	//DrawCustKeybd(0);
-	//US_Print((char*)"\n");
-
-
-
-	//
-	// KEYBOARD MOVE KEYS
-	//
-	//SETFONTCOLOR(TEXTCOLOR,BKGDCOLOR);
-	//#ifdef SPANISH
-	//PrintX=4;
-	//US_Print(STR_LEFT);
-	//US_Print("/");
-	//US_Print(STR_RIGHT);
-	//US_Print("/");
-	//US_Print(STR_FRWD);
-	//US_Print("/");
-	//US_Print(STR_BKWD"\n");
-	//#else
-	//PrintX=CST_START;
-	//US_Print((char*)STR_LEFT);
-	//PrintX=CST_START+CST_SPC*1;
-	//US_Print((char*)STR_RIGHT);
-	//PrintX=CST_START+CST_SPC*2;
-	//US_Print((char*)STR_FRWD);
-	//PrintX=CST_START+CST_SPC*3;
-	//US_Print((char*)STR_BKWD"\n");
-	//#endif
-	//DrawWindow(5,PrintY-1,310,13,BKGDCOLOR);
-	//DrawCustKeys(0);
-
-	//
-	// PICK STARTING POINT IN MENU
-	//
-	//if (CusItems.curpos<0)
-	//	for (i=0;i<CusItems.amount;i++)
-	//		if (CusMenu[i].active)
-	//		{
-	//			CusItems.curpos=i;
-	//			break;
-	//		}
-
-
+    const char* ms[] = { STR_FRWD, STR_BKWD, STR_CSTRAFEL, STR_CSTRAFER, STR_CFIRE, STR_COPEN, STR_LEFT, STR_RIGHT };
+    PrintY = 52 - 3 + 24 + 0 * 13;
+    for (int i = 0; i < 8; ++i)
+    {
+        PrintX = 40;
+        SETFONTCOLOR((overlayRow != -1 && overlayRow != i) ? 28 : TEXTCOLOR, BKGDCOLOR);
+        US_Print((char*)ms[i]);
+        PrintX = 180;
+        
+        if (overlayRow == i && overlayIndex == 0) 
+        { 
+            VL_Bar(overlayIndex ? 240 : 180, 52 - 3 + 24 + overlayRow * 13, 60, 13, READCOLOR);
+            SETFONTCOLOR(HIGHLIGHT, BKGDCOLOR);
+        }
+        else
+        {
+            SETFONTCOLOR((ScanCode)buttonscan[0][mk[i]] == sc_None ? DEACTIVE : ((overlayRow != -1 && overlayRow != i) ? 28 : TEXTCOLOR), BKGDCOLOR);
+        }
+        US_Print((char*)IN_GetScanName((ScanCode)buttonscan[0][mk[i]]));
+        PrintX = 240;
+        if (overlayRow == i && overlayIndex == 1)
+        {
+            VL_Bar(overlayIndex ? 240 : 180, 52 - 3 + 24 + overlayRow * 13, 60, 13, READCOLOR);
+            SETFONTCOLOR(HIGHLIGHT, BKGDCOLOR);
+        }
+        else
+        {
+            SETFONTCOLOR((ScanCode)buttonscan[1][mk[i]] == sc_None ? DEACTIVE : ((overlayRow != -1 && overlayRow != i) ? 28 : TEXTCOLOR), BKGDCOLOR);
+        }
+        US_Print((char*)IN_GetScanName((ScanCode)buttonscan[1][mk[i]]));
+        PrintY += 13;
+    }
+    //DEACTIVE
 	VW_UpdateScreen();
-	MenuFadeIn();
 }
 
 
@@ -3763,10 +3784,10 @@ void FreeMusic (void)
 byte *
 IN_GetScanName(ScanCode scan)
 {
-	byte		**p;
+    byte **p;
 	ScanCode   *s;
 
-    if (scan >= 128 + 36) return (byte*)"?inv";
+    //if (scan >= 128 + 36) return (byte*)"?inv";
 
 	for (s = ExtScanCodes,p = ExtScanNames;*s;p++,s++)
 		if (*s == scan)

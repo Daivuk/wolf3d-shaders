@@ -65,7 +65,7 @@ int32_t            heightnumerator=0;
 int16_t                     minheightdiv=0;
 
 _boolean         startgame=_false,loadedgame=_false,virtualreality=_false;
-int16_t             mouseadjustment = 0;
+int16_t             mouseadjustment = 5;
 
 char	configname[13]="CONFIG.";
 
@@ -96,66 +96,66 @@ void ReadConfig(void)
 	SDSMode         sds;
 
 
-	if ( (file = file_open(configname,O_BINARY | O_RDONLY)) != -1)
-	{
-	//
-	// valid config file
-	//
-		file_read(file,Scores,sizeof(HighScore) * MaxScores);
+	//if ( (file = file_open(configname,O_BINARY | O_RDONLY)) != -1)
+	//{
+	////
+	//// valid config file
+	////
+	//	file_read(file,Scores,sizeof(HighScore) * MaxScores);
 
-		file_read(file,&sd,sizeof(sd));
-		file_read(file,&sm,sizeof(sm));
-		file_read(file,&sds,sizeof(sds));
+	//	file_read(file,&sd,sizeof(sd));
+	//	file_read(file,&sm,sizeof(sm));
+	//	file_read(file,&sds,sizeof(sds));
 
-		file_read(file,&mouseenabled,sizeof(mouseenabled));
-		file_read(file,&joystickenabled,sizeof(joystickenabled));
-		file_read(file,&joypadenabled,sizeof(joypadenabled));
-		file_read(file,&joystickprogressive,sizeof(joystickprogressive));
-		file_read(file,&joystickport,sizeof(joystickport));
+	//	file_read(file,&mouseenabled,sizeof(mouseenabled));
+	//	file_read(file,&joystickenabled,sizeof(joystickenabled));
+	//	file_read(file,&joypadenabled,sizeof(joypadenabled));
+	//	file_read(file,&joystickprogressive,sizeof(joystickprogressive));
+	//	file_read(file,&joystickport,sizeof(joystickport));
 
-		file_read(file,&dirscan,sizeof(dirscan));
-		file_read(file,&buttonscan,sizeof(buttonscan));
-		file_read(file,&buttonmouse,sizeof(buttonmouse));
-		file_read(file,&buttonjoy,sizeof(buttonjoy));
+	//	file_read(file,&dirscan,sizeof(dirscan));
+	//	file_read(file,&buttonscan,sizeof(buttonscan));
+	//	file_read(file,&buttonmouse,sizeof(buttonmouse));
+	//	file_read(file,&buttonjoy,sizeof(buttonjoy));
 
-		file_read(file,&viewsize,sizeof(viewsize));
-		file_read(file,&mouseadjustment,sizeof(mouseadjustment));
+	//	file_read(file,&viewsize,sizeof(viewsize));
+	//	file_read(file,&mouseadjustment,sizeof(mouseadjustment));
 
-		file_close(file);
+	//	file_close(file);
 
-		if (sd == sdm_AdLib && !AdLibPresent && !SoundBlasterPresent)
-		{
-			sd = sdm_PC;
-			sd = (SDMode)smm_Off; // sm?
-		}
+	//	if (sd == sdm_AdLib && !AdLibPresent && !SoundBlasterPresent)
+	//	{
+	//		sd = sdm_PC;
+	//		sd = (SDMode)smm_Off; // sm?
+	//	}
 
-		if ((sds == sds_SoundBlaster && !SoundBlasterPresent) ||
-			(sds == sds_SoundSource && !SoundSourcePresent))
-			sds = sds_Off;
+	//	if ((sds == sds_SoundBlaster && !SoundBlasterPresent) ||
+	//		(sds == sds_SoundSource && !SoundSourcePresent))
+	//		sds = sds_Off;
 
-		if (!MousePresent)
-			mouseenabled = _false;
-		if (!JoysPresent[joystickport])
-			joystickenabled = _false;
+	//	if (!MousePresent)
+	//		mouseenabled = _false;
+	//	if (!JoysPresent[joystickport])
+	//		joystickenabled = _false;
 
-		MainMenu[6].active=1;
-		MainItems.curpos=0;
-	}
-	else
-	{
+	//	MainMenu[6].active=1;
+	//	MainItems.curpos=0;
+	//}
+	//else
+	//{
 	//
 	// no config file, so select by hardware
 	//
-		if (SoundBlasterPresent || AdLibPresent)
+		//if (SoundBlasterPresent || AdLibPresent)
 		{
 			sd = sdm_AdLib;
 			sm = smm_AdLib;
 		}
-		else
-		{
-			sd = sdm_PC;
-			sm = smm_Off;
-		}
+		//else
+		//{
+		//	sd = sdm_PC;
+		//	sm = smm_Off;
+		//}
 
 		if (SoundBlasterPresent)
 			sds = sds_SoundBlaster;
@@ -173,8 +173,8 @@ void ReadConfig(void)
 		joystickprogressive = _false;
 
 		viewsize = 15;
-		mouseadjustment=3;
-	}
+		//mouseadjustment=3;
+	//}
 
 	SD_SetMusicMode (sm);
 	SD_SetSoundMode (sd);
@@ -1203,7 +1203,7 @@ void InitGame (void)
 
 	bufferofs = 0;
 	displayofs = 0;
-	ReadConfig ();
+	 ReadConfig (); // We have our own config.json
 
 
 //
@@ -1345,7 +1345,7 @@ void Quit (char *error)
 {
 	if (!error)
 	{
-	 WriteConfig ();
+	 //WriteConfig (); // We have our own config.json
 	}
 	else
 	{

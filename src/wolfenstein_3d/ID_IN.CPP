@@ -147,11 +147,11 @@ static int16_t
 INL_KeyService(void)
 {
  static	_boolean	special;
- 		byte	k,c,
+ 		byte	c=0,
  				temp;
  		int16_t		i;
 
- 	k = (byte)inportb(0x60);	// Get the scan code
+ 	auto k = inportb(0x60);	// Get the scan code
 
  	// Tell the XT keyboard controller to clear the key
  	//outportb(0x61,(temp = inportb(0x61)) | 0x80);
@@ -168,7 +168,7 @@ INL_KeyService(void)
  	{
  		if (k & 0x80)	// Break code
  		{
- 			k &= 0x7f;
+ 			k &= 0xff7f;
 
  // DEBUG - handle special keys: ctl-alt-delete, print scrn
 

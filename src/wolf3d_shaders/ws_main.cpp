@@ -63,7 +63,7 @@ bool wasMouseRel = false;
 
 #define KeyInt 9 // The keyboard ISR number
 
-static byte scancode = 0;
+static int scancode = 0;
 static Interrupt KeyInt_in = nullptr;
 
 std::map<int, int> SDL2DosKeymap = {
@@ -142,7 +142,6 @@ std::map<int, int> SDL2DosKeymap = {
 };
 
 float fade_val = 1.0f;
-bool showDebug = false;
 float debugOffset = 0.0f;
 
 ws_Resources ws_resources;
@@ -366,7 +365,6 @@ void ws_update_sdl()
             {
                 if (event.key.keysym.scancode == SDL_SCANCODE_F1)
                 {
-                    //showDebug = true;
                     wasMouseRel = SDL_GetRelativeMouseMode() == SDL_TRUE;
                     SDL_SetRelativeMouseMode(SDL_FALSE);
                     ws_debug_view_enabled = true;
@@ -411,12 +409,9 @@ void ws_update_sdl()
             }
             else
             {
-                if (!showDebug)
-                {
-                    scancode = getDosScanCode(event.key.keysym.scancode) | 0x80;
-                    if (KeyInt_in)
-                        KeyInt_in();
-                }
+                scancode = getDosScanCode(event.key.keysym.scancode) | 0x80;
+                if (KeyInt_in)
+                    KeyInt_in();
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
@@ -501,11 +496,26 @@ void ws_update_sdl()
             else
             {
                 if (event.button.button == SDL_BUTTON_LEFT)
+                {
                     mouseButtons |= 1;
+                    scancode = sc_Mouse0;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
                 else if (event.button.button == SDL_BUTTON_RIGHT)
+                {
                     mouseButtons |= 2;
+                    scancode = sc_Mouse1;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
                 else if (event.button.button == SDL_BUTTON_MIDDLE)
+                {
                     mouseButtons |= 4;
+                    scancode = sc_Mouse2;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
             }
             break;
         case SDL_MOUSEBUTTONUP:
@@ -531,11 +541,26 @@ void ws_update_sdl()
             else
             {
                 if (event.button.button == SDL_BUTTON_LEFT)
+                {
                     mouseButtons &= 0xFFFE;
+                    scancode = sc_Mouse0 | 0x80;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
                 else if (event.button.button == SDL_BUTTON_RIGHT)
+                {
                     mouseButtons &= 0xFFFD;
+                    scancode = sc_Mouse1 | 0x80;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
                 else if (event.button.button == SDL_BUTTON_MIDDLE)
+                {
                     mouseButtons &= 0xFFFB;
+                    scancode = sc_Mouse2 | 0x80;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
             }
             break;
         case SDL_MOUSEMOTION:
@@ -776,7 +801,7 @@ int16_t inportb(int16_t addr)
     {
     case 0x60:
     {
-        return scancode;
+        return (int16_t)scancode;
     }
     case PEL_DATA:
     {

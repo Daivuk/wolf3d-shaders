@@ -1,5 +1,7 @@
 #include "ws.h"
 
+#include "WL_DEF.H"
+
 #include <json/json.h>
 #include <fstream>
 #include <tinyfiledialogs.h>
@@ -223,6 +225,17 @@ void ws_save_configs()
     //-----------------------
     jsonDocument["sound_volume"] = ws_sound_volume;
     jsonDocument["music_volume"] = ws_music_volume;
+    jsonDocument["mouse_adjustment"] = (int)mouseadjustment;
+    Json::Value buttons(Json::arrayValue);
+    for (int i = 0; i < NUMBUTTONS; ++i)
+    {
+        Json::Value button;
+        button["id"] = i;
+        button["config1"] = (int)buttonscan[0][i];
+        button["config2"] = (int)buttonscan[1][i];
+        buttons.append(button);
+    }
+    jsonDocument["buttons"] = buttons;
     //-----------------------
 
     file << jsonDocument;
@@ -251,6 +264,21 @@ void ws_load_configs()
     //-----------------------
     ws_sound_volume = json_to_float(jsonDocument["sound_volume"], 0.5f);
     ws_music_volume = json_to_float(jsonDocument["music_volume"], 0.5f);
+    mouseadjustment = (int16_t)json_to_int(jsonDocument["mouse_adjustment"], 3);
+    const auto& buttons = jsonDocument["buttons"];
+    if (buttons.isArray())
+    {
+        for (int i = 0; i < (int)buttons.size(); ++i)
+        {
+            auto& button = buttons[i];
+            auto id = json_to_int(button["id"], -1);
+            if (id != -1)
+            {
+                buttonscan[0][id] = json_to_int(button["config1"], sc_None);
+                buttonscan[1][id] = json_to_int(button["config2"], sc_None);
+            }
+        }
+    }
     //-----------------------
 
     file.close();

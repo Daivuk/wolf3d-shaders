@@ -17,9 +17,9 @@
 #define	MaxPlayers	4
 #define	MaxKbds		2
 #define	MaxJoys		2
-#define	NumCodes	128
+#define	NumCodes	600
 
-typedef	byte		ScanCode;
+typedef	int16_t		ScanCode;
 #define	sc_None			0
 #define	sc_Bad			0xff
 #define	sc_Return		0x1c
@@ -93,6 +93,12 @@ typedef	byte		ScanCode;
 #define	sc_X			0x2d
 #define	sc_Y			0x15
 #define	sc_Z			0x2c
+
+#define sc_Mouse0       256
+#define sc_Mouse1       257
+#define sc_Mouse2       258
+#define sc_JoyBtnBase   259
+#define sc_JoyAxisBtnBase   300
 
 #define	key_None		0
 #define	key_Return		0x0d
