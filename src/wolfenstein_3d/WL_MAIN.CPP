@@ -65,7 +65,7 @@ int32_t            heightnumerator=0;
 int16_t                     minheightdiv=0;
 
 _boolean         startgame=_false,loadedgame=_false,virtualreality=_false;
-int16_t             mouseadjustment = 5;
+int16_t             mouseadjustment = 0;
 
 char	configname[13]="CONFIG.";
 
@@ -173,7 +173,7 @@ void ReadConfig(void)
 		joystickprogressive = _false;
 
 		viewsize = 15;
-		//mouseadjustment=3;
+		mouseadjustment=3;
 	//}
 
 	SD_SetMusicMode (sm);

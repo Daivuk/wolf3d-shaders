@@ -12,3 +12,4 @@ build/
 *.WL1
 .DS_Store
 .vscode/
+configs.json

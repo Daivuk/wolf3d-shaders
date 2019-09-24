@@ -245,20 +245,19 @@ void ws_save_configs()
 void ws_load_configs()
 {
     std::ifstream file(CONFIGS_FILENAME);
-    if (!file.is_open())
-    {
-        tinyfd_messageBox("Open", ("Failed to open file:\n" + CONFIGS_FILENAME).c_str(), "ok", "error", 0);
-        return;
-    }
     Json::Value jsonDocument;
     try
     {
-        file >> jsonDocument;
+        if (file.is_open())
+        {
+            file >> jsonDocument;
+            file.close();
+        }
     }
     catch (...)
     {
         tinyfd_messageBox("Open", ("Failed to open file:\n" + CONFIGS_FILENAME + "\nIt is corrupted.").c_str(), "ok", "error", 0);
-        return;
+        jsonDocument = Json::Value();
     }
 
     //-----------------------
@@ -280,6 +279,4 @@ void ws_load_configs()
         }
     }
     //-----------------------
-
-    file.close();
 }
