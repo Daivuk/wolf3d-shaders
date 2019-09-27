@@ -66,7 +66,8 @@ bool wasMouseRel = false;
 static int scancode = 0;
 static Interrupt KeyInt_in = nullptr;
 
-static float controller_axis[16] = { 0.f };
+static bool controller_axis_btn[16*2] = { false };
+float ws_controller_axis[16] = { 0.0f };
 
 std::map<int, int> SDL2DosKeymap = {
     std::make_pair<int, int>(SDL_SCANCODE_UNKNOWN, sc_None),
@@ -660,20 +661,69 @@ void ws_update_sdl()
             if (event.caxis.axis * 2 > 15) break; // Sorry only 16 buttons supported for now
             auto normalized = (float)((double)event.caxis.value / 32768.0);
             auto deadzone = (float)(7849.0 / 32768.0);
-            auto prev = controller_axis[event.caxis.axis];
-            controller_axis[event.caxis.axis] = normalized;
+            auto clamped = 0.0f;
+            if (normalized > 0.0f)
+            {
+                clamped = (std::max(deadzone, std::min(1.0f, normalized)) - deadzone) / (1.0f - deadzone);
+            }
+            if (normalized < 0.0f)
+            {
+                clamped = (std::min(-deadzone, std::min(1.0f, normalized)) + deadzone) / (1.0f - deadzone);
+            }
+            ws_controller_axis[event.caxis.axis] = clamped;
             if (normalized >= deadzone)
             {
-                if (prev < deadzone)
+                auto i = event.caxis.axis * 2;
+                if (controller_axis_btn[i + 1])
                 {
-                    scancode = sc_JoyAxisBtnBase + (int)event.caxis.axis * 2 + ();
+                    controller_axis_btn[i + 1] = false;
+                    scancode = (sc_JoyAxisBtnBase + i + 1) | 0x80;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
+                if (!controller_axis_btn[i])
+                {
+                    controller_axis_btn[i] = true;
+                    scancode = sc_JoyAxisBtnBase + i;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
+            }
+            else if (normalized <= -deadzone)
+            {
+                auto i = event.caxis.axis * 2 + 1;
+                if (controller_axis_btn[i - 1])
+                {
+                    controller_axis_btn[i - 1] = false;
+                    scancode = (sc_JoyAxisBtnBase + i - 1) | 0x80;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
+                if (!controller_axis_btn[i])
+                {
+                    controller_axis_btn[i] = true;
+                    scancode = sc_JoyAxisBtnBase + i;
                     if (KeyInt_in)
                         KeyInt_in();
                 }
             }
             else
             {
-
+                auto i = event.caxis.axis * 2;
+                if (controller_axis_btn[i])
+                {
+                    controller_axis_btn[i] = false;
+                    scancode = (sc_JoyAxisBtnBase + i) | 0x80;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
+                if (controller_axis_btn[i + 1])
+                {
+                    controller_axis_btn[i + 1] = false;
+                    scancode = (sc_JoyAxisBtnBase + i + 1) | 0x80;
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
             }
             break;
         }

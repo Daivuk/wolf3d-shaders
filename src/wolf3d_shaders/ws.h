@@ -127,6 +127,7 @@ const int WS_SPHERE_VERT_COUNT = 8 * 6 * 6 + 8 * 3 * 2;
 const float WS_WALL_HEIGHT = 1.16f;
 
 extern _boolean sdl_keystates[NumCodes];
+extern float ws_controller_axis[16];
 extern ws_Color ws_palette[];
 extern ws_Color ws_dynamic_palette[];
 extern int16_t ws_argc;

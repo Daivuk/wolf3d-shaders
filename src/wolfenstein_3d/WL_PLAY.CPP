@@ -433,7 +433,19 @@ void PollMouseMove (void)
 
 void PollJoystickMove (void)
 {
+    int movSpeed = BASEMOVE;
+    if (buttonstate[bt_run])
+    {
+        movSpeed = RUNMOVE;
+    }
+
+    strafecontrol += (int)(ws_controller_axis[0] * movSpeed) * tics;
+    controly += (int)(ws_controller_axis[1] * movSpeed) * tics;
+    controlx += (int)(ws_controller_axis[2] * movSpeed * 3 / 2) * tics;
+
     return;
+
+    // return;
 	int16_t	joyx,joyy;
 
 	INL_GetJoyDelta(joystickport,&joyx,&joyy);
@@ -570,7 +582,7 @@ void PollControls (void)
 	if (mouseenabled)
 		PollMouseMove ();
 
-	if (joystickenabled)
+	// if (joystickenabled)
 		PollJoystickMove ();
 
 //

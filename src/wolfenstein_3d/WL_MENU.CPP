@@ -55,7 +55,7 @@ CP_iteminfo
 	SndItems={SM_X,SM_Y1,4,0,52},
 	LSItems={LSM_X,LSM_Y,10,0,24},
 	CtlItems={CTL_X,CTL_Y,2,0,56},
-	CusItems={8,52+21,8,0,32},
+	CusItems={8,52+21-7,9,0,32},
 	NewEitems={NE_X,NE_Y,11,0,88},
 	NewItems={NM_X,NM_Y,4,2,24};
 
@@ -271,6 +271,7 @@ CusMenu[]=
 	{1,STR_COPEN,0},
 	{1,STR_LEFT,0},
 	{1,STR_RIGHT,0},
+	{1,STR_CRUN,0},
 }
 ;
 
@@ -2045,7 +2046,7 @@ void DrawCtlScreen(void)
 enum {FIRE,STRAFE,RUN,OPEN};
 char mbarray[4][3]={"b0","b1","b2","b3"},
 	   order[4]={RUN,OPEN,FIRE,STRAFE};
-int mk[] = { bt_forward, bt_backward, bt_strafeleft, bt_straferight, bt_attack, bt_use, bt_turnleft, bt_turnright };
+int mk[] = { bt_forward, bt_backward, bt_strafeleft, bt_straferight, bt_attack, bt_use, bt_turnleft, bt_turnright, bt_run };
 
 void CustomControls(void)
 {
@@ -2087,7 +2088,7 @@ void CustomControls(void)
                     SD_PlaySound(SHOOTSND);
                     while (true)
                     {
-                        VL_Bar(index ? 240 : 180, 52 - 3 + 24 + which * 13, 60, 13, BORD2COLOR);
+                        VL_Bar(index ? 240 : 180, 52 - 3 + 24-7 + which * 13, 60, 13, BORD2COLOR);
 
                         ControlInfo ci;
                         IN_ClearKeysDown();
@@ -2496,19 +2497,19 @@ void DrawCustomScreen(int overlayRow, int overlayIndex)
 	//
 	// KEYBOARD
 	//
-	DrawWindow(5,52 - 3 + 20,310,13 * 8 + 6,BKGDCOLOR);
+	DrawWindow(5,52 - 3 + 20-7,310,13 * 8 + 6+13,BKGDCOLOR);
 
     SETFONTCOLOR(TEXTCOLOR, BKGDCOLOR);
     PrintX = 180;
-    PrintY = 52+3;
+    PrintY = 52+3-7;
     US_Print("Cfg 1");
     PrintX = 240;
-    PrintY = 52+3;
+    PrintY = 52+3-7;
     US_Print("Cfg 2");
 
-    const char* ms[] = { STR_FRWD, STR_BKWD, STR_CSTRAFEL, STR_CSTRAFER, STR_CFIRE, STR_COPEN, STR_LEFT, STR_RIGHT };
-    PrintY = 52 - 3 + 24 + 0 * 13;
-    for (int i = 0; i < 8; ++i)
+    const char* ms[] = { STR_FRWD, STR_BKWD, STR_CSTRAFEL, STR_CSTRAFER, STR_CFIRE, STR_COPEN, STR_LEFT, STR_RIGHT, STR_CRUN };
+    PrintY = 52 - 3 + 24 + 0 * 13-7;
+    for (int i = 0; i < 9; ++i)
     {
         PrintX = 40;
         SETFONTCOLOR((overlayRow != -1 && overlayRow != i) ? 28 : TEXTCOLOR, BKGDCOLOR);
@@ -2517,7 +2518,7 @@ void DrawCustomScreen(int overlayRow, int overlayIndex)
         
         if (overlayRow == i && overlayIndex == 0) 
         { 
-            VL_Bar(overlayIndex ? 240 : 180, 52 - 3 + 24 + overlayRow * 13, 60, 13, READCOLOR);
+            VL_Bar(overlayIndex ? 240 : 180, 52 - 3-7 + 24 + overlayRow * 13, 60, 13, READCOLOR);
             SETFONTCOLOR(HIGHLIGHT, BKGDCOLOR);
         }
         else
@@ -2528,7 +2529,7 @@ void DrawCustomScreen(int overlayRow, int overlayIndex)
         PrintX = 240;
         if (overlayRow == i && overlayIndex == 1)
         {
-            VL_Bar(overlayIndex ? 240 : 180, 52 - 3 + 24 + overlayRow * 13, 60, 13, READCOLOR);
+            VL_Bar(overlayIndex ? 240 : 180, 52 - 3-7 + 24 + overlayRow * 13, 60, 13, READCOLOR);
             SETFONTCOLOR(HIGHLIGHT, BKGDCOLOR);
         }
         else
