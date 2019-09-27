@@ -1127,6 +1127,7 @@ void Died (void)
 //
 // swing around to face attacker
 //
+    if (!killerobj) killerobj = player;
 	dx = killerobj->x - player->x;
 	dy = player->y - killerobj->y;
 
