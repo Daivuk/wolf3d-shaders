@@ -66,6 +66,8 @@ bool wasMouseRel = false;
 static int scancode = 0;
 static Interrupt KeyInt_in = nullptr;
 
+static float controller_axis[16] = { 0.f };
+
 std::map<int, int> SDL2DosKeymap = {
     std::make_pair<int, int>(SDL_SCANCODE_UNKNOWN, sc_None),
     std::make_pair<int, int>(0xff, sc_Bad),
@@ -205,6 +207,7 @@ int main(int argc, char **argv)
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         ws_screen_w, ws_screen_h,
         SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE /*| SDL_WINDOW_MAXIMIZED*/);
+    SDL_Init(SDL_INIT_GAMECONTROLLER);
 
     // Init OpenGL
     auto glContext = SDL_GL_CreateContext(sdlWindow);
@@ -636,6 +639,49 @@ void ws_update_sdl()
                 default: break;
             }
             break;
+        case SDL_CONTROLLERBUTTONDOWN:
+        {
+            if (event.cbutton.button > 15) break; // Sorry only 16 buttons supported for now
+            scancode = sc_JoyBtnBase + (int)event.cbutton.button;
+            if (KeyInt_in)
+                KeyInt_in();
+            break;
+        }
+        case SDL_CONTROLLERBUTTONUP:
+        {
+            if (event.cbutton.button > 15) break; // Sorry only 16 buttons supported for now
+            scancode = (sc_JoyBtnBase + (int)event.cbutton.button) | 0x80;
+            if (KeyInt_in)
+                KeyInt_in();
+            break;
+        }
+        case SDL_CONTROLLERAXISMOTION:
+        {
+            if (event.caxis.axis * 2 > 15) break; // Sorry only 16 buttons supported for now
+            auto normalized = (float)((double)event.caxis.value / 32768.0);
+            auto deadzone = (float)(7849.0 / 32768.0);
+            auto prev = controller_axis[event.caxis.axis];
+            controller_axis[event.caxis.axis] = normalized;
+            if (normalized >= deadzone)
+            {
+                if (prev < deadzone)
+                {
+                    scancode = sc_JoyAxisBtnBase + (int)event.caxis.axis * 2 + ();
+                    if (KeyInt_in)
+                        KeyInt_in();
+                }
+            }
+            else
+            {
+
+            }
+            break;
+        }
+        case SDL_CONTROLLERDEVICEADDED:
+            {
+                SDL_GameControllerOpen(event.cdevice.which);
+                break;
+            }
         }
     }
     // SDL_UnlockAudio();

@@ -98,7 +98,7 @@ typedef	int16_t		ScanCode;
 #define sc_Mouse1       257
 #define sc_Mouse2       258
 #define sc_JoyBtnBase   259
-#define sc_JoyAxisBtnBase   300
+#define sc_JoyAxisBtnBase   275
 
 #define	key_None		0
 #define	key_Return		0x0d

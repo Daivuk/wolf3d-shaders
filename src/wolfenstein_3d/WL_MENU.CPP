@@ -318,7 +318,16 @@ ExtScanCodes[] =	// Scan codes with >1 char names
 1,0xe,0xf,0x1d,0x2a,0x39,0x3a,0x3b,0x3c,0x3d,0x3e,
 0x3f,0x40,0x41,0x42,0x43,0x44,0x57,0x59,0x46,0x1c,0x36,
 0x37,0x38,0x47,0x49,0x4f,0x51,0x52,0x53,0x45,0x48,
-0x50,0x4b,0x4d,sc_Mouse0,sc_Mouse1,sc_Mouse2,0x00
+0x50,0x4b,0x4d,sc_Mouse0,sc_Mouse1,sc_Mouse2,
+sc_JoyBtnBase + 0,sc_JoyBtnBase + 1,sc_JoyBtnBase + 2,sc_JoyBtnBase + 3,
+sc_JoyBtnBase + 4,sc_JoyBtnBase + 5,sc_JoyBtnBase + 6,sc_JoyBtnBase + 7,
+sc_JoyBtnBase + 8,sc_JoyBtnBase + 9,sc_JoyBtnBase + 10,sc_JoyBtnBase + 11,
+sc_JoyBtnBase + 12,sc_JoyBtnBase + 13,sc_JoyBtnBase + 14,sc_JoyBtnBase + 15,
+sc_JoyAxisBtnBase + 0,sc_JoyAxisBtnBase + 1,sc_JoyAxisBtnBase + 2,sc_JoyAxisBtnBase + 3,
+sc_JoyAxisBtnBase + 4,sc_JoyAxisBtnBase + 5,sc_JoyAxisBtnBase + 6,sc_JoyAxisBtnBase + 7,
+sc_JoyAxisBtnBase + 8,sc_JoyAxisBtnBase + 9,sc_JoyAxisBtnBase + 10,sc_JoyAxisBtnBase + 11,
+sc_JoyAxisBtnBase + 12,sc_JoyAxisBtnBase + 13,sc_JoyAxisBtnBase + 14,sc_JoyAxisBtnBase + 15,
+0x00
 };
 static byte
 					*ExtScanNames[] =	// Names corresponding to ExtScanCodes
@@ -326,7 +335,16 @@ static byte
 	(byte*)"Esc",(byte*)"BkSp",(byte*)"Tab",(byte*)"Ctrl",(byte*)"LShft",(byte*)"Space",(byte*)"CapsLk",(byte*)"F1",(byte*)"F2",(byte*)"F3",(byte*)"F4",
 	(byte*)"F5",(byte*)"F6",(byte*)"F7",(byte*)"F8",(byte*)"F9",(byte*)"F10",(byte*)"F11",(byte*)"F12",(byte*)"ScrlLk",(byte*)"Enter",(byte*)"RShft",
 	(byte*)"PrtSc",(byte*)"Alt",(byte*)"Home",(byte*)"PgUp",(byte*)"End",(byte*)"PgDn",(byte*)"Ins",(byte*)"Del",(byte*)"NumLk",(byte*)"Up",
-	(byte*)"Down",(byte*)"Left",(byte*)"Right",(byte*)"LMB",(byte*)"RMB",(byte*)"MMB",(byte*)""
+	(byte*)"Down",(byte*)"Left",(byte*)"Right",(byte*)"LMB",(byte*)"RMB",(byte*)"MMB",
+    (byte*)"Joy1",(byte*)"Joy2",(byte*)"Joy3",(byte*)"Joy4",
+    (byte*)"Joy5",(byte*)"Joy6",(byte*)"Joy7",(byte*)"Joy8",
+    (byte*)"Joy9",(byte*)"Joy10",(byte*)"Joy11",(byte*)"Joy12",
+    (byte*)"Joy13",(byte*)"Joy14",(byte*)"Joy15",(byte*)"Joy16",
+    (byte*)"Axe1",(byte*)"Axe2",(byte*)"Axe3",(byte*)"Axe4",
+    (byte*)"Axe5",(byte*)"Axe6",(byte*)"Axe7",(byte*)"Axe8",
+    (byte*)"Axe9",(byte*)"Axe10",(byte*)"Axe11",(byte*)"Axe12",
+    (byte*)"Axe13",(byte*)"Axe14",(byte*)"Axe15",(byte*)"Axe16",
+    (byte*)""
 					};
 //#define sc_JoyBtnBase   303
 //#define sc_JoyAxisBtnBase   350
