@@ -1446,6 +1446,11 @@ static void init_saveload_constants()
     {
         STR_2_DIR[kv.second] = kv.first;
     }
+
+    for (auto& kv : DOORACTION_2_STR)
+    {
+        STR_2_DOORACTION[kv.second] = kv.first;
+    }
 }
 
 static Json::Value gamestate_to_json(const gametype& gamestate)
@@ -1578,7 +1583,7 @@ static Json::Value actorat_to_json(objtype** actorat)
         auto val = (uintptr_t)pActorAt;
         if (val > 0xFFFF)
         {
-            json_actorat.append((int)((uintptr_t)0x8000 + (uintptr_t)(objlist - pActorAt)));
+            json_actorat.append((int)((uintptr_t)0x8000 + (uintptr_t)(pActorAt - objlist)));
         }
         else
         {
@@ -1586,6 +1591,22 @@ static Json::Value actorat_to_json(objtype** actorat)
         }
     }
     return json_actorat;
+}
+
+static void json_to_actorat(const Json::Value& json, objtype** actorat)
+{
+    for (int i = 0; i < MAPSIZE * MAPSIZE; ++i)
+    {
+        auto val = (uintptr_t)json[i].asInt();
+        if (val >= 0x8000)
+        {
+            actorat[i] = objlist + (val - 0x8000);
+        }
+        else
+        {
+            actorat[i] = (objtype*)val;
+        }
+    }
 }
 
 static Json::Value areaconnect_to_json(const byte* areaconnect)
@@ -1598,6 +1619,14 @@ static Json::Value areaconnect_to_json(const byte* areaconnect)
     return json_areaconnect;
 }
 
+static void json_to_areaconnect(const Json::Value& json, byte* areaconnect)
+{
+    for (int i = 0; i < NUMAREAS * NUMAREAS; ++i)
+    {
+        areaconnect[i] = (byte)json[i].asUInt();
+    }
+}
+
 static Json::Value areabyplayer_to_json(const _boolean* areabyplayer)
 {
     Json::Value json_areabyplayer(Json::arrayValue);
@@ -1606,6 +1635,14 @@ static Json::Value areabyplayer_to_json(const _boolean* areabyplayer)
         json_areabyplayer.append((byte)areabyplayer[i] ? true : false);
     }
     return json_areabyplayer;
+}
+
+static void json_to_areabyplayer(const Json::Value& json, _boolean* areabyplayer)
+{
+    for (int i = 0; i < NUMAREAS * NUMAREAS; ++i)
+    {
+        areabyplayer[i] = json[i].asBool() ? _true : _false;
+    }
 }
 
 static Json::Value object_to_json(const objtype& ob)
@@ -1651,6 +1688,49 @@ static Json::Value objects_to_json(objtype *ob, int16_t x, int16_t y)
     return json_objects;
 }
 
+static void json_to_object(const Json::Value& json_object, objtype& ob)
+{
+    ob.active = STR_2_ACTIVETYPE[json_object["active"].asString()];
+    ob.ticcount = (int16_t)json_object["ticcount"].asInt();
+    ob.obclass = STR_2_CLASSTYPE[json_object["obclass"].asString()];
+    ob.state = (statetype*)STR_2_STATE[json_object["state"].asString()];
+    ob.flags = (byte)json_object["flags"].asUInt();
+    ob.distance = (int32_t)json_object["distance"].asInt();
+    ob.dir = STR_2_DIR[json_object["dir"].asString()];
+    ob.x = (fixed)json_object["x"].asInt();
+    ob.y = (fixed)json_object["y"].asInt();
+    ob.tilex = (uint16_t)json_object["tilex"].asUInt();
+    ob.tiley = (uint16_t)json_object["tiley"].asUInt();
+    ob.areanumber = (byte)json_object["areanumber"].asUInt();
+    ob.viewx = (int16_t)json_object["viewx"].asInt();
+    ob.viewheight = (uint16_t)json_object["viewheight"].asUInt();
+    ob.transx = (fixed)json_object["transx"].asInt();
+    ob.transy = (fixed)json_object["transy"].asInt();
+    ob.angle = (int16_t)json_object["angle"].asInt();
+    ob.hitpoints = (int16_t)json_object["hitpoints"].asInt();
+    ob.speed = (int32_t)json_object["speed"].asInt();
+    ob.temp1 = (int16_t)json_object["temp1"].asInt();
+    ob.temp2 = (int16_t)json_object["temp2"].asInt();
+    ob.temp3 = (int16_t)json_object["temp3"].asInt();
+}
+
+static void json_to_objects(const Json::Value& json, int16_t x, int16_t y)
+{
+    InitActorList();
+
+    // Player first
+    json_to_object(json[0], *player);
+
+    for (int i = 1; i < (int)json.size(); ++i)
+    {
+        auto& json_obj = json[i];
+
+        DiskFlopAnim(x, y);
+        GetNewActor();
+        json_to_object(json_obj, *_new);
+    }
+}
+
 static Json::Value statobj_to_json(const statobj_t& statobj)
 {
     Json::Value json_statobj;
@@ -1672,6 +1752,23 @@ static Json::Value statobjs_to_json(statobj_t *statobjlist)
     return json_sstatobjs;
 }
 
+static void json_to_statobj(const Json::Value& json_statobj, statobj_t& statobj)
+{
+    statobj.tilex = (byte)json_statobj["tilex"].asUInt();
+    statobj.tiley = (byte)json_statobj["tiley"].asUInt();
+    statobj.shapenum = (int16_t)json_statobj["shapenum"].asInt();
+    statobj.flags = (byte)json_statobj["flags"].asUInt();
+    statobj.itemnumber = (byte)json_statobj["itemnumber"].asUInt();
+}
+
+static void json_to_statobjs(const Json::Value& json, statobj_t *statobjlist)
+{
+    for (int i = 0; i < MAXSTATS; ++i)
+    {
+        json_to_statobj(json[i], statobjlist[i]);
+    }
+}
+
 static Json::Value doorposition_to_json(uint16_t* doorposition)
 {
     Json::Value json_doorposition(Json::arrayValue);
@@ -1680,6 +1777,14 @@ static Json::Value doorposition_to_json(uint16_t* doorposition)
         json_doorposition.append(doorposition[i]);
     }
     return json_doorposition;
+}
+
+static void json_to_doorposition(const Json::Value& json, uint16_t* doorposition)
+{
+    for (int i = 0; i < MAXDOORS; ++i)
+    {
+        doorposition[i] = (uint16_t)json[i].asUInt();
+    }
 }
 
 static Json::Value doorobj_to_json(const doorobj_t& doorobj)
@@ -1695,6 +1800,30 @@ static Json::Value doorobj_to_json(const doorobj_t& doorobj)
     return json_doorobj;
 }
 
+static void json_to_doorobj(const Json::Value& json_doorobj, doorobj_t& doorobj)
+{
+    doorobj.tilex = (byte)json_doorobj["tilex"].asUInt();
+    doorobj.tiley = (byte)json_doorobj["tiley"].asUInt();
+    doorobj.vertical = json_doorobj["vertical"].asBool() ? _true : _false;
+    doorobj.lock = (byte)json_doorobj["lock"].asUInt();
+    switch (STR_2_DOORACTION[json_doorobj["action"].asString()])
+    {
+        case doorstruct::dr_open:
+            doorobj.action = doorstruct::dr_open; 
+            break;
+        case doorstruct::dr_closed: 
+            doorobj.action = doorstruct::dr_closed;
+            break;
+        case doorstruct::dr_opening: 
+            doorobj.action = doorstruct::dr_opening; 
+            break;
+        case doorstruct::dr_closing:
+            doorobj.action = doorstruct::dr_closing;
+            break;
+    }
+    doorobj.ticcount = (int16_t)json_doorobj["ticcount"].asInt();
+}
+
 static Json::Value doorobjlist_to_json(doorobj_t* doorobjlist)
 {
     Json::Value json_doorobjlist(Json::arrayValue);
@@ -1705,6 +1834,13 @@ static Json::Value doorobjlist_to_json(doorobj_t* doorobjlist)
     return json_doorobjlist;
 }
 
+static void json_to_doorobjlist(const Json::Value& json, doorobj_t* doorobjlist)
+{
+    for (int i = 0; i < MAXDOORS; ++i)
+    {
+        json_to_doorobj(json[i], doorobjlist[i]);
+    }
+}
 
 _boolean SaveTheGame(int16_t file,int16_t x,int16_t y)
 {
@@ -1782,25 +1918,27 @@ _boolean LoadTheGame(int16_t file,int16_t x,int16_t y)
     DiskFlopAnim(x, y);
     json_to_tilemap(jsonDocument["tilemap"], (byte*)tilemap);
     DiskFlopAnim(x, y);
-    //jsonDocument["actorat"] = actorat_to_json((objtype**)actorat);
-    //jsonDocument["areaconnect"] = areaconnect_to_json((byte*)areaconnect);
-    //jsonDocument["areabyplayer"] = areabyplayer_to_json((_boolean*)areabyplayer);
-    //jsonDocument["objects"] = objects_to_json(player, x, y);
-    //DiskFlopAnim(x, y);
-    //int laststatobji = (int)(laststatobj - statobjlist);
-    //jsonDocument["laststatobj"] = laststatobji;
-    //DiskFlopAnim(x, y);
-    //jsonDocument["statobjs"] = statobjs_to_json((statobj_t*)statobjlist);
-    //DiskFlopAnim(x, y);
-    //jsonDocument["doorposition"] = doorposition_to_json((uint16_t*)doorposition);
-    //DiskFlopAnim(x, y);
-    //jsonDocument["doorobjlist"] = doorobjlist_to_json((doorobj_t*)doorobjlist);
-    //DiskFlopAnim(x, y);
-    //jsonDocument["pwallstate"] = pwallstate;
-    //jsonDocument["pwallx"] = pwallx;
-    //jsonDocument["pwally"] = pwally;
-    //jsonDocument["pwalldir"] = pwalldir;
-    //jsonDocument["pwallpos"] = pwallpos;
+    SetupGameLevel();
+    DiskFlopAnim(x, y);
+    json_to_actorat(jsonDocument["actorat"], (objtype**)actorat);
+    json_to_areaconnect(jsonDocument["areaconnect"], (byte*)areaconnect);
+    json_to_areabyplayer(jsonDocument["areabyplayer"], (_boolean*)areabyplayer);
+    json_to_objects(jsonDocument["objects"], x, y);
+    DiskFlopAnim(x, y);
+    auto laststatobji = jsonDocument["laststatobj"].asInt();
+    laststatobj = statobjlist + laststatobji;
+    DiskFlopAnim(x, y);
+    json_to_statobjs(jsonDocument["statobjs"], (statobj_t*)statobjlist);
+    DiskFlopAnim(x, y);
+    json_to_doorposition(jsonDocument["doorposition"], (uint16_t*)doorposition);
+    DiskFlopAnim(x, y);
+    json_to_doorobjlist(jsonDocument["doorobjlist"], (doorobj_t*)doorobjlist);
+    DiskFlopAnim(x, y);
+    pwallstate = (uint16_t)jsonDocument["pwallstate"].asUInt();
+    pwallx = (uint16_t)jsonDocument["pwallx"].asUInt();
+    pwally = (uint16_t)jsonDocument["pwally"].asUInt();
+    pwalldir = (int16_t)jsonDocument["pwalldir"].asInt();
+    pwallpos = (uint16_t)jsonDocument["pwallpos"].asUInt();
     //-----------------------
 
 	return _true;
