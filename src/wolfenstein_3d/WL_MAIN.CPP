@@ -876,525 +876,531 @@ extern	statetype s_schabbdeathcam2;
 extern	statetype s_hitlerdeathcam2;
 extern	statetype s_giftdeathcam2;
 extern	statetype s_fatdeathcam2;
+extern  statetype s_player;
+extern  statetype s_attack;
 
-static std::map<statetype*, std::string> STATE_2_STR = {
-    std::make_pair<statetype*, std::string>(&s_rocket, "rocket"),
-    std::make_pair<statetype*, std::string>(&s_smoke1, "smoke1"),
-    std::make_pair<statetype*, std::string>(&s_smoke2, "smoke2"),
-    std::make_pair<statetype*, std::string>(&s_smoke3, "smoke3"),
-    std::make_pair<statetype*, std::string>(&s_smoke4, "smoke4"),
-    std::make_pair<statetype*, std::string>(&s_boom2, "boom2"),
-    std::make_pair<statetype*, std::string>(&s_boom3, "boom3"),
-    //std::make_pair<statetype*, std::string>(&s_hrocket, "hrocket"),
-    //std::make_pair<statetype*, std::string>(&s_hsmoke1, "hsmoke1"),
-    //std::make_pair<statetype*, std::string>(&s_hsmoke2, "hsmoke2"),
-    //std::make_pair<statetype*, std::string>(&s_hsmoke3, "hsmoke3"),
-    //std::make_pair<statetype*, std::string>(&s_hsmoke4, "hsmoke4"),
-    //std::make_pair<statetype*, std::string>(&s_hboom2, "hboom2"),
-    //std::make_pair<statetype*, std::string>(&s_hboom3, "hboom3"),
-    std::make_pair<statetype*, std::string>(&s_grdstand, "grdstand"),
-    std::make_pair<statetype*, std::string>(&s_grdpath1, "grdpath1"),
-    std::make_pair<statetype*, std::string>(&s_grdpath1s, "grdpath1s"),
-    std::make_pair<statetype*, std::string>(&s_grdpath2, "grdpath2"),
-    std::make_pair<statetype*, std::string>(&s_grdpath3, "grdpath3"),
-    std::make_pair<statetype*, std::string>(&s_grdpath3s, "grdpath3s"),
-    std::make_pair<statetype*, std::string>(&s_grdpath4, "grdpath4"),
-    std::make_pair<statetype*, std::string>(&s_grdpain, "grdpain"),
-    std::make_pair<statetype*, std::string>(&s_grdpain1, "grdpain1"),
-    //std::make_pair<statetype*, std::string>(&s_grdgiveup, "grdgiveup"),
-    std::make_pair<statetype*, std::string>(&s_grdshoot1, "grdshoot1"),
-    std::make_pair<statetype*, std::string>(&s_grdshoot2, "grdshoot2"),
-    std::make_pair<statetype*, std::string>(&s_grdshoot3, "grdshoot3"),
-    //std::make_pair<statetype*, std::string>(&s_grdshoot4, "grdshoot4"),
-    std::make_pair<statetype*, std::string>(&s_grdchase1, "grdchase1"),
-    std::make_pair<statetype*, std::string>(&s_grdchase1s, "grdchase1s"),
-    std::make_pair<statetype*, std::string>(&s_grdchase2, "grdchase2"),
-    std::make_pair<statetype*, std::string>(&s_grdchase3, "grdchase3"),
-    std::make_pair<statetype*, std::string>(&s_grdchase3s, "grdchase3s"),
-    std::make_pair<statetype*, std::string>(&s_grdchase4, "grdchase4"),
-    std::make_pair<statetype*, std::string>(&s_grddie1, "grddie1"),
-    //std::make_pair<statetype*, std::string>(&s_grddie1d, "grddie1d"),
-    std::make_pair<statetype*, std::string>(&s_grddie2, "grddie2"),
-    std::make_pair<statetype*, std::string>(&s_grddie3, "grddie3"),
-    std::make_pair<statetype*, std::string>(&s_grddie4, "grddie4"),
-    std::make_pair<statetype*, std::string>(&s_blinkychase1, "blinkychase1"),
-    std::make_pair<statetype*, std::string>(&s_blinkychase2, "blinkychase2"),
-    std::make_pair<statetype*, std::string>(&s_inkychase1, "inkychase1"),
-    std::make_pair<statetype*, std::string>(&s_inkychase2, "inkychase2"),
-    std::make_pair<statetype*, std::string>(&s_pinkychase1, "pinkychase1"),
-    std::make_pair<statetype*, std::string>(&s_pinkychase2, "pinkychase2"),
-    std::make_pair<statetype*, std::string>(&s_clydechase1, "clydechase1"),
-    std::make_pair<statetype*, std::string>(&s_clydechase2, "clydechase2"),
-    std::make_pair<statetype*, std::string>(&s_dogpath1, "dogpath1"),
-    std::make_pair<statetype*, std::string>(&s_dogpath1s, "dogpath1s"),
-    std::make_pair<statetype*, std::string>(&s_dogpath2, "dogpath2"),
-    std::make_pair<statetype*, std::string>(&s_dogpath3, "dogpath3"),
-    std::make_pair<statetype*, std::string>(&s_dogpath3s, "dogpath3s"),
-    std::make_pair<statetype*, std::string>(&s_dogpath4, "dogpath4"),
-    std::make_pair<statetype*, std::string>(&s_dogjump1, "dogjump1"),
-    std::make_pair<statetype*, std::string>(&s_dogjump2, "dogjump2"),
-    std::make_pair<statetype*, std::string>(&s_dogjump3, "dogjump3"),
-    std::make_pair<statetype*, std::string>(&s_dogjump4, "dogjump4"),
-    std::make_pair<statetype*, std::string>(&s_dogjump5, "dogjump5"),
-    std::make_pair<statetype*, std::string>(&s_dogchase1, "dogchase1"),
-    std::make_pair<statetype*, std::string>(&s_dogchase1s, "dogchase1s"),
-    std::make_pair<statetype*, std::string>(&s_dogchase2, "dogchase2"),
-    std::make_pair<statetype*, std::string>(&s_dogchase3, "dogchase3"),
-    std::make_pair<statetype*, std::string>(&s_dogchase3s, "dogchase3s"),
-    std::make_pair<statetype*, std::string>(&s_dogchase4, "dogchase4"),
-    std::make_pair<statetype*, std::string>(&s_dogdie1, "dogdie1"),
-    //std::make_pair<statetype*, std::string>(&s_dogdie1d, "dogdie1d"),
-    std::make_pair<statetype*, std::string>(&s_dogdie2, "dogdie2"),
-    std::make_pair<statetype*, std::string>(&s_dogdie3, "dogdie3"),
-    std::make_pair<statetype*, std::string>(&s_dogdead, "dogdead"),
-    std::make_pair<statetype*, std::string>(&s_ofcstand, "ofcstand"),
-    std::make_pair<statetype*, std::string>(&s_ofcpath1, "ofcpath1"),
-    std::make_pair<statetype*, std::string>(&s_ofcpath1s, "ofcpath1s"),
-    std::make_pair<statetype*, std::string>(&s_ofcpath2, "ofcpath2"),
-    std::make_pair<statetype*, std::string>(&s_ofcpath3, "ofcpath3"),
-    std::make_pair<statetype*, std::string>(&s_ofcpath3s, "ofcpath3s"),
-    std::make_pair<statetype*, std::string>(&s_ofcpath4, "ofcpath4"),
-    std::make_pair<statetype*, std::string>(&s_ofcpain, "ofcpain"),
-    std::make_pair<statetype*, std::string>(&s_ofcpain1, "ofcpain1"),
-    //std::make_pair<statetype*, std::string>(&s_ofcgiveup, "ofcgiveup"),
-    std::make_pair<statetype*, std::string>(&s_ofcshoot1, "ofcshoot1"),
-    std::make_pair<statetype*, std::string>(&s_ofcshoot2, "ofcshoot2"),
-    std::make_pair<statetype*, std::string>(&s_ofcshoot3, "ofcshoot3"),
-    //std::make_pair<statetype*, std::string>(&s_ofcshoot4, "ofcshoot4"),
-    std::make_pair<statetype*, std::string>(&s_ofcchase1, "ofcchase1"),
-    std::make_pair<statetype*, std::string>(&s_ofcchase1s, "ofcchase1s"),
-    std::make_pair<statetype*, std::string>(&s_ofcchase2, "ofcchase2"),
-    std::make_pair<statetype*, std::string>(&s_ofcchase3, "ofcchase3"),
-    std::make_pair<statetype*, std::string>(&s_ofcchase3s, "ofcchase3s"),
-    std::make_pair<statetype*, std::string>(&s_ofcchase4, "ofcchase4"),
-    std::make_pair<statetype*, std::string>(&s_ofcdie1, "ofcdie1"),
-    std::make_pair<statetype*, std::string>(&s_ofcdie2, "ofcdie2"),
-    std::make_pair<statetype*, std::string>(&s_ofcdie3, "ofcdie3"),
-    std::make_pair<statetype*, std::string>(&s_ofcdie4, "ofcdie4"),
-    std::make_pair<statetype*, std::string>(&s_ofcdie5, "ofcdie5"),
-    std::make_pair<statetype*, std::string>(&s_mutstand, "mutstand"),
-    std::make_pair<statetype*, std::string>(&s_mutpath1, "mutpath1"),
-    std::make_pair<statetype*, std::string>(&s_mutpath1s, "mutpath1s"),
-    std::make_pair<statetype*, std::string>(&s_mutpath2, "mutpath2"),
-    std::make_pair<statetype*, std::string>(&s_mutpath3, "mutpath3"),
-    std::make_pair<statetype*, std::string>(&s_mutpath3s, "mutpath3s"),
-    std::make_pair<statetype*, std::string>(&s_mutpath4, "mutpath4"),
-    std::make_pair<statetype*, std::string>(&s_mutpain, "mutpain"),
-    std::make_pair<statetype*, std::string>(&s_mutpain1, "mutpain1"),
-    //std::make_pair<statetype*, std::string>(&s_mutgiveup, "mutgiveup"),
-    std::make_pair<statetype*, std::string>(&s_mutshoot1, "mutshoot1"),
-    std::make_pair<statetype*, std::string>(&s_mutshoot2, "mutshoot2"),
-    std::make_pair<statetype*, std::string>(&s_mutshoot3, "mutshoot3"),
-    std::make_pair<statetype*, std::string>(&s_mutshoot4, "mutshoot4"),
-    std::make_pair<statetype*, std::string>(&s_mutchase1, "mutchase1"),
-    std::make_pair<statetype*, std::string>(&s_mutchase1s, "mutchase1s"),
-    std::make_pair<statetype*, std::string>(&s_mutchase2, "mutchase2"),
-    std::make_pair<statetype*, std::string>(&s_mutchase3, "mutchase3"),
-    std::make_pair<statetype*, std::string>(&s_mutchase3s, "mutchase3s"),
-    std::make_pair<statetype*, std::string>(&s_mutchase4, "mutchase4"),
-    std::make_pair<statetype*, std::string>(&s_mutdie1, "mutdie1"),
-    std::make_pair<statetype*, std::string>(&s_mutdie2, "mutdie2"),
-    std::make_pair<statetype*, std::string>(&s_mutdie3, "mutdie3"),
-    std::make_pair<statetype*, std::string>(&s_mutdie4, "mutdie4"),
-    std::make_pair<statetype*, std::string>(&s_mutdie5, "mutdie5"),
-    std::make_pair<statetype*, std::string>(&s_ssstand, "ssstand"),
-    std::make_pair<statetype*, std::string>(&s_sspath1, "sspath1"),
-    std::make_pair<statetype*, std::string>(&s_sspath1s, "sspath1s"),
-    std::make_pair<statetype*, std::string>(&s_sspath2, "sspath2"),
-    std::make_pair<statetype*, std::string>(&s_sspath3, "sspath3"),
-    std::make_pair<statetype*, std::string>(&s_sspath3s, "sspath3s"),
-    std::make_pair<statetype*, std::string>(&s_sspath4, "sspath4"),
-    std::make_pair<statetype*, std::string>(&s_sspain, "sspain"),
-    std::make_pair<statetype*, std::string>(&s_sspain1, "sspain1"),
-    std::make_pair<statetype*, std::string>(&s_ssshoot1, "ssshoot1"),
-    std::make_pair<statetype*, std::string>(&s_ssshoot2, "ssshoot2"),
-    std::make_pair<statetype*, std::string>(&s_ssshoot3, "ssshoot3"),
-    std::make_pair<statetype*, std::string>(&s_ssshoot4, "ssshoot4"),
-    std::make_pair<statetype*, std::string>(&s_ssshoot5, "ssshoot5"),
-    std::make_pair<statetype*, std::string>(&s_ssshoot6, "ssshoot6"),
-    std::make_pair<statetype*, std::string>(&s_ssshoot7, "ssshoot7"),
-    std::make_pair<statetype*, std::string>(&s_ssshoot8, "ssshoot8"),
-    std::make_pair<statetype*, std::string>(&s_ssshoot9, "ssshoot9"),
-    std::make_pair<statetype*, std::string>(&s_sschase1, "sschase1"),
-    std::make_pair<statetype*, std::string>(&s_sschase1s, "sschase1s"),
-    std::make_pair<statetype*, std::string>(&s_sschase2, "sschase2"),
-    std::make_pair<statetype*, std::string>(&s_sschase3, "sschase3"),
-    std::make_pair<statetype*, std::string>(&s_sschase3s, "sschase3s"),
-    std::make_pair<statetype*, std::string>(&s_sschase4, "sschase4"),
-    std::make_pair<statetype*, std::string>(&s_ssdie1, "ssdie1"),
-    std::make_pair<statetype*, std::string>(&s_ssdie2, "ssdie2"),
-    std::make_pair<statetype*, std::string>(&s_ssdie3, "ssdie3"),
-    std::make_pair<statetype*, std::string>(&s_ssdie4, "ssdie4"),
-    std::make_pair<statetype*, std::string>(&s_bossstand, "bossstand"),
-    std::make_pair<statetype*, std::string>(&s_bosschase1, "bosschase1"),
-    std::make_pair<statetype*, std::string>(&s_bosschase1s, "bosschase1s"),
-    std::make_pair<statetype*, std::string>(&s_bosschase2, "bosschase2"),
-    std::make_pair<statetype*, std::string>(&s_bosschase3, "bosschase3"),
-    std::make_pair<statetype*, std::string>(&s_bosschase3s, "bosschase3s"),
-    std::make_pair<statetype*, std::string>(&s_bosschase4, "bosschase4"),
-    std::make_pair<statetype*, std::string>(&s_bossdie1, "bossdie1"),
-    std::make_pair<statetype*, std::string>(&s_bossdie2, "bossdie2"),
-    std::make_pair<statetype*, std::string>(&s_bossdie3, "bossdie3"),
-    std::make_pair<statetype*, std::string>(&s_bossdie4, "bossdie4"),
-    std::make_pair<statetype*, std::string>(&s_bossshoot1, "bossshoot1"),
-    std::make_pair<statetype*, std::string>(&s_bossshoot2, "bossshoot2"),
-    std::make_pair<statetype*, std::string>(&s_bossshoot3, "bossshoot3"),
-    std::make_pair<statetype*, std::string>(&s_bossshoot4, "bossshoot4"),
-    std::make_pair<statetype*, std::string>(&s_bossshoot5, "bossshoot5"),
-    std::make_pair<statetype*, std::string>(&s_bossshoot6, "bossshoot6"),
-    std::make_pair<statetype*, std::string>(&s_bossshoot7, "bossshoot7"),
-    std::make_pair<statetype*, std::string>(&s_bossshoot8, "bossshoot8"),
-    std::make_pair<statetype*, std::string>(&s_gretelstand, "gretelstand"),
-    std::make_pair<statetype*, std::string>(&s_gretelchase1, "gretelchase1"),
-    std::make_pair<statetype*, std::string>(&s_gretelchase1s, "gretelchase1s"),
-    std::make_pair<statetype*, std::string>(&s_gretelchase2, "gretelchase2"),
-    std::make_pair<statetype*, std::string>(&s_gretelchase3, "gretelchase3"),
-    std::make_pair<statetype*, std::string>(&s_gretelchase3s, "gretelchase3s"),
-    std::make_pair<statetype*, std::string>(&s_gretelchase4, "gretelchase4"),
-    std::make_pair<statetype*, std::string>(&s_greteldie1, "greteldie1"),
-    std::make_pair<statetype*, std::string>(&s_greteldie2, "greteldie2"),
-    std::make_pair<statetype*, std::string>(&s_greteldie3, "greteldie3"),
-    std::make_pair<statetype*, std::string>(&s_greteldie4, "greteldie4"),
-    std::make_pair<statetype*, std::string>(&s_gretelshoot1, "gretelshoot1"),
-    std::make_pair<statetype*, std::string>(&s_gretelshoot2, "gretelshoot2"),
-    std::make_pair<statetype*, std::string>(&s_gretelshoot3, "gretelshoot3"),
-    std::make_pair<statetype*, std::string>(&s_gretelshoot4, "gretelshoot4"),
-    std::make_pair<statetype*, std::string>(&s_gretelshoot5, "gretelshoot5"),
-    std::make_pair<statetype*, std::string>(&s_gretelshoot6, "gretelshoot6"),
-    std::make_pair<statetype*, std::string>(&s_gretelshoot7, "gretelshoot7"),
-    std::make_pair<statetype*, std::string>(&s_gretelshoot8, "gretelshoot8"),
-    //std::make_pair<statetype*, std::string>(&s_angelshoot1, "angelshoot1"),
-    //std::make_pair<statetype*, std::string>(&s_deathshoot1, "deathshoot1"),
-    //std::make_pair<statetype*, std::string>(&s_spark1, "spark1"),
-    //std::make_pair<statetype*, std::string>(&s_transstand, "transstand"),
-    //std::make_pair<statetype*, std::string>(&s_transchase1, "transchase1"),
-    //std::make_pair<statetype*, std::string>(&s_transchase1s, "transchase1s"),
-    //std::make_pair<statetype*, std::string>(&s_transchase2, "transchase2"),
-    //std::make_pair<statetype*, std::string>(&s_transchase3, "transchase3"),
-    //std::make_pair<statetype*, std::string>(&s_transchase3s, "transchase3s"),
-    //std::make_pair<statetype*, std::string>(&s_transchase4, "transchase4"),
-    //std::make_pair<statetype*, std::string>(&s_transdie0, "transdie0"),
-    //std::make_pair<statetype*, std::string>(&s_transdie01, "transdie01"),
-    //std::make_pair<statetype*, std::string>(&s_transdie1, "transdie1"),
-    //std::make_pair<statetype*, std::string>(&s_transdie2, "transdie2"),
-    //std::make_pair<statetype*, std::string>(&s_transdie3, "transdie3"),
-    //std::make_pair<statetype*, std::string>(&s_transdie4, "transdie4"),
-    //std::make_pair<statetype*, std::string>(&s_transshoot1, "transshoot1"),
-    //std::make_pair<statetype*, std::string>(&s_transshoot2, "transshoot2"),
-    //std::make_pair<statetype*, std::string>(&s_transshoot3, "transshoot3"),
-    //std::make_pair<statetype*, std::string>(&s_transshoot4, "transshoot4"),
-    //std::make_pair<statetype*, std::string>(&s_transshoot5, "transshoot5"),
-    //std::make_pair<statetype*, std::string>(&s_transshoot6, "transshoot6"),
-    //std::make_pair<statetype*, std::string>(&s_transshoot7, "transshoot7"),
-    //std::make_pair<statetype*, std::string>(&s_transshoot8, "transshoot8"),
-    //std::make_pair<statetype*, std::string>(&s_uberstand, "uberstand"),
-    //std::make_pair<statetype*, std::string>(&s_uberchase1, "uberchase1"),
-    //std::make_pair<statetype*, std::string>(&s_uberchase1s, "uberchase1s"),
-    //std::make_pair<statetype*, std::string>(&s_uberchase2, "uberchase2"),
-    //std::make_pair<statetype*, std::string>(&s_uberchase3, "uberchase3"),
-    //std::make_pair<statetype*, std::string>(&s_uberchase3s, "uberchase3s"),
-    //std::make_pair<statetype*, std::string>(&s_uberchase4, "uberchase4"),
-    //std::make_pair<statetype*, std::string>(&s_uberdie0, "uberdie0"),
-    //std::make_pair<statetype*, std::string>(&s_uberdie01, "uberdie01"),
-    //std::make_pair<statetype*, std::string>(&s_uberdie1, "uberdie1"),
-    //std::make_pair<statetype*, std::string>(&s_uberdie2, "uberdie2"),
-    //std::make_pair<statetype*, std::string>(&s_uberdie3, "uberdie3"),
-    //std::make_pair<statetype*, std::string>(&s_uberdie4, "uberdie4"),
-    //std::make_pair<statetype*, std::string>(&s_uberdie5, "uberdie5"),
-    //std::make_pair<statetype*, std::string>(&s_ubershoot1, "ubershoot1"),
-    //std::make_pair<statetype*, std::string>(&s_ubershoot2, "ubershoot2"),
-    //std::make_pair<statetype*, std::string>(&s_ubershoot3, "ubershoot3"),
-    //std::make_pair<statetype*, std::string>(&s_ubershoot4, "ubershoot4"),
-    //std::make_pair<statetype*, std::string>(&s_ubershoot5, "ubershoot5"),
-    //std::make_pair<statetype*, std::string>(&s_ubershoot6, "ubershoot6"),
-    //std::make_pair<statetype*, std::string>(&s_ubershoot7, "ubershoot7"),
-    //std::make_pair<statetype*, std::string>(&s_willstand, "willstand"),
-    //std::make_pair<statetype*, std::string>(&s_willchase1, "willchase1"),
-    //std::make_pair<statetype*, std::string>(&s_willchase1s, "willchase1s"),
-    //std::make_pair<statetype*, std::string>(&s_willchase2, "willchase2"),
-    //std::make_pair<statetype*, std::string>(&s_willchase3, "willchase3"),
-    //std::make_pair<statetype*, std::string>(&s_willchase3s, "willchase3s"),
-    //std::make_pair<statetype*, std::string>(&s_willchase4, "willchase4"),
-    //std::make_pair<statetype*, std::string>(&s_willdie1, "willdie1"),
-    //std::make_pair<statetype*, std::string>(&s_willdie2, "willdie2"),
-    //std::make_pair<statetype*, std::string>(&s_willdie3, "willdie3"),
-    //std::make_pair<statetype*, std::string>(&s_willdie4, "willdie4"),
-    //std::make_pair<statetype*, std::string>(&s_willdie5, "willdie5"),
-    //std::make_pair<statetype*, std::string>(&s_willdie6, "willdie6"),
-    //std::make_pair<statetype*, std::string>(&s_willshoot1, "willshoot1"),
-    //std::make_pair<statetype*, std::string>(&s_willshoot2, "willshoot2"),
-    //std::make_pair<statetype*, std::string>(&s_willshoot3, "willshoot3"),
-    //std::make_pair<statetype*, std::string>(&s_willshoot4, "willshoot4"),
-    //std::make_pair<statetype*, std::string>(&s_willshoot5, "willshoot5"),
-    //std::make_pair<statetype*, std::string>(&s_willshoot6, "willshoot6"),
-    //std::make_pair<statetype*, std::string>(&s_deathstand, "deathstand"),
-    //std::make_pair<statetype*, std::string>(&s_deathchase1, "deathchase1"),
-    //std::make_pair<statetype*, std::string>(&s_deathchase1s, "deathchase1s"),
-    //std::make_pair<statetype*, std::string>(&s_deathchase2, "deathchase2"),
-    //std::make_pair<statetype*, std::string>(&s_deathchase3, "deathchase3"),
-    //std::make_pair<statetype*, std::string>(&s_deathchase3s, "deathchase3s"),
-    //std::make_pair<statetype*, std::string>(&s_deathchase4, "deathchase4"),
-    //std::make_pair<statetype*, std::string>(&s_deathdie1, "deathdie1"),
-    //std::make_pair<statetype*, std::string>(&s_deathdie2, "deathdie2"),
-    //std::make_pair<statetype*, std::string>(&s_deathdie3, "deathdie3"),
-    //std::make_pair<statetype*, std::string>(&s_deathdie4, "deathdie4"),
-    //std::make_pair<statetype*, std::string>(&s_deathdie5, "deathdie5"),
-    //std::make_pair<statetype*, std::string>(&s_deathdie6, "deathdie6"),
-    //std::make_pair<statetype*, std::string>(&s_deathdie7, "deathdie7"),
-    //std::make_pair<statetype*, std::string>(&s_deathdie8, "deathdie8"),
-    //std::make_pair<statetype*, std::string>(&s_deathdie9, "deathdie9"),
-    //std::make_pair<statetype*, std::string>(&s_deathshoot1, "deathshoot1"),
-    //std::make_pair<statetype*, std::string>(&s_deathshoot2, "deathshoot2"),
-    //std::make_pair<statetype*, std::string>(&s_deathshoot3, "deathshoot3"),
-    //std::make_pair<statetype*, std::string>(&s_deathshoot4, "deathshoot4"),
-    //std::make_pair<statetype*, std::string>(&s_deathshoot5, "deathshoot5"),
-    //std::make_pair<statetype*, std::string>(&s_angelstand, "angelstand"),
-    //std::make_pair<statetype*, std::string>(&s_angelchase1, "angelchase1"),
-    //std::make_pair<statetype*, std::string>(&s_angelchase1s, "angelchase1s"),
-    //std::make_pair<statetype*, std::string>(&s_angelchase2, "angelchase2"),
-    //std::make_pair<statetype*, std::string>(&s_angelchase3, "angelchase3"),
-    //std::make_pair<statetype*, std::string>(&s_angelchase3s, "angelchase3s"),
-    //std::make_pair<statetype*, std::string>(&s_angelchase4, "angelchase4"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie1, "angeldie1"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie11, "angeldie11"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie2, "angeldie2"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie3, "angeldie3"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie4, "angeldie4"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie5, "angeldie5"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie6, "angeldie6"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie7, "angeldie7"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie8, "angeldie8"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie9, "angeldie9"),
-    //std::make_pair<statetype*, std::string>(&s_angelshoot1, "angelshoot1"),
-    //std::make_pair<statetype*, std::string>(&s_angelshoot2, "angelshoot2"),
-    //std::make_pair<statetype*, std::string>(&s_angelshoot3, "angelshoot3"),
-    //std::make_pair<statetype*, std::string>(&s_angelshoot4, "angelshoot4"),
-    //std::make_pair<statetype*, std::string>(&s_angelshoot5, "angelshoot5"),
-    //std::make_pair<statetype*, std::string>(&s_angelshoot6, "angelshoot6"),
-    //std::make_pair<statetype*, std::string>(&s_angeltired, "angeltired"),
-    //std::make_pair<statetype*, std::string>(&s_angeltired2, "angeltired2"),
-    //std::make_pair<statetype*, std::string>(&s_angeltired3, "angeltired3"),
-    //std::make_pair<statetype*, std::string>(&s_angeltired4, "angeltired4"),
-    //std::make_pair<statetype*, std::string>(&s_angeltired5, "angeltired5"),
-    //std::make_pair<statetype*, std::string>(&s_angeltired6, "angeltired6"),
-    //std::make_pair<statetype*, std::string>(&s_angeltired7, "angeltired7"),
-    //std::make_pair<statetype*, std::string>(&s_spark1, "spark1"),
-    //std::make_pair<statetype*, std::string>(&s_spark2, "spark2"),
-    //std::make_pair<statetype*, std::string>(&s_spark3, "spark3"),
-    //std::make_pair<statetype*, std::string>(&s_spark4, "spark4"),
-    //std::make_pair<statetype*, std::string>(&s_spectrewait1, "spectrewait1"),
-    //std::make_pair<statetype*, std::string>(&s_spectrewait2, "spectrewait2"),
-    //std::make_pair<statetype*, std::string>(&s_spectrewait3, "spectrewait3"),
-    //std::make_pair<statetype*, std::string>(&s_spectrewait4, "spectrewait4"),
-    //std::make_pair<statetype*, std::string>(&s_spectrechase1, "spectrechase1"),
-    //std::make_pair<statetype*, std::string>(&s_spectrechase2, "spectrechase2"),
-    //std::make_pair<statetype*, std::string>(&s_spectrechase3, "spectrechase3"),
-    //std::make_pair<statetype*, std::string>(&s_spectrechase4, "spectrechase4"),
-    //std::make_pair<statetype*, std::string>(&s_spectredie1, "spectredie1"),
-    //std::make_pair<statetype*, std::string>(&s_spectredie2, "spectredie2"),
-    //std::make_pair<statetype*, std::string>(&s_spectredie3, "spectredie3"),
-    //std::make_pair<statetype*, std::string>(&s_spectredie4, "spectredie4"),
-    //std::make_pair<statetype*, std::string>(&s_spectrewake, "spectrewake"),
-    std::make_pair<statetype*, std::string>(&s_schabbstand, "schabbstand"),
-    std::make_pair<statetype*, std::string>(&s_schabbchase1, "schabbchase1"),
-    std::make_pair<statetype*, std::string>(&s_schabbchase1s, "schabbchase1s"),
-    std::make_pair<statetype*, std::string>(&s_schabbchase2, "schabbchase2"),
-    std::make_pair<statetype*, std::string>(&s_schabbchase3, "schabbchase3"),
-    std::make_pair<statetype*, std::string>(&s_schabbchase3s, "schabbchase3s"),
-    std::make_pair<statetype*, std::string>(&s_schabbchase4, "schabbchase4"),
-    std::make_pair<statetype*, std::string>(&s_schabbdie1, "schabbdie1"),
-    std::make_pair<statetype*, std::string>(&s_schabbdie2, "schabbdie2"),
-    std::make_pair<statetype*, std::string>(&s_schabbdie3, "schabbdie3"),
-    std::make_pair<statetype*, std::string>(&s_schabbdie4, "schabbdie4"),
-    std::make_pair<statetype*, std::string>(&s_schabbdie5, "schabbdie5"),
-    std::make_pair<statetype*, std::string>(&s_schabbdie6, "schabbdie6"),
-    std::make_pair<statetype*, std::string>(&s_schabbshoot1, "schabbshoot1"),
-    std::make_pair<statetype*, std::string>(&s_schabbshoot2, "schabbshoot2"),
-    std::make_pair<statetype*, std::string>(&s_needle1, "needle1"),
-    std::make_pair<statetype*, std::string>(&s_needle2, "needle2"),
-    std::make_pair<statetype*, std::string>(&s_needle3, "needle3"),
-    std::make_pair<statetype*, std::string>(&s_needle4, "needle4"),
-    std::make_pair<statetype*, std::string>(&s_schabbdeathcam, "schabbdeathcam"),
-    std::make_pair<statetype*, std::string>(&s_giftstand, "giftstand"),
-    std::make_pair<statetype*, std::string>(&s_giftchase1, "giftchase1"),
-    std::make_pair<statetype*, std::string>(&s_giftchase1s, "giftchase1s"),
-    std::make_pair<statetype*, std::string>(&s_giftchase2, "giftchase2"),
-    std::make_pair<statetype*, std::string>(&s_giftchase3, "giftchase3"),
-    std::make_pair<statetype*, std::string>(&s_giftchase3s, "giftchase3s"),
-    std::make_pair<statetype*, std::string>(&s_giftchase4, "giftchase4"),
-    std::make_pair<statetype*, std::string>(&s_giftdie1, "giftdie1"),
-    std::make_pair<statetype*, std::string>(&s_giftdie2, "giftdie2"),
-    std::make_pair<statetype*, std::string>(&s_giftdie3, "giftdie3"),
-    std::make_pair<statetype*, std::string>(&s_giftdie4, "giftdie4"),
-    std::make_pair<statetype*, std::string>(&s_giftdie5, "giftdie5"),
-    std::make_pair<statetype*, std::string>(&s_giftdie6, "giftdie6"),
-    std::make_pair<statetype*, std::string>(&s_giftshoot1, "giftshoot1"),
-    std::make_pair<statetype*, std::string>(&s_giftshoot2, "giftshoot2"),
-    std::make_pair<statetype*, std::string>(&s_needle1, "needle1"),
-    std::make_pair<statetype*, std::string>(&s_needle2, "needle2"),
-    std::make_pair<statetype*, std::string>(&s_needle3, "needle3"),
-    std::make_pair<statetype*, std::string>(&s_needle4, "needle4"),
-    std::make_pair<statetype*, std::string>(&s_giftdeathcam, "giftdeathcam"),
-    std::make_pair<statetype*, std::string>(&s_boom1, "boom1"),
-    std::make_pair<statetype*, std::string>(&s_boom2, "boom2"),
-    std::make_pair<statetype*, std::string>(&s_boom3, "boom3"),
-    std::make_pair<statetype*, std::string>(&s_fatstand, "fatstand"),
-    std::make_pair<statetype*, std::string>(&s_fatchase1, "fatchase1"),
-    std::make_pair<statetype*, std::string>(&s_fatchase1s, "fatchase1s"),
-    std::make_pair<statetype*, std::string>(&s_fatchase2, "fatchase2"),
-    std::make_pair<statetype*, std::string>(&s_fatchase3, "fatchase3"),
-    std::make_pair<statetype*, std::string>(&s_fatchase3s, "fatchase3s"),
-    std::make_pair<statetype*, std::string>(&s_fatchase4, "fatchase4"),
-    std::make_pair<statetype*, std::string>(&s_fatdie1, "fatdie1"),
-    std::make_pair<statetype*, std::string>(&s_fatdie2, "fatdie2"),
-    std::make_pair<statetype*, std::string>(&s_fatdie3, "fatdie3"),
-    std::make_pair<statetype*, std::string>(&s_fatdie4, "fatdie4"),
-    std::make_pair<statetype*, std::string>(&s_fatdie5, "fatdie5"),
-    std::make_pair<statetype*, std::string>(&s_fatdie6, "fatdie6"),
-    std::make_pair<statetype*, std::string>(&s_fatshoot1, "fatshoot1"),
-    std::make_pair<statetype*, std::string>(&s_fatshoot2, "fatshoot2"),
-    std::make_pair<statetype*, std::string>(&s_fatshoot3, "fatshoot3"),
-    std::make_pair<statetype*, std::string>(&s_fatshoot4, "fatshoot4"),
-    std::make_pair<statetype*, std::string>(&s_fatshoot5, "fatshoot5"),
-    std::make_pair<statetype*, std::string>(&s_fatshoot6, "fatshoot6"),
-    std::make_pair<statetype*, std::string>(&s_needle1, "needle1"),
-    std::make_pair<statetype*, std::string>(&s_needle2, "needle2"),
-    std::make_pair<statetype*, std::string>(&s_needle3, "needle3"),
-    std::make_pair<statetype*, std::string>(&s_needle4, "needle4"),
-    std::make_pair<statetype*, std::string>(&s_fatdeathcam, "fatdeathcam"),
-    std::make_pair<statetype*, std::string>(&s_fakestand, "fakestand"),
-    std::make_pair<statetype*, std::string>(&s_fakechase1, "fakechase1"),
-    std::make_pair<statetype*, std::string>(&s_fakechase1s, "fakechase1s"),
-    std::make_pair<statetype*, std::string>(&s_fakechase2, "fakechase2"),
-    std::make_pair<statetype*, std::string>(&s_fakechase3, "fakechase3"),
-    std::make_pair<statetype*, std::string>(&s_fakechase3s, "fakechase3s"),
-    std::make_pair<statetype*, std::string>(&s_fakechase4, "fakechase4"),
-    std::make_pair<statetype*, std::string>(&s_fakedie1, "fakedie1"),
-    std::make_pair<statetype*, std::string>(&s_fakedie2, "fakedie2"),
-    std::make_pair<statetype*, std::string>(&s_fakedie3, "fakedie3"),
-    std::make_pair<statetype*, std::string>(&s_fakedie4, "fakedie4"),
-    std::make_pair<statetype*, std::string>(&s_fakedie5, "fakedie5"),
-    std::make_pair<statetype*, std::string>(&s_fakedie6, "fakedie6"),
-    std::make_pair<statetype*, std::string>(&s_fakeshoot1, "fakeshoot1"),
-    std::make_pair<statetype*, std::string>(&s_fakeshoot2, "fakeshoot2"),
-    std::make_pair<statetype*, std::string>(&s_fakeshoot3, "fakeshoot3"),
-    std::make_pair<statetype*, std::string>(&s_fakeshoot4, "fakeshoot4"),
-    std::make_pair<statetype*, std::string>(&s_fakeshoot5, "fakeshoot5"),
-    std::make_pair<statetype*, std::string>(&s_fakeshoot6, "fakeshoot6"),
-    std::make_pair<statetype*, std::string>(&s_fakeshoot7, "fakeshoot7"),
-    std::make_pair<statetype*, std::string>(&s_fakeshoot8, "fakeshoot8"),
-    std::make_pair<statetype*, std::string>(&s_fakeshoot9, "fakeshoot9"),
-    std::make_pair<statetype*, std::string>(&s_fire1, "fire1"),
-    std::make_pair<statetype*, std::string>(&s_fire2, "fire2"),
-    std::make_pair<statetype*, std::string>(&s_mechachase1, "mechachase1"),
-    std::make_pair<statetype*, std::string>(&s_mechachase1s, "mechachase1s"),
-    std::make_pair<statetype*, std::string>(&s_mechachase2, "mechachase2"),
-    std::make_pair<statetype*, std::string>(&s_mechachase3, "mechachase3"),
-    std::make_pair<statetype*, std::string>(&s_mechachase3s, "mechachase3s"),
-    std::make_pair<statetype*, std::string>(&s_mechachase4, "mechachase4"),
-    std::make_pair<statetype*, std::string>(&s_mechadie1, "mechadie1"),
-    std::make_pair<statetype*, std::string>(&s_mechadie2, "mechadie2"),
-    std::make_pair<statetype*, std::string>(&s_mechadie3, "mechadie3"),
-    std::make_pair<statetype*, std::string>(&s_mechadie4, "mechadie4"),
-    std::make_pair<statetype*, std::string>(&s_mechashoot1, "mechashoot1"),
-    std::make_pair<statetype*, std::string>(&s_mechashoot2, "mechashoot2"),
-    std::make_pair<statetype*, std::string>(&s_mechashoot3, "mechashoot3"),
-    std::make_pair<statetype*, std::string>(&s_mechashoot4, "mechashoot4"),
-    std::make_pair<statetype*, std::string>(&s_mechashoot5, "mechashoot5"),
-    std::make_pair<statetype*, std::string>(&s_mechashoot6, "mechashoot6"),
-    std::make_pair<statetype*, std::string>(&s_hitlerchase1, "hitlerchase1"),
-    std::make_pair<statetype*, std::string>(&s_hitlerchase1s, "hitlerchase1s"),
-    std::make_pair<statetype*, std::string>(&s_hitlerchase2, "hitlerchase2"),
-    std::make_pair<statetype*, std::string>(&s_hitlerchase3, "hitlerchase3"),
-    std::make_pair<statetype*, std::string>(&s_hitlerchase3s, "hitlerchase3s"),
-    std::make_pair<statetype*, std::string>(&s_hitlerchase4, "hitlerchase4"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie1, "hitlerdie1"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie2, "hitlerdie2"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie3, "hitlerdie3"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie4, "hitlerdie4"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie5, "hitlerdie5"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie6, "hitlerdie6"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie7, "hitlerdie7"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie8, "hitlerdie8"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie9, "hitlerdie9"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie10, "hitlerdie10"),
-    std::make_pair<statetype*, std::string>(&s_hitlershoot1, "hitlershoot1"),
-    std::make_pair<statetype*, std::string>(&s_hitlershoot2, "hitlershoot2"),
-    std::make_pair<statetype*, std::string>(&s_hitlershoot3, "hitlershoot3"),
-    std::make_pair<statetype*, std::string>(&s_hitlershoot4, "hitlershoot4"),
-    std::make_pair<statetype*, std::string>(&s_hitlershoot5, "hitlershoot5"),
-    std::make_pair<statetype*, std::string>(&s_hitlershoot6, "hitlershoot6"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdeathcam, "hitlerdeathcam"),
-    std::make_pair<statetype*, std::string>(&s_bjrun1, "bjrun1"),
-    std::make_pair<statetype*, std::string>(&s_bjrun1s, "bjrun1s"),
-    std::make_pair<statetype*, std::string>(&s_bjrun2, "bjrun2"),
-    std::make_pair<statetype*, std::string>(&s_bjrun3, "bjrun3"),
-    std::make_pair<statetype*, std::string>(&s_bjrun3s, "bjrun3s"),
-    std::make_pair<statetype*, std::string>(&s_bjrun4, "bjrun4"),
-    std::make_pair<statetype*, std::string>(&s_bjjump1, "bjjump1"),
-    std::make_pair<statetype*, std::string>(&s_bjjump2, "bjjump2"),
-    std::make_pair<statetype*, std::string>(&s_bjjump3, "bjjump3"),
-    std::make_pair<statetype*, std::string>(&s_bjjump4, "bjjump4"),
-    std::make_pair<statetype*, std::string>(&s_grddie1, "grddie1"),
-    std::make_pair<statetype*, std::string>(&s_dogdie1, "dogdie1"),
-    std::make_pair<statetype*, std::string>(&s_ofcdie1, "ofcdie1"),
-    std::make_pair<statetype*, std::string>(&s_mutdie1, "mutdie1"),
-    std::make_pair<statetype*, std::string>(&s_ssdie1, "ssdie1"),
-    std::make_pair<statetype*, std::string>(&s_bossdie1, "bossdie1"),
-    std::make_pair<statetype*, std::string>(&s_schabbdie1, "schabbdie1"),
-    std::make_pair<statetype*, std::string>(&s_fakedie1, "fakedie1"),
-    std::make_pair<statetype*, std::string>(&s_mechadie1, "mechadie1"),
-    std::make_pair<statetype*, std::string>(&s_hitlerdie1, "hitlerdie1"),
-    std::make_pair<statetype*, std::string>(&s_greteldie1, "greteldie1"),
-    std::make_pair<statetype*, std::string>(&s_giftdie1, "giftdie1"),
-    std::make_pair<statetype*, std::string>(&s_fatdie1, "fatdie1"),
-    //std::make_pair<statetype*, std::string>(&s_spectredie1, "spectredie1"),
-    //std::make_pair<statetype*, std::string>(&s_angeldie1, "angeldie1"),
-    //std::make_pair<statetype*, std::string>(&s_transdie0, "transdie0"),
-    //std::make_pair<statetype*, std::string>(&s_uberdie0, "uberdie0"),
-    //std::make_pair<statetype*, std::string>(&s_willdie1, "willdie1"),
-    //std::make_pair<statetype*, std::string>(&s_deathdie1, "deathdie1"),
-    std::make_pair<statetype*, std::string>(&s_grdchase1, "grdchase1"),
-    std::make_pair<statetype*, std::string>(&s_dogchase1, "dogchase1"),
-    std::make_pair<statetype*, std::string>(&s_ofcchase1, "ofcchase1"),
-    std::make_pair<statetype*, std::string>(&s_sschase1, "sschase1"),
-    std::make_pair<statetype*, std::string>(&s_mutchase1, "mutchase1"),
-    std::make_pair<statetype*, std::string>(&s_bosschase1, "bosschase1"),
-    std::make_pair<statetype*, std::string>(&s_schabbchase1, "schabbchase1"),
-    std::make_pair<statetype*, std::string>(&s_fakechase1, "fakechase1"),
-    std::make_pair<statetype*, std::string>(&s_mechachase1, "mechachase1"),
-    std::make_pair<statetype*, std::string>(&s_gretelchase1, "gretelchase1"),
-    std::make_pair<statetype*, std::string>(&s_giftchase1, "giftchase1"),
-    std::make_pair<statetype*, std::string>(&s_fatchase1, "fatchase1"),
-    //std::make_pair<statetype*, std::string>(&s_spectrechase1, "spectrechase1"),
-    //std::make_pair<statetype*, std::string>(&s_angelchase1, "angelchase1"),
-    //std::make_pair<statetype*, std::string>(&s_transchase1, "transchase1"),
-    //std::make_pair<statetype*, std::string>(&s_uberchase1, "uberchase1"),
-    //std::make_pair<statetype*, std::string>(&s_willchase1, "willchase1"),
-    //std::make_pair<statetype*, std::string>(&s_deathchase1, "deathchase1"),
-    std::make_pair<statetype*, std::string>(&s_blinkychase1, "blinkychase1"),
-    std::make_pair<statetype*, std::string>(&s_hitlerchase1, "hitlerchase1"),
-    std::make_pair<statetype*, std::string>(&s_grdpain, "grdpain"),
-    std::make_pair<statetype*, std::string>(&s_grdpain1, "grdpain1"),
-    std::make_pair<statetype*, std::string>(&s_ofcpain, "ofcpain"),
-    std::make_pair<statetype*, std::string>(&s_ofcpain1, "ofcpain1"),
-    std::make_pair<statetype*, std::string>(&s_sspain, "sspain"),
-    std::make_pair<statetype*, std::string>(&s_sspain1, "sspain1"),
-    std::make_pair<statetype*, std::string>(&s_mutpain, "mutpain"),
-    std::make_pair<statetype*, std::string>(&s_mutpain1, "mutpain1"),
-    std::make_pair<statetype*, std::string>(&s_deathcam, "deathcam")
-    //std::make_pair<statetype*, std::string>(&s_schabbdeathcam2, "schabbdeathcam2"),
-    //std::make_pair<statetype*, std::string>(&s_hitlerdeathcam2, "hitlerdeathcam2"),
-    //std::make_pair<statetype*, std::string>(&s_giftdeathcam2, "giftdeathcam2"),
-    //std::make_pair<statetype*, std::string>(&s_fatdeathcam2, "fatdeathcam2")
+static std::map<uintptr_t, std::string> STATE_2_STR = {
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_rocket, "rocket"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_smoke1, "smoke1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_smoke2, "smoke2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_smoke3, "smoke3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_smoke4, "smoke4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_boom2, "boom2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_boom3, "boom3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hrocket, "hrocket"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hsmoke1, "hsmoke1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hsmoke2, "hsmoke2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hsmoke3, "hsmoke3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hsmoke4, "hsmoke4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hboom2, "hboom2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hboom3, "hboom3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdstand, "grdstand"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdpath1, "grdpath1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdpath1s, "grdpath1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdpath2, "grdpath2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdpath3, "grdpath3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdpath3s, "grdpath3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdpath4, "grdpath4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdpain, "grdpain"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdpain1, "grdpain1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdgiveup, "grdgiveup"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdshoot1, "grdshoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdshoot2, "grdshoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdshoot3, "grdshoot3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdshoot4, "grdshoot4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdchase1, "grdchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdchase1s, "grdchase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdchase2, "grdchase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdchase3, "grdchase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdchase3s, "grdchase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdchase4, "grdchase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grddie1, "grddie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grddie1d, "grddie1d"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grddie2, "grddie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grddie3, "grddie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grddie4, "grddie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_blinkychase1, "blinkychase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_blinkychase2, "blinkychase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_inkychase1, "inkychase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_inkychase2, "inkychase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_pinkychase1, "pinkychase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_pinkychase2, "pinkychase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_clydechase1, "clydechase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_clydechase2, "clydechase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogpath1, "dogpath1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogpath1s, "dogpath1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogpath2, "dogpath2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogpath3, "dogpath3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogpath3s, "dogpath3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogpath4, "dogpath4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogjump1, "dogjump1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogjump2, "dogjump2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogjump3, "dogjump3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogjump4, "dogjump4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogjump5, "dogjump5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogchase1, "dogchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogchase1s, "dogchase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogchase2, "dogchase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogchase3, "dogchase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogchase3s, "dogchase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogchase4, "dogchase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogdie1, "dogdie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogdie1d, "dogdie1d"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogdie2, "dogdie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogdie3, "dogdie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogdead, "dogdead"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcstand, "ofcstand"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcpath1, "ofcpath1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcpath1s, "ofcpath1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcpath2, "ofcpath2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcpath3, "ofcpath3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcpath3s, "ofcpath3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcpath4, "ofcpath4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcpain, "ofcpain"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcpain1, "ofcpain1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcgiveup, "ofcgiveup"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcshoot1, "ofcshoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcshoot2, "ofcshoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcshoot3, "ofcshoot3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcshoot4, "ofcshoot4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcchase1, "ofcchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcchase1s, "ofcchase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcchase2, "ofcchase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcchase3, "ofcchase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcchase3s, "ofcchase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcchase4, "ofcchase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcdie1, "ofcdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcdie2, "ofcdie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcdie3, "ofcdie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcdie4, "ofcdie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcdie5, "ofcdie5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutstand, "mutstand"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutpath1, "mutpath1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutpath1s, "mutpath1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutpath2, "mutpath2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutpath3, "mutpath3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutpath3s, "mutpath3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutpath4, "mutpath4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutpain, "mutpain"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutpain1, "mutpain1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutgiveup, "mutgiveup"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutshoot1, "mutshoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutshoot2, "mutshoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutshoot3, "mutshoot3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutshoot4, "mutshoot4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutchase1, "mutchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutchase1s, "mutchase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutchase2, "mutchase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutchase3, "mutchase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutchase3s, "mutchase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutchase4, "mutchase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutdie1, "mutdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutdie2, "mutdie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutdie3, "mutdie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutdie4, "mutdie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutdie5, "mutdie5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssstand, "ssstand"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sspath1, "sspath1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sspath1s, "sspath1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sspath2, "sspath2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sspath3, "sspath3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sspath3s, "sspath3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sspath4, "sspath4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sspain, "sspain"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sspain1, "sspain1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssshoot1, "ssshoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssshoot2, "ssshoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssshoot3, "ssshoot3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssshoot4, "ssshoot4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssshoot5, "ssshoot5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssshoot6, "ssshoot6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssshoot7, "ssshoot7"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssshoot8, "ssshoot8"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssshoot9, "ssshoot9"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sschase1, "sschase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sschase1s, "sschase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sschase2, "sschase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sschase3, "sschase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sschase3s, "sschase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sschase4, "sschase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssdie1, "ssdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssdie2, "ssdie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssdie3, "ssdie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssdie4, "ssdie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossstand, "bossstand"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bosschase1, "bosschase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bosschase1s, "bosschase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bosschase2, "bosschase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bosschase3, "bosschase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bosschase3s, "bosschase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bosschase4, "bosschase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossdie1, "bossdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossdie2, "bossdie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossdie3, "bossdie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossdie4, "bossdie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossshoot1, "bossshoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossshoot2, "bossshoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossshoot3, "bossshoot3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossshoot4, "bossshoot4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossshoot5, "bossshoot5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossshoot6, "bossshoot6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossshoot7, "bossshoot7"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossshoot8, "bossshoot8"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelstand, "gretelstand"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelchase1, "gretelchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelchase1s, "gretelchase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelchase2, "gretelchase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelchase3, "gretelchase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelchase3s, "gretelchase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelchase4, "gretelchase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_greteldie1, "greteldie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_greteldie2, "greteldie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_greteldie3, "greteldie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_greteldie4, "greteldie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelshoot1, "gretelshoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelshoot2, "gretelshoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelshoot3, "gretelshoot3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelshoot4, "gretelshoot4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelshoot5, "gretelshoot5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelshoot6, "gretelshoot6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelshoot7, "gretelshoot7"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelshoot8, "gretelshoot8"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelshoot1, "angelshoot1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathshoot1, "deathshoot1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spark1, "spark1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transstand, "transstand"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transchase1, "transchase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transchase1s, "transchase1s"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transchase2, "transchase2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transchase3, "transchase3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transchase3s, "transchase3s"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transchase4, "transchase4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transdie0, "transdie0"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transdie01, "transdie01"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transdie1, "transdie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transdie2, "transdie2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transdie3, "transdie3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transdie4, "transdie4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transshoot1, "transshoot1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transshoot2, "transshoot2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transshoot3, "transshoot3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transshoot4, "transshoot4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transshoot5, "transshoot5"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transshoot6, "transshoot6"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transshoot7, "transshoot7"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transshoot8, "transshoot8"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberstand, "uberstand"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberchase1, "uberchase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberchase1s, "uberchase1s"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberchase2, "uberchase2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberchase3, "uberchase3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberchase3s, "uberchase3s"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberchase4, "uberchase4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberdie0, "uberdie0"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberdie01, "uberdie01"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberdie1, "uberdie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberdie2, "uberdie2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberdie3, "uberdie3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberdie4, "uberdie4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberdie5, "uberdie5"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ubershoot1, "ubershoot1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ubershoot2, "ubershoot2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ubershoot3, "ubershoot3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ubershoot4, "ubershoot4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ubershoot5, "ubershoot5"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ubershoot6, "ubershoot6"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ubershoot7, "ubershoot7"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willstand, "willstand"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willchase1, "willchase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willchase1s, "willchase1s"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willchase2, "willchase2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willchase3, "willchase3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willchase3s, "willchase3s"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willchase4, "willchase4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willdie1, "willdie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willdie2, "willdie2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willdie3, "willdie3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willdie4, "willdie4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willdie5, "willdie5"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willdie6, "willdie6"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willshoot1, "willshoot1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willshoot2, "willshoot2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willshoot3, "willshoot3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willshoot4, "willshoot4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willshoot5, "willshoot5"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willshoot6, "willshoot6"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathstand, "deathstand"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathchase1, "deathchase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathchase1s, "deathchase1s"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathchase2, "deathchase2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathchase3, "deathchase3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathchase3s, "deathchase3s"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathchase4, "deathchase4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathdie1, "deathdie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathdie2, "deathdie2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathdie3, "deathdie3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathdie4, "deathdie4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathdie5, "deathdie5"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathdie6, "deathdie6"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathdie7, "deathdie7"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathdie8, "deathdie8"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathdie9, "deathdie9"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathshoot1, "deathshoot1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathshoot2, "deathshoot2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathshoot3, "deathshoot3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathshoot4, "deathshoot4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathshoot5, "deathshoot5"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelstand, "angelstand"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelchase1, "angelchase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelchase1s, "angelchase1s"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelchase2, "angelchase2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelchase3, "angelchase3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelchase3s, "angelchase3s"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelchase4, "angelchase4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie1, "angeldie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie11, "angeldie11"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie2, "angeldie2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie3, "angeldie3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie4, "angeldie4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie5, "angeldie5"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie6, "angeldie6"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie7, "angeldie7"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie8, "angeldie8"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie9, "angeldie9"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelshoot1, "angelshoot1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelshoot2, "angelshoot2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelshoot3, "angelshoot3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelshoot4, "angelshoot4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelshoot5, "angelshoot5"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelshoot6, "angelshoot6"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeltired, "angeltired"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeltired2, "angeltired2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeltired3, "angeltired3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeltired4, "angeltired4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeltired5, "angeltired5"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeltired6, "angeltired6"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeltired7, "angeltired7"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spark1, "spark1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spark2, "spark2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spark3, "spark3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spark4, "spark4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectrewait1, "spectrewait1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectrewait2, "spectrewait2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectrewait3, "spectrewait3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectrewait4, "spectrewait4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectrechase1, "spectrechase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectrechase2, "spectrechase2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectrechase3, "spectrechase3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectrechase4, "spectrechase4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectredie1, "spectredie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectredie2, "spectredie2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectredie3, "spectredie3"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectredie4, "spectredie4"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectrewake, "spectrewake"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbstand, "schabbstand"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbchase1, "schabbchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbchase1s, "schabbchase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbchase2, "schabbchase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbchase3, "schabbchase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbchase3s, "schabbchase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbchase4, "schabbchase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbdie1, "schabbdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbdie2, "schabbdie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbdie3, "schabbdie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbdie4, "schabbdie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbdie5, "schabbdie5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbdie6, "schabbdie6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbshoot1, "schabbshoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbshoot2, "schabbshoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle1, "needle1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle2, "needle2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle3, "needle3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle4, "needle4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbdeathcam, "schabbdeathcam"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftstand, "giftstand"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftchase1, "giftchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftchase1s, "giftchase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftchase2, "giftchase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftchase3, "giftchase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftchase3s, "giftchase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftchase4, "giftchase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftdie1, "giftdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftdie2, "giftdie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftdie3, "giftdie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftdie4, "giftdie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftdie5, "giftdie5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftdie6, "giftdie6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftshoot1, "giftshoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftshoot2, "giftshoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle1, "needle1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle2, "needle2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle3, "needle3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle4, "needle4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftdeathcam, "giftdeathcam"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_boom1, "boom1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_boom2, "boom2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_boom3, "boom3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatstand, "fatstand"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatchase1, "fatchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatchase1s, "fatchase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatchase2, "fatchase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatchase3, "fatchase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatchase3s, "fatchase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatchase4, "fatchase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatdie1, "fatdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatdie2, "fatdie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatdie3, "fatdie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatdie4, "fatdie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatdie5, "fatdie5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatdie6, "fatdie6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatshoot1, "fatshoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatshoot2, "fatshoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatshoot3, "fatshoot3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatshoot4, "fatshoot4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatshoot5, "fatshoot5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatshoot6, "fatshoot6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle1, "needle1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle2, "needle2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle3, "needle3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_needle4, "needle4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatdeathcam, "fatdeathcam"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakestand, "fakestand"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakechase1, "fakechase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakechase1s, "fakechase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakechase2, "fakechase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakechase3, "fakechase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakechase3s, "fakechase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakechase4, "fakechase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakedie1, "fakedie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakedie2, "fakedie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakedie3, "fakedie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakedie4, "fakedie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakedie5, "fakedie5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakedie6, "fakedie6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakeshoot1, "fakeshoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakeshoot2, "fakeshoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakeshoot3, "fakeshoot3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakeshoot4, "fakeshoot4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakeshoot5, "fakeshoot5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakeshoot6, "fakeshoot6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakeshoot7, "fakeshoot7"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakeshoot8, "fakeshoot8"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakeshoot9, "fakeshoot9"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fire1, "fire1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fire2, "fire2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechachase1, "mechachase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechachase1s, "mechachase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechachase2, "mechachase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechachase3, "mechachase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechachase3s, "mechachase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechachase4, "mechachase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechadie1, "mechadie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechadie2, "mechadie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechadie3, "mechadie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechadie4, "mechadie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechashoot1, "mechashoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechashoot2, "mechashoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechashoot3, "mechashoot3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechashoot4, "mechashoot4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechashoot5, "mechashoot5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechashoot6, "mechashoot6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerchase1, "hitlerchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerchase1s, "hitlerchase1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerchase2, "hitlerchase2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerchase3, "hitlerchase3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerchase3s, "hitlerchase3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerchase4, "hitlerchase4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie1, "hitlerdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie2, "hitlerdie2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie3, "hitlerdie3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie4, "hitlerdie4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie5, "hitlerdie5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie6, "hitlerdie6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie7, "hitlerdie7"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie8, "hitlerdie8"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie9, "hitlerdie9"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie10, "hitlerdie10"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlershoot1, "hitlershoot1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlershoot2, "hitlershoot2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlershoot3, "hitlershoot3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlershoot4, "hitlershoot4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlershoot5, "hitlershoot5"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlershoot6, "hitlershoot6"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdeathcam, "hitlerdeathcam"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bjrun1, "bjrun1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bjrun1s, "bjrun1s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bjrun2, "bjrun2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bjrun3, "bjrun3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bjrun3s, "bjrun3s"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bjrun4, "bjrun4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bjjump1, "bjjump1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bjjump2, "bjjump2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bjjump3, "bjjump3"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bjjump4, "bjjump4"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grddie1, "grddie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogdie1, "dogdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcdie1, "ofcdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutdie1, "mutdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ssdie1, "ssdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bossdie1, "bossdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbdie1, "schabbdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakedie1, "fakedie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechadie1, "mechadie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdie1, "hitlerdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_greteldie1, "greteldie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftdie1, "giftdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatdie1, "fatdie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectredie1, "spectredie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angeldie1, "angeldie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transdie0, "transdie0"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberdie0, "uberdie0"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willdie1, "willdie1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathdie1, "deathdie1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdchase1, "grdchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_dogchase1, "dogchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcchase1, "ofcchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sschase1, "sschase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutchase1, "mutchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_bosschase1, "bosschase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbchase1, "schabbchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fakechase1, "fakechase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mechachase1, "mechachase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_gretelchase1, "gretelchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftchase1, "giftchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatchase1, "fatchase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_spectrechase1, "spectrechase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_angelchase1, "angelchase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_transchase1, "transchase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_uberchase1, "uberchase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_willchase1, "willchase1"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathchase1, "deathchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_blinkychase1, "blinkychase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerchase1, "hitlerchase1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdpain, "grdpain"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_grdpain1, "grdpain1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcpain, "ofcpain"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_ofcpain1, "ofcpain1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sspain, "sspain"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_sspain1, "sspain1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutpain, "mutpain"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_mutpain1, "mutpain1"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_deathcam, "deathcam"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_schabbdeathcam2, "schabbdeathcam2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_hitlerdeathcam2, "hitlerdeathcam2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_giftdeathcam2, "giftdeathcam2"),
+    //std::make_pair<uintptr_t, std::string>((uintptr_t)&s_fatdeathcam2, "fatdeathcam2"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_player, "player"),
+    std::make_pair<uintptr_t, std::string>((uintptr_t)&s_attack, "attack")
 };
-std::map<std::string, statetype*> STR_2_STATE;
+
+std::map<std::string, uintptr_t> STR_2_STATE;
 
 std::map<dirtype, std::string> DIR_2_STR = {
     std::make_pair<dirtype, std::string>(east, "east"),
     std::make_pair<dirtype, std::string>(northeast, "northeast"),
     std::make_pair<dirtype, std::string>(north, "north"),
     std::make_pair<dirtype, std::string>(northwest, "northwest"),
+    std::make_pair<dirtype, std::string>(west, "west"),
     std::make_pair<dirtype, std::string>(southwest, "southwest"),
     std::make_pair<dirtype, std::string>(south, "south"),
     std::make_pair<dirtype, std::string>(southeast, "southeast"),
@@ -1478,14 +1484,53 @@ static Json::Value gamestate_to_json(const gametype& gamestate)
     return json_gamestate;
 }
 
+static void json_to_gamestate(const Json::Value& json, gametype& gamestate)
+{
+    gamestate.difficulty = (int16_t)json["difficulty"].asInt();
+    gamestate.mapon = (int16_t)json["mapon"].asInt();
+    gamestate.oldscore = (int32_t)json["oldscore"].asInt();
+    gamestate.score = (int32_t)json["score"].asInt();
+    gamestate.nextextra = (int32_t)json["nextextra"].asInt();
+    gamestate.lives = (int16_t)json["lives"].asInt();
+    gamestate.health = (int16_t)json["health"].asInt();
+    gamestate.ammo = (int16_t)json["ammo"].asInt();
+    gamestate.keys = (int16_t)json["keys"].asInt();
+    gamestate.bestweapon = STR_2_WP[json["bestweapon"].asString()];
+    gamestate.weapon = STR_2_WP[json["weapon"].asString()];
+    gamestate.chosenweapon = STR_2_WP[json["chosenweapon"].asString()];
+    gamestate.faceframe = (int16_t)json["faceframe"].asInt();
+    gamestate.attackframe = (int16_t)json["attackframe"].asInt();
+    gamestate.attackcount = (int16_t)json["attackcount"].asInt();
+    gamestate.weaponframe = (int16_t)json["weaponframe"].asInt();
+    gamestate.episode = (int16_t)json["episode"].asInt();
+    gamestate.secretcount = (int16_t)json["secretcount"].asInt();
+    gamestate.treasurecount = (int16_t)json["treasurecount"].asInt();
+    gamestate.killcount = (int16_t)json["killcount"].asInt();
+    gamestate.secrettotal = (int16_t)json["secrettotal"].asInt();
+    gamestate.treasuretotal = (int16_t)json["treasuretotal"].asInt();
+    gamestate.killtotal = (int16_t)json["killtotal"].asInt();
+    gamestate.TimeCount = (int32_t)json["TimeCount"].asInt();
+    gamestate.killx = (int32_t)json["killx"].asInt();
+    gamestate.killy = (int32_t)json["killy"].asInt();
+    gamestate.victoryflag = json["victoryflag"].asBool() ? _true : _false;
+}
+
 static Json::Value LevelRatio_to_json(const LRstruct& level_ratio)
 {
     Json::Value json_LevelRatio;
-    json_LevelRatio["killy"] = level_ratio.kill;
+    json_LevelRatio["kill"] = level_ratio.kill;
     json_LevelRatio["secret"] = level_ratio.secret;
     json_LevelRatio["treasure"] = level_ratio.treasure;
     json_LevelRatio["time"] = level_ratio.time;
     return json_LevelRatio;
+}
+
+static void json_to_LevelRatio(const Json::Value& json, LRstruct& level_ratio)
+{
+    level_ratio.kill = (int16_t)json["kill"].asInt();
+    level_ratio.secret = (int16_t)json["secret"].asInt();
+    level_ratio.treasure = (int16_t)json["treasure"].asInt();
+    level_ratio.time = (int32_t)json["time"].asInt();
 }
 
 static Json::Value LevelRatios_to_json(const LRstruct* level_ratios, int count)
@@ -1498,6 +1543,14 @@ static Json::Value LevelRatios_to_json(const LRstruct* level_ratios, int count)
     return json_LevelRatios;
 }
 
+static void json_to_LevelRatios(const Json::Value& json, LRstruct* level_ratios, int count)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        json_to_LevelRatio(json[i], level_ratios[i]);
+    }
+}
+
 static Json::Value tilemap_to_json(const byte* tilemap)
 {
     Json::Value json_tilemap(Json::arrayValue);
@@ -1506,6 +1559,14 @@ static Json::Value tilemap_to_json(const byte* tilemap)
         json_tilemap.append(tilemap[i]);
     }
     return json_tilemap;
+}
+
+static void json_to_tilemap(const Json::Value& json, byte* tilemap)
+{
+    for (int i = 0; i < MAPSIZE * MAPSIZE; ++i)
+    {
+        tilemap[i] = (byte)json[i].asUInt();
+    }
 }
 
 static Json::Value actorat_to_json(objtype** actorat)
@@ -1555,13 +1616,12 @@ static Json::Value object_to_json(const objtype& ob)
     json_object["ticcount"] = ob.ticcount;
     assert(CLASSTYPE_2_STR.find(ob.obclass) != CLASSTYPE_2_STR.end());
     json_object["obclass"] = CLASSTYPE_2_STR[ob.obclass];
-    printf("ob.state: %p\n", (void*)ob.state);
-    assert(STATE_2_STR.find(ob.state) != STATE_2_STR.end());
-    json_object["state"] = STATE_2_STR[ob.state];
+    assert(STATE_2_STR.find((uintptr_t)ob.state) != STATE_2_STR.end());
+    json_object["state"] = STATE_2_STR[(uintptr_t)ob.state];
     json_object["flags"] = ob.flags;
     json_object["distance"] = ob.distance;
     assert(DIR_2_STR.find(ob.dir) != DIR_2_STR.end());
-    json_object["state"] = DIR_2_STR[ob.dir];
+    json_object["dir"] = DIR_2_STR[ob.dir];
     json_object["x"] = ob.x;
     json_object["y"] = ob.y;
     json_object["tilex"] = ob.tilex;
@@ -1681,79 +1741,9 @@ _boolean SaveTheGame(int16_t file,int16_t x,int16_t y)
     jsonDocument["pwallpos"] = pwallpos;
     //-----------------------
 
-    std::stringstream ss;
-    ss << jsonDocument;
-    auto str = ss.str();
-
+    Json::FastWriter fastWriter;
+    auto str = fastWriter.write(jsonDocument);
     CA_FarWrite(file, (byte *)str.c_str(), (int32_t)str.size());
-
-
-
-
-	//DiskFlopAnim(x,y);
-	//CA_FarWrite (file,(byte *)&gamestate,sizeof(gamestate));
-	//checksum = DoChecksum((byte *)&gamestate,sizeof(gamestate),checksum);
-
-	//DiskFlopAnim(x,y);
-//#ifdef SPEAR
-//	CA_FarWrite (file,(byte *)&LevelRatios[0],sizeof(LRstruct)*20);
-//	checksum = DoChecksum((byte *)&LevelRatios[0],sizeof(LRstruct)*20,checksum);
-//#else
-//	CA_FarWrite (file,(byte *)&LevelRatios[0],sizeof(LRstruct)*8);
-//	checksum = DoChecksum((byte *)&LevelRatios[0],sizeof(LRstruct)*8,checksum);
-//#endif
-
-	//DiskFlopAnim(x,y);
-	//CA_FarWrite (file,(byte *)tilemap,sizeof(tilemap));
-	//checksum = DoChecksum((byte *)tilemap,sizeof(tilemap),checksum);
-	//DiskFlopAnim(x,y);
-	//CA_FarWrite (file,(byte *)actorat,sizeof(actorat));
-	//checksum = DoChecksum((byte *)actorat,sizeof(actorat),checksum);
-
-	//CA_FarWrite (file,(byte *)areaconnect,sizeof(areaconnect));
-	//CA_FarWrite (file,(byte *)areabyplayer,sizeof(areabyplayer));
-
-	//for (ob = player ; ob ; ob=ob->next)
-	//{
-	// DiskFlopAnim(x,y);
-	// CA_FarWrite (file,(byte *)ob,sizeof(*ob));
-	//}
-	//nullobj.active = ac_badobject;          // end of file marker
-	//DiskFlopAnim(x,y);
-	//CA_FarWrite (file,(byte *)&nullobj,sizeof(nullobj));
-
-
-
-	//DiskFlopAnim(x,y);
-	//CA_FarWrite (file,(byte *)&laststatobj,sizeof(laststatobj));
-	//checksum = DoChecksum((byte *)&laststatobj,sizeof(laststatobj),checksum);
-	// DiskFlopAnim(x,y);
-	// CA_FarWrite (file,(byte *)statobjlist,sizeof(statobjlist));
-	// checksum = DoChecksum((byte *)statobjlist,sizeof(statobjlist),checksum);
-
-	// DiskFlopAnim(x,y);
-	// CA_FarWrite (file,(byte *)doorposition,sizeof(doorposition));
-	// checksum = DoChecksum((byte *)doorposition,sizeof(doorposition),checksum);
-	// DiskFlopAnim(x,y);
-	// CA_FarWrite (file,(byte *)doorobjlist,sizeof(doorobjlist));
-	// checksum = DoChecksum((byte *)doorobjlist,sizeof(doorobjlist),checksum);
-
-	// DiskFlopAnim(x,y);
-	// CA_FarWrite (file,(byte *)&pwallstate,sizeof(pwallstate));
-	// checksum = DoChecksum((byte *)&pwallstate,sizeof(pwallstate),checksum);
-	// CA_FarWrite (file,(byte *)&pwallx,sizeof(pwallx));
-	// checksum = DoChecksum((byte *)&pwallx,sizeof(pwallx),checksum);
-	// CA_FarWrite (file,(byte *)&pwally,sizeof(pwally));
-	// checksum = DoChecksum((byte *)&pwally,sizeof(pwally),checksum);
-	// CA_FarWrite (file,(byte *)&pwalldir,sizeof(pwalldir));
-	// checksum = DoChecksum((byte *)&pwalldir,sizeof(pwalldir),checksum);
-	// CA_FarWrite (file,(byte *)&pwallpos,sizeof(pwallpos));
-	// checksum = DoChecksum((byte *)&pwallpos,sizeof(pwallpos),checksum);
-
-	//
-	// WRITE OUT CHECKSUM
-	//
-	//CA_FarWrite (file,(byte *)&checksum,sizeof(checksum));
 
 	return(_true);
 }
@@ -1767,105 +1757,51 @@ _boolean SaveTheGame(int16_t file,int16_t x,int16_t y)
 =
 ==================
 */
+#include <json/reader.h>
 
 _boolean LoadTheGame(int16_t file,int16_t x,int16_t y)
 {
-	int32_t checksum,oldchecksum;
-	objtype *ob,nullobj;
+    init_saveload_constants();
 
+    auto len = filelength(file);
+    std::string str(len, ' ');
+    CA_FarRead(file, (byte *)str.c_str(), len);
+    Json::Reader reader;
+    Json::Value jsonDocument;
+    if (!reader.parse(str, jsonDocument))
+    {
+        tinyfd_messageBox("Load Game", "Failed to parse save file", "ok", "error", 0);
+        return _false;
+    }
 
-	checksum = 0;
-
-	DiskFlopAnim(x,y);
-	CA_FarRead (file,(byte *)&gamestate,sizeof(gamestate));
-	checksum = DoChecksum((byte *)&gamestate,sizeof(gamestate),checksum);
-
-	DiskFlopAnim(x,y);
-#ifdef SPEAR
-	CA_FarRead (file,(byte *)&LevelRatios[0],sizeof(LRstruct)*20);
-	checksum = DoChecksum((byte *)&LevelRatios[0],sizeof(LRstruct)*20,checksum);
-#else
-	CA_FarRead (file,(byte *)&LevelRatios[0],sizeof(LRstruct)*8);
-	checksum = DoChecksum((byte *)&LevelRatios[0],sizeof(LRstruct)*8,checksum);
-#endif
-
-	DiskFlopAnim(x,y);
-	SetupGameLevel ();
-
-	DiskFlopAnim(x,y);
-	CA_FarRead (file,(byte *)tilemap,sizeof(tilemap));
-	checksum = DoChecksum((byte *)tilemap,sizeof(tilemap),checksum);
-	DiskFlopAnim(x,y);
-	CA_FarRead (file,(byte *)actorat,sizeof(actorat));
-	checksum = DoChecksum((byte *)actorat,sizeof(actorat),checksum);
-
-	CA_FarRead (file,(byte *)areaconnect,sizeof(areaconnect));
-	CA_FarRead (file,(byte *)areabyplayer,sizeof(areabyplayer));
-
-
-
-	InitActorList ();
-	DiskFlopAnim(x,y);
-	CA_FarRead (file,(byte *)player,sizeof(*player));
-
-	while (1)
-	{
-	 DiskFlopAnim(x,y);
-		CA_FarRead (file,(byte *)&nullobj,sizeof(nullobj));
-		if (nullobj.active == ac_badobject)
-			break;
-		GetNewActor ();
-	 // don't copy over the links
-		memcpy (_new,&nullobj,sizeof(nullobj)-4);
-	}
-
-
-
-	DiskFlopAnim(x,y);
-	CA_FarRead (file,(byte *)&laststatobj,sizeof(laststatobj));
-	checksum = DoChecksum((byte *)&laststatobj,sizeof(laststatobj),checksum);
-	DiskFlopAnim(x,y);
-	CA_FarRead (file,(byte *)statobjlist,sizeof(statobjlist));
-	checksum = DoChecksum((byte *)statobjlist,sizeof(statobjlist),checksum);
-
-	DiskFlopAnim(x,y);
-	CA_FarRead (file,(byte *)doorposition,sizeof(doorposition));
-	checksum = DoChecksum((byte *)doorposition,sizeof(doorposition),checksum);
-	DiskFlopAnim(x,y);
-	CA_FarRead (file,(byte *)doorobjlist,sizeof(doorobjlist));
-	checksum = DoChecksum((byte *)doorobjlist,sizeof(doorobjlist),checksum);
-
-	DiskFlopAnim(x,y);
-	CA_FarRead (file,(byte *)&pwallstate,sizeof(pwallstate));
-	checksum = DoChecksum((byte *)&pwallstate,sizeof(pwallstate),checksum);
-	CA_FarRead (file,(byte *)&pwallx,sizeof(pwallx));
-	checksum = DoChecksum((byte *)&pwallx,sizeof(pwallx),checksum);
-	CA_FarRead (file,(byte *)&pwally,sizeof(pwally));
-	checksum = DoChecksum((byte *)&pwally,sizeof(pwally),checksum);
-	CA_FarRead (file,(byte *)&pwalldir,sizeof(pwalldir));
-	checksum = DoChecksum((byte *)&pwalldir,sizeof(pwalldir),checksum);
-	CA_FarRead (file,(byte *)&pwallpos,sizeof(pwallpos));
-	checksum = DoChecksum((byte *)&pwallpos,sizeof(pwallpos),checksum);
-
-	CA_FarRead (file,(byte *)&oldchecksum,sizeof(oldchecksum));
-
-	if (oldchecksum != checksum)
-	{
-	 Message((char*)(STR_SAVECHT1"\n"
-			 STR_SAVECHT2"\n"
-			 STR_SAVECHT3"\n"
-			 STR_SAVECHT4));
-
-	 IN_ClearKeysDown();
-	 IN_Ack();
-
-	 gamestate.score = 0;
-	 gamestate.lives = 1;
-	 gamestate.weapon =
-	   gamestate.chosenweapon =
-	   gamestate.bestweapon = wp_pistol;
-	 gamestate.ammo = 8;
-	}
+    //-----------------------
+    DiskFlopAnim(x, y);
+    json_to_gamestate(jsonDocument["gamestate"], gamestate);
+    DiskFlopAnim(x, y);
+    json_to_LevelRatios(jsonDocument["LevelRatios"], LevelRatios, 8);
+    DiskFlopAnim(x, y);
+    json_to_tilemap(jsonDocument["tilemap"], (byte*)tilemap);
+    DiskFlopAnim(x, y);
+    //jsonDocument["actorat"] = actorat_to_json((objtype**)actorat);
+    //jsonDocument["areaconnect"] = areaconnect_to_json((byte*)areaconnect);
+    //jsonDocument["areabyplayer"] = areabyplayer_to_json((_boolean*)areabyplayer);
+    //jsonDocument["objects"] = objects_to_json(player, x, y);
+    //DiskFlopAnim(x, y);
+    //int laststatobji = (int)(laststatobj - statobjlist);
+    //jsonDocument["laststatobj"] = laststatobji;
+    //DiskFlopAnim(x, y);
+    //jsonDocument["statobjs"] = statobjs_to_json((statobj_t*)statobjlist);
+    //DiskFlopAnim(x, y);
+    //jsonDocument["doorposition"] = doorposition_to_json((uint16_t*)doorposition);
+    //DiskFlopAnim(x, y);
+    //jsonDocument["doorobjlist"] = doorobjlist_to_json((doorobj_t*)doorobjlist);
+    //DiskFlopAnim(x, y);
+    //jsonDocument["pwallstate"] = pwallstate;
+    //jsonDocument["pwallx"] = pwallx;
+    //jsonDocument["pwally"] = pwally;
+    //jsonDocument["pwalldir"] = pwalldir;
+    //jsonDocument["pwallpos"] = pwallpos;
+    //-----------------------
 
 	return _true;
 }
