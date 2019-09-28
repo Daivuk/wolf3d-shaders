@@ -1208,7 +1208,7 @@ void resampleSound(std::vector<float>& snd)
     }
 }
 
-void SD_PlayDigitized(word which, int16_t leftpos, int16_t rightpos)
+void SD_PlayDigitized(int soundnum, word which, int16_t leftpos, int16_t rightpos)
 {
 	SD_StopDigitized();
 	if (which >= NumDigi)
@@ -1220,14 +1220,14 @@ void SD_PlayDigitized(word which, int16_t leftpos, int16_t rightpos)
     float xf = (float)global_snd_x / 65536.0f;
     float yf = (float)global_snd_y / 65536.0f;
 
-    auto it = digiMap.find(which);
+    auto it = digiMap.find(soundnum);
     if (it != digiMap.end())
     {
         ws_play_sound(it->second.data(), (int)it->second.size(), xf, yf, global_snd_x != 0);
         global_snd_x = 0;
         return;
     }
-    auto& raw = digiMap[which];
+    auto& raw = digiMap[soundnum];
 
 	DigiPage = DigiList[(which * 2) + 0];
 	DigiLeft = DigiList[(which * 2) + 1];
@@ -1524,41 +1524,31 @@ void
 #else
 static void
 #endif
-SDL_ALPlaySound(AdLibSound *sound)
+SDL_ALPlaySound(int soundnum, AdLibSound *sound)
 {
-    // // SoundCommon	common;
-    // // Instrument	inst;
-    // // byte		block,
-    // //             data[1];
+    //auto it = digiMap.find(soundnum);
+    //if (it != digiMap.end())
+    //{
+    //    ws_play_sound(it->second.data(), (int)it->second.size(), 0.0f, 0.0f, false);
+    //    return;
+    //}
+    //auto& raw = digiMap[soundnum];
 
-    // auto data = (byte*)sound + sizeof(SoundCommon) + sizeof(Instrument);
+    auto alLengthLeft = sound->common.length;
+    auto data = sound->data;
+    auto alBlock = ((sound->block & 7) << 2) | 0x20;
+    auto inst = &sound->inst;
 
-// 	Instrument	 *inst;
-// 	byte		 *data;
+    //if (!(inst->mSus | inst->cSus))
+    //{
+    //    Quit("SDL_ALPlaySound() - Bad instrument");
+    //}
 
-// 	SDL_ALStopSound();
+    //resampleSound(raw);
+    //ws_play_sound(raw.data(), (int)raw.size(), 0.0f, 0.0f, false);
 
-// // asm	pushf
-// // asm	cli
-
-// 	soundLen = (int)sound->common.length;
-// 	soundData = sound->data;
-	// data++;
-	// data--;
-	// alSound = (byte  *)data;
-	// alBlock = ((sound->block & 7) << 2) | 0x20;
-	// inst = &sound->inst;
-
-	// if (!(inst->mSus | inst->cSus))
-	// {
-	// // asm	popf
-	// 	Quit("SDL_ALPlaySound() - Bad instrument");
-	// }
-
-	// SDL_AlSetFXInst(&alZeroInst);	// DEBUG
-	// SDL_AlSetFXInst(inst);
-
-// asm	popf
+    int tmp;
+    tmp = 5;
 }
 
 #if 0
@@ -2249,85 +2239,33 @@ SD_PlaySound(soundnames sound)
 	ispos = nextsoundpos;
 	nextsoundpos = _false;
 
+    if (sound == -1)
+        return _false;
 	if (sound == (soundnames)-1)
-		return(_false);
+		return _false;
 
-	 s = (SoundCommon*)SoundTable[sound];
-	 if ((SoundMode != sdm_Off) && !s)
-	 	Quit((char*)"SD_PlaySound() - Uncached sound");
-
-			// longword	length;
-			// word		priority;
-    // printf("playsound:%i l:%i, p:%i\n", (int)sound, (int)s->length, (int)s->priority);
-
-	// if ((DigiMode != sds_Off) && (DigiMap[sound] != -1))
-	// {
-	// 	if ((DigiMode == sds_PC) && (SoundMode == sdm_PC))
-	// 	{
-	// 		if (s->priority < SoundPriority)
-	// 			return(_false);
-
-	// 		SDL_PCStopSound();
-
-	// 		SD_PlayDigitized(DigiMap[sound],lp,rp);
-	// 		SoundPositioned = ispos;
-	// 		SoundNumber = sound;
-	// 		SoundPriority = s->priority;
-	// 	}
-	// 	else
-	// 	{
-	// 	// asm	pushf
-	// 	// asm	cli
-	// 	// 	if (DigiPriority && !DigiNumber)
-	// 	// 	{
-	// 	// 	asm	popf
-	// 	// 		Quit("SD_PlaySound: Priority without a sound");
-	// 	// 	}
-	// 	// asm	popf
-
-	// 		if (s->priority < DigiPriority)
-	// 			return(_false);
+	s = (SoundCommon*)SoundTable[sound];
+	if ((SoundMode != sdm_Off) && !s)
+	    Quit((char*)"SD_PlaySound() - Uncached sound");
 
     if (DigiMap[sound] != -1)
     {
-        SD_PlayDigitized(DigiMap[sound], lp, rp);
+        SD_PlayDigitized((int)sound, DigiMap[sound], lp, rp);
         SoundPositioned = ispos;
         DigiNumber = sound;
         DigiPriority = s->priority;
         return _true;
     }
+    else
+    {
+        if (!s->length)
+            Quit("SD_PlaySound() - Zero length sound");
+
+        SDL_ALPlaySound((int)sound, (AdLibSound*)s);
+        return _true;
+    }
+
     return _false;
-	// 	}
-
-	// 	return(_true);
-	// }
-
-	// if (SoundMode == sdm_Off)
-	// 	return(_false);
-	// if (!s->length)
-	// 	Quit((char*)"SD_PlaySound() - Zero length sound");
-	// if (s->priority < SoundPriority)
-	// 	return(_false);
-
-	// switch (SoundMode)
-	// {
-    //     default: break;
-	// case sdm_PC:
-	// 	SDL_PCPlaySound((PCSound *)(void  *)s);
-	// 	break;
-	// case sdm_AdLib:
-    // if (SoundMode != sdm_Off)
-    //{
-    //    // ws_play_sound((byte*)s + sizeof(*s) + 4, (int)s->length);
-    //    SD_PlayDigitized(DigiMap[sound],lp,rp);
-    //}
-	// 	break;
-	// }
-
-	//SoundNumber = sound;
-	// SoundPriority = s->priority;
-
-	//return(_false);
 }
 
 ///////////////////////////////////////////////////////////////////////////
